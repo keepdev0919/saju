@@ -82,7 +82,8 @@ export async function getSajuResult(req, res) {
 
     // 사용자 조회
     const [users] = await db.execute(
-      `SELECT id FROM users WHERE access_token = ?`,
+      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type 
+       FROM users WHERE access_token = ?`,
       [token]
     );
 
@@ -90,7 +91,8 @@ export async function getSajuResult(req, res) {
       return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
     }
 
-    const userId = users[0].id;
+    const user = users[0];
+    const userId = user.id;
 
     // 사주 결과 조회
     const [results] = await db.execute(
@@ -104,8 +106,34 @@ export async function getSajuResult(req, res) {
 
     const result = results[0];
 
+    /**
+     * JSON 데이터 파싱 헬퍼 함수
+     * 문자열이면 파싱하고, 객체면 그대로 반환, null이면 기본값 반환
+     */
+    const parseJsonData = (data, defaultValue = {}) => {
+      if (!data) return defaultValue;
+      if (typeof data === 'string') {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          console.warn('JSON 파싱 실패:', e.message);
+          return defaultValue;
+        }
+      }
+      // 이미 객체인 경우 그대로 반환
+      return data;
+    };
+
     res.json({
       success: true,
+      user: {
+        id: user.id,
+        name: user.name,
+        birthDate: user.birth_date,
+        birthTime: user.birth_time,
+        gender: user.gender,
+        calendarType: user.calendar_type
+      },
       result: {
         id: result.id,
         overallFortune: result.overall_fortune,
@@ -120,8 +148,8 @@ export async function getSajuResult(req, res) {
           career: result.career_score,
           health: result.health_score
         },
-        oheng: JSON.parse(result.oheng_data),
-        sajuData: JSON.parse(result.saju_data)
+        oheng: parseJsonData(result.oheng_data, {}),
+        sajuData: parseJsonData(result.saju_data, {})
       }
     });
   } catch (error) {

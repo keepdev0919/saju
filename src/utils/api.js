@@ -144,10 +144,34 @@ export const getSajuResult = async (token) => {
 /**
  * PDF 생성
  * @param {Object} pdfData - PDF 생성 데이터
- * @returns {Promise} PDF 생성 결과
+ * @param {boolean} pdfData.preview - 미리보기 여부 (워터마크 포함)
+ * @returns {Promise} PDF 생성 결과 또는 PDF Blob (미리보기인 경우)
  */
 export const generatePDF = async (pdfData) => {
-  const response = await apiClient.post('/pdf/generate', pdfData);
+  const response = await apiClient.post('/pdf/generate', pdfData, {
+    responseType: pdfData.preview ? 'arraybuffer' : 'json'
+  });
+
+  // 미리보기인 경우 ArrayBuffer → Blob 변환
+  if (pdfData.preview) {
+    // ArrayBuffer → Blob 수동 변환
+    const blob = new Blob([response.data], { type: 'application/pdf' });
+
+    // PDF 헤더 검증
+    const headerBytes = new Uint8Array(response.data.slice(0, 5));
+    const header = String.fromCharCode(...headerBytes);
+    if (!header.startsWith('%PDF-')) {
+      throw new Error('유효하지 않은 PDF 데이터입니다.');
+    }
+
+    console.log('✅ PDF Blob 생성:', {
+      size: blob.size,
+      type: blob.type,
+      header: header
+    });
+
+    return blob;
+  }
   return response.data;
 };
 
@@ -158,6 +182,16 @@ export const generatePDF = async (pdfData) => {
  */
 export const getPdfDownloadUrl = (token) => {
   return `${API_BASE_URL}/pdf/download/${token}`;
+};
+
+/**
+ * PDF 결제 여부 확인
+ * @param {string} token - 접근 토큰
+ * @returns {Promise} PDF 결제 여부
+ */
+export const checkPdfPayment = async (token) => {
+  const response = await apiClient.get(`/pdf/check/${token}`);
+  return response.data;
 };
 
 export default apiClient;

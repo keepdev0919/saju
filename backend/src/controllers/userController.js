@@ -78,7 +78,8 @@ export async function verifyUser(req, res) {
 
     // 사용자 조회
     const [users] = await db.execute(
-      `SELECT id, name, access_token FROM users 
+      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, access_token 
+       FROM users 
        WHERE phone = ? AND birth_date = ?`,
       [phone, birthDate]
     );
@@ -96,6 +97,10 @@ export async function verifyUser(req, res) {
       user: {
         id: user.id,
         name: user.name,
+        birthDate: user.birth_date,
+        birthTime: user.birth_time,
+        gender: user.gender,
+        calendarType: user.calendar_type,
         accessToken: user.access_token
       },
       message: '인증이 완료되었습니다.'

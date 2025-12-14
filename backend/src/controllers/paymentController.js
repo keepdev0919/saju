@@ -68,8 +68,8 @@ export async function verifyPayment(req, res) {
       });
     }
 
-    // 포트원에서 결제 정보 조회 및 검증
-    const paymentInfo = await verifyPortonePayment(imp_uid);
+    // 포트원에서 결제 정보 조회 및 검증 (merchant_uid 전달)
+    const paymentInfo = await verifyPortonePayment(imp_uid, merchant_uid);
 
     // DB에서 결제 정보 조회
     const [payments] = await db.execute(
@@ -83,8 +83,20 @@ export async function verifyPayment(req, res) {
 
     const payment = payments[0];
 
+    // 결제 상태 검증
+    if (paymentInfo.status !== 'paid') {
+      return res.status(400).json({ 
+        error: '결제가 완료되지 않았습니다.' 
+      });
+    }
+
     // 결제 금액 검증
     if (paymentInfo.amount !== payment.amount) {
+      console.error('결제 금액 불일치:', {
+        expected: payment.amount,
+        actual: paymentInfo.amount,
+        merchant_uid: merchant_uid
+      });
       return res.status(400).json({ 
         error: '결제 금액이 일치하지 않습니다.' 
       });
@@ -108,22 +120,39 @@ export async function verifyPayment(req, res) {
       const user = users[0];
       const resultUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/result/${user.access_token}`;
 
+      // 알림톡 발송 기록 저장 (pending 상태)
+      const [notificationResult] = await db.execute(
+        `INSERT INTO notifications (user_id, type, phone, status)
+         VALUES (?, 'result_link', ?, 'pending')`,
+        [payment.user_id, user.phone]
+      );
+
       // 카카오 알림톡 발송 (비동기로 처리, 실패해도 결제는 완료)
       sendResultLink({
         phone: user.phone,
         userName: user.name,
         resultUrl
-      }).catch(err => {
-        console.error('알림톡 발송 실패:', err);
-        // 알림톡 발송 실패는 로그만 남기고 결제는 성공 처리
-      });
-
-      // 알림톡 발송 기록 저장
-      await db.execute(
-        `INSERT INTO notifications (user_id, type, phone, status)
-         VALUES (?, 'result_link', ?, 'pending')`,
-        [payment.user_id, user.phone]
-      );
+      })
+        .then(result => {
+          // 발송 성공 시 상태 업데이트
+          if (result.success && !result.isDummy) {
+            db.execute(
+              `UPDATE notifications SET status = 'sent', sent_at = NOW() WHERE id = ?`,
+              [notificationResult.insertId]
+            ).catch(err => console.error('알림톡 발송 기록 업데이트 실패:', err));
+          } else if (result.isDummy) {
+            // 더미 모드인 경우 pending 상태 유지
+            console.log('알림톡 더미 발송 (실제 발송 안 함)');
+          }
+        })
+        .catch(err => {
+          console.error('알림톡 발송 실패:', err);
+          // 발송 실패 시 상태 업데이트
+          db.execute(
+            `UPDATE notifications SET status = 'failed' WHERE id = ?`,
+            [notificationResult.insertId]
+          ).catch(updateErr => console.error('알림톡 발송 기록 업데이트 실패:', updateErr));
+        });
     }
 
     res.json({

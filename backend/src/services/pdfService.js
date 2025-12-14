@@ -20,23 +20,41 @@ export async function generatePDF(htmlContent, options = {}) {
   let browser;
 
   try {
+    console.log('🔧 Puppeteer 시작...');
+
     // Puppeteer 브라우저 실행
     browser = await puppeteer.launch({
       headless: true,
       args: ['--no-sandbox', '--disable-setuid-sandbox']
     });
+    console.log('✅ Puppeteer 브라우저 실행 완료');
 
     const page = await browser.newPage();
+    console.log('✅ 새 페이지 생성 완료');
+
+    // 실패한 네트워크 요청 무시 (404 에러 방지)
+    // favicon이나 외부 리소스 요청 실패를 조용히 무시
+    page.on('requestfailed', (request) => {
+      const url = request.url();
+      // favicon, 외부 이미지 등의 실패는 무시 (콘솔 에러 방지)
+      if (url.includes('favicon') || request.resourceType() === 'image' || request.resourceType() === 'font') {
+        return;
+      }
+    });
 
     // HTML 내용 설정
+    console.log('📝 HTML 내용 설정 중... (길이:', htmlContent.length, ')');
     await page.setContent(htmlContent, {
-      waitUntil: 'networkidle0'
+      waitUntil: 'domcontentloaded' // DOM 로드 후 즉시 진행 (외부 리소스 대기 없음)
     });
+    console.log('✅ HTML 내용 설정 완료');
 
     // PDF 생성 옵션
     const pdfOptions = {
       format: 'A4',
       printBackground: true,
+      preferCSSPageSize: true,  // CSS 페이지 크기 우선
+      displayHeaderFooter: false,  // 헤더/푸터 비활성화
       margin: {
         top: '20mm',
         right: '15mm',
@@ -47,7 +65,13 @@ export async function generatePDF(htmlContent, options = {}) {
     };
 
     // PDF 생성
-    const pdfBuffer = await page.pdf(pdfOptions);
+    console.log('🖨️ PDF 생성 중...');
+    const pdfData = await page.pdf(pdfOptions);
+    console.log('✅ PDF 생성 완료 (크기:', pdfData.length, 'bytes)');
+
+    // Uint8Array를 Buffer로 변환 (Node.js Buffer 메서드 사용 가능하도록)
+    const pdfBuffer = Buffer.from(pdfData);
+    console.log('✅ Buffer 변환 완료 (isBuffer:', Buffer.isBuffer(pdfBuffer), ')');
 
     return pdfBuffer;
   } catch (error) {
@@ -63,9 +87,10 @@ export async function generatePDF(htmlContent, options = {}) {
 /**
  * 사주 결과 HTML 템플릿 생성
  * @param {Object} resultData - 사주 결과 데이터
+ * @param {boolean} withWatermark - 워터마크 포함 여부 (미리보기용)
  * @returns {string} HTML 문자열
  */
-export function generateSajuHTML(resultData) {
+export function generateSajuHTML(resultData, withWatermark = false) {
   const { user, result } = resultData;
 
   return `
@@ -174,9 +199,43 @@ export function generateSajuHTML(resultData) {
       color: #999;
       font-size: 12px;
     }
+    ${withWatermark ? `
+    .watermark {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-45deg);
+      font-size: 72px;
+      color: rgba(0, 0, 0, 0.1);
+      font-weight: bold;
+      z-index: 1000;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .watermark-overlay {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+      padding: 40px;
+      text-align: center;
+      z-index: 1001;
+      color: white;
+    }
+    .watermark-overlay h2 {
+      margin-bottom: 20px;
+      font-size: 24px;
+    }
+    .watermark-overlay p {
+      margin-bottom: 20px;
+      opacity: 0.9;
+    }
+    ` : ''}
   </style>
 </head>
 <body>
+  ${withWatermark ? '<div class="watermark">미리보기</div>' : ''}
   <div class="container">
     <div class="header">
       <h1>${user.name}님의 운명</h1>
@@ -233,6 +292,12 @@ export function generateSajuHTML(resultData) {
       <p>생성일: ${new Date().toLocaleDateString('ko-KR')}</p>
     </div>
   </div>
+  ${withWatermark ? `
+  <div class="watermark-overlay">
+    <h2>전체 PDF를 다운로드하시겠어요?</h2>
+    <p>결제 후 워터마크 없는 전체 PDF를 다운로드할 수 있습니다.</p>
+  </div>
+  ` : ''}
 </body>
 </html>
   `.trim();

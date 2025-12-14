@@ -13,7 +13,7 @@ import fs from 'fs/promises';
  */
 export async function generatePdf(req, res) {
   try {
-    const { userId, resultId } = req.body;
+    const { userId, resultId, preview = false } = req.body;
 
     if (!userId || !resultId) {
       return res.status(400).json({ 
@@ -45,6 +45,24 @@ export async function generatePdf(req, res) {
 
     const result = results[0];
 
+    /**
+     * JSON 데이터 파싱 헬퍼 함수
+     * 문자열이면 파싱하고, 객체면 그대로 반환, null이면 기본값 반환
+     */
+    const parseJsonData = (data, defaultValue = {}) => {
+      if (!data) return defaultValue;
+      if (typeof data === 'string') {
+        try {
+          return JSON.parse(data);
+        } catch (e) {
+          console.warn('JSON 파싱 실패:', e.message);
+          return defaultValue;
+        }
+      }
+      // 이미 객체인 경우 그대로 반환
+      return data;
+    };
+
     // 결과 데이터 파싱
     const resultData = {
       overallFortune: result.overall_fortune,
@@ -59,10 +77,10 @@ export async function generatePdf(req, res) {
         career: result.career_score,
         health: result.health_score
       },
-      oheng: JSON.parse(result.oheng_data)
+      oheng: parseJsonData(result.oheng_data, {})
     };
 
-    // HTML 생성
+    // HTML 생성 (미리보기인 경우 워터마크 포함)
     const htmlContent = generateSajuHTML({
       user: {
         name: user.name,
@@ -70,12 +88,44 @@ export async function generatePdf(req, res) {
         gender: user.gender
       },
       result: resultData
-    });
+    }, preview);
 
     // PDF 생성
     const pdfBuffer = await generatePDF(htmlContent);
 
-    // 파일 저장
+    // PDF 유효성 확인 - 더 자세한 로그 추가
+    console.log('📄 PDF 버퍼 정보:', {
+      bufferLength: pdfBuffer.length,
+      bufferType: typeof pdfBuffer,
+      isBuffer: Buffer.isBuffer(pdfBuffer),
+      first20Bytes: pdfBuffer.slice(0, 20).toString('utf-8'),
+      first20Hex: pdfBuffer.slice(0, 20).toString('hex')
+    });
+
+    const pdfHeader = pdfBuffer.slice(0, 5).toString('utf-8');
+    if (!pdfHeader.startsWith('%PDF-')) {
+      console.error('❌ PDF 헤더 검증 실패:', {
+        expected: '%PDF-',
+        actual: pdfHeader,
+        actualHex: pdfBuffer.slice(0, 5).toString('hex')
+      });
+      throw new Error('생성된 PDF가 유효하지 않습니다.');
+    }
+    console.log('✅ PDF 생성 성공:', {
+      size: pdfBuffer.length,
+      header: pdfHeader,
+      preview: preview
+    });
+
+    // 미리보기인 경우 파일 저장하지 않고 바로 반환
+    if (preview) {
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader('Content-Disposition', 'inline; filename="preview.pdf"');
+      res.setHeader('Content-Length', pdfBuffer.length);
+      return res.end(pdfBuffer, 'binary');
+    }
+
+    // 파일 저장 (결제 완료 후 다운로드용)
     const filename = `saju_${userId}_${resultId}_${Date.now()}.pdf`;
     const filePath = await savePDF(pdfBuffer, filename);
 
@@ -148,6 +198,55 @@ export async function downloadPdf(req, res) {
     console.error('PDF 다운로드 오류:', error);
     res.status(500).json({ 
       error: 'PDF 다운로드에 실패했습니다.',
+      message: error.message 
+    });
+  }
+}
+
+/**
+ * PDF 결제 여부 확인
+ * 사용자가 PDF를 이미 결제했는지 확인
+ */
+export async function checkPdfPayment(req, res) {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).json({ error: '토큰이 필요합니다.' });
+    }
+
+    // 사용자 조회
+    const [users] = await db.execute(
+      `SELECT id FROM users WHERE access_token = ?`,
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
+    }
+
+    const userId = users[0].id;
+
+    // PDF 결제 여부 확인
+    const [payments] = await db.execute(
+      `SELECT id, status, paid_at FROM payments 
+       WHERE user_id = ? AND product_type = 'pdf' AND status = 'paid'
+       ORDER BY paid_at DESC LIMIT 1`,
+      [userId]
+    );
+
+    res.json({
+      success: true,
+      hasPaid: payments.length > 0,
+      payment: payments.length > 0 ? {
+        id: payments[0].id,
+        paidAt: payments[0].paid_at
+      } : null
+    });
+  } catch (error) {
+    console.error('PDF 결제 확인 오류:', error);
+    res.status(500).json({ 
+      error: 'PDF 결제 확인에 실패했습니다.',
       message: error.message 
     });
   }
