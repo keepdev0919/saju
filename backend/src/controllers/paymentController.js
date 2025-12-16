@@ -9,16 +9,33 @@ import { sendResultLink } from '../services/kakaoService.js';
 /**
  * 결제 요청 생성
  * 포트원에 결제 요청을 생성하고 merchant_uid를 반환
+ * 보안 개선: accessToken을 사용하여 DB에서 userId를 안전하게 조회 (IDOR 방지)
+ * 
+ * @param {string} req.body.accessToken - 사용자 접근 토큰
+ * @param {number} req.body.amount - 결제 금액
+ * @param {string} req.body.productType - 상품 유형 (basic/pdf)
  */
 export async function createPayment(req, res) {
   try {
-    const { userId, amount, productType = 'basic' } = req.body;
+    const { accessToken, amount, productType = 'basic' } = req.body;
 
-    if (!userId || !amount) {
-      return res.status(400).json({ 
-        error: '사용자 ID와 결제 금액이 필요합니다.' 
+    if (!accessToken || !amount) {
+      return res.status(400).json({
+        error: '접근 토큰과 결제 금액이 필요합니다.'
       });
     }
+
+    // 사용자 정보 조회 (삭제된 사용자 제외)
+    const [users] = await db.execute(
+      `SELECT id FROM users WHERE access_token = ? AND deleted_at IS NULL`,
+      [accessToken]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
+    }
+
+    const userId = users[0].id;
 
     // merchant_uid 생성 (고유 주문번호)
     const merchantUid = `saju_${Date.now()}_${userId}`;
@@ -47,9 +64,9 @@ export async function createPayment(req, res) {
     });
   } catch (error) {
     console.error('결제 생성 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '결제 요청 생성에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }
@@ -63,8 +80,8 @@ export async function verifyPayment(req, res) {
     const { imp_uid, merchant_uid } = req.body;
 
     if (!imp_uid || !merchant_uid) {
-      return res.status(400).json({ 
-        error: '결제 정보가 필요합니다.' 
+      return res.status(400).json({
+        error: '결제 정보가 필요합니다.'
       });
     }
 
@@ -85,8 +102,8 @@ export async function verifyPayment(req, res) {
 
     // 결제 상태 검증
     if (paymentInfo.status !== 'paid') {
-      return res.status(400).json({ 
-        error: '결제가 완료되지 않았습니다.' 
+      return res.status(400).json({
+        error: '결제가 완료되지 않았습니다.'
       });
     }
 
@@ -97,8 +114,8 @@ export async function verifyPayment(req, res) {
         actual: paymentInfo.amount,
         merchant_uid: merchant_uid
       });
-      return res.status(400).json({ 
-        error: '결제 금액이 일치하지 않습니다.' 
+      return res.status(400).json({
+        error: '결제 금액이 일치하지 않습니다.'
       });
     }
 
@@ -110,9 +127,9 @@ export async function verifyPayment(req, res) {
       [imp_uid, merchant_uid]
     );
 
-    // 사용자 정보 조회 (알림톡 발송용)
+    // 사용자 정보 조회 (알림톡 발송용, 삭제된 사용자 제외)
     const [users] = await db.execute(
-      `SELECT name, phone, access_token FROM users WHERE id = ?`,
+      `SELECT name, phone, access_token FROM users WHERE id = ? AND deleted_at IS NULL`,
       [payment.user_id]
     );
 
@@ -168,9 +185,9 @@ export async function verifyPayment(req, res) {
     });
   } catch (error) {
     console.error('결제 검증 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '결제 검증에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }
@@ -213,9 +230,9 @@ export async function cancelPayment(req, res) {
     });
   } catch (error) {
     console.error('환불 처리 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '환불 처리에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }

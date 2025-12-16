@@ -8,29 +8,36 @@ import { interpretSajuWithAI } from '../services/aiService.js';
 
 /**
  * 사주 계산
- * lunar-javascript로 사주를 계산하고 AI로 해석 생성
+ * AI를 사용하여 사주 풀이를 생성하고 저장
+ * 보안 강화: accessToken으로 사용자 검증 후 계산 수행 (IDOR 방지)
+ * 
+ * @param {string} req.body.accessToken - 사용자 접근 토큰
+ * @param {string} req.body.birthDate - 생년월일 (YYYY-MM-DD)
+ * @param {string} req.body.birthTime - 생시 (HH:MM 또는 null)
+ * @param {string} req.body.calendarType - 양력/음력 (solar/lunar)
  */
 export async function calculateSaju(req, res) {
   try {
-    const { userId, birthDate, birthTime, calendarType } = req.body;
+    const { accessToken, birthDate, birthTime, calendarType } = req.body;
 
-    if (!userId || !birthDate) {
+    if (!accessToken || !birthDate) {
       return res.status(400).json({
-        error: '사용자 ID와 생년월일이 필요합니다.'
+        error: '접근 토큰과 생년월일이 필요합니다.'
       });
     }
 
-    // 사용자 정보 조회
+    // 사용자 정보 조회 (삭제된 사용자 제외, 토큰 기반 검증)
     const [users] = await db.execute(
-      `SELECT name, gender, phone FROM users WHERE id = ?`,
-      [userId]
+      `SELECT id, name, gender, phone FROM users WHERE access_token = ? AND deleted_at IS NULL`,
+      [accessToken]
     );
 
     if (users.length === 0) {
-      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+      return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
     }
 
     const user = users[0];
+    const userId = user.id;
 
     console.log('🔮 사주 계산 시작:', {
       userId,
@@ -44,7 +51,8 @@ export async function calculateSaju(req, res) {
     const sajuData = await callSajuAPI({
       birthDate,
       birthTime,
-      calendarType: calendarType || 'solar'
+      calendarType: calendarType || 'solar',
+      gender: user.gender // Tech Demo용 (대운 계산에 필요)
     });
 
     console.log('✅ 사주 계산 완료:', {
@@ -120,10 +128,10 @@ export async function getSajuResult(req, res) {
       return res.status(400).json({ error: '토큰이 필요합니다.' });
     }
 
-    // 사용자 조회
+    // 사용자 조회 (삭제된 사용자 제외)
     const [users] = await db.execute(
       `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type
-       FROM users WHERE access_token = ?`,
+       FROM users WHERE access_token = ? AND deleted_at IS NULL`,
       [token]
     );
 

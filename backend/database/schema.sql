@@ -16,10 +16,14 @@ CREATE TABLE IF NOT EXISTS users (
   calendar_type ENUM('solar', 'lunar') DEFAULT 'solar',
   access_token VARCHAR(100) UNIQUE, -- 결과 페이지 접근용 고유 토큰
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL, -- Soft Delete (탈퇴/삭제 시 날짜 기록)
   
   -- 같은 휴대폰+생년월일 조합으로 본인 확인
   UNIQUE KEY unique_user (phone, birth_date),
-  INDEX idx_access_token (access_token)
+  INDEX idx_access_token (access_token),
+  INDEX idx_deleted_at (deleted_at),
+  INDEX idx_name (name),
+  INDEX idx_created_at (created_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 결제 테이블
@@ -33,11 +37,13 @@ CREATE TABLE IF NOT EXISTS payments (
   status ENUM('pending', 'paid', 'cancelled', 'refunded') DEFAULT 'pending',
   paid_at TIMESTAMP NULL,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
   
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_user_id (user_id),
   INDEX idx_merchant_uid (merchant_uid),
-  INDEX idx_status (status)
+  INDEX idx_status (status),
+  INDEX idx_deleted_at (deleted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 사주 결과 테이블
@@ -66,9 +72,11 @@ CREATE TABLE IF NOT EXISTS saju_results (
   oheng_data JSON,                   -- { "목": 20, "화": 60, ... }
   
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  deleted_at TIMESTAMP NULL,
   
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-  INDEX idx_user_id (user_id)
+  INDEX idx_user_id (user_id),
+  INDEX idx_deleted_at (deleted_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 알림톡 발송 기록

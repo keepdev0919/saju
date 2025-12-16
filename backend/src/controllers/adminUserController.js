@@ -34,7 +34,7 @@ export async function getUsers(req, res) {
         // 회원 목록 조회
         const listQuery = `
       SELECT 
-        id, name, phone, birth_date, gender, calendar_type, created_at,
+        id, name, phone, birth_date, gender, calendar_type, created_at, deleted_at,
         (SELECT COUNT(*) FROM payments WHERE user_id = users.id AND status = 'paid') as payment_count,
         (SELECT SUM(amount) FROM payments WHERE user_id = users.id AND status = 'paid') as total_payment_amount
       FROM users
@@ -75,7 +75,7 @@ export async function getUserDetail(req, res) {
 
         // 1. 회원 기본 정보
         const [users] = await db.query(
-            `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, created_at FROM users WHERE id = ?`,
+            `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, created_at, deleted_at FROM users WHERE id = ?`,
             [id]
         );
 

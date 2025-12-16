@@ -275,18 +275,25 @@ function parseAIResponse(aiResponse) {
  */
 function generateScoresFromWuxing(wuxing) {
   // 오행 균형도를 점수로 환산
+  // 오행 균형도를 점수로 환산
+  // 기존 로직: 100 - (Max - Min) -> 차이가 40만 나도 바로 60점(최하점)이 되는 문제 수정
+  // 개선 로직: 95 - (차이 * 0.5) -> 차이가 40이면 20점 감점 -> 75점 (훨씬 자연스러움)
   const wuxingValues = Object.values(wuxing);
   const maxWuxing = Math.max(...wuxingValues);
   const minWuxing = Math.min(...wuxingValues);
-  const balance = 100 - (maxWuxing - minWuxing);
-  const baseScore = Math.min(Math.max(balance, 60), 95);
+
+  const diff = maxWuxing - minWuxing;
+  const rawScore = 95 - (diff * 0.5); // 차이의 절반만 감점
+
+  // 최하점 40점, 최고점 98점으로 제한
+  const baseScore = Math.min(Math.max(rawScore, 40), 98);
 
   return {
     overall: Math.round(baseScore),
-    wealth: Math.round(Math.min(baseScore + (wuxing.금 / 2), 100)),   // 금 = 재물
-    love: Math.round(Math.min(baseScore + (wuxing.화 / 2), 100)),     // 화 = 애정
-    career: Math.round(Math.min(baseScore + (wuxing.목 / 2), 100)),   // 목 = 성장
-    health: Math.round(Math.min(baseScore + (wuxing.토 / 2), 100))    // 토 = 건강
+    wealth: Math.round(Math.min(baseScore + (wuxing.금 / 3), 100)),   // 가산점 비율 조정 (1/2 -> 1/3)
+    love: Math.round(Math.min(baseScore + (wuxing.화 / 3), 100)),
+    career: Math.round(Math.min(baseScore + (wuxing.목 / 3), 100)),
+    health: Math.round(Math.min(baseScore + (wuxing.토 / 3), 100))
   };
 }
 
@@ -305,39 +312,39 @@ function generateFallbackInterpretation(sajuData) {
 
   const elementMessages = {
     목: {
-      overall: '2026년은 성장과 발전의 해입니다. 새로운 도전을 두려워하지 마세요.',
-      wealth: '투자보다는 저축이 유리한 시기입니다. 장기적인 관점으로 재물을 관리하세요.',
-      love: '진실된 마음으로 다가가면 좋은 인연을 만날 수 있습니다.',
-      career: '꾸준한 노력이 인정받는 시기입니다. 상반기에 좋은 기회가 있을 것입니다.',
-      health: '간과 눈 건강에 신경 쓰세요. 규칙적인 생활이 중요합니다.'
+      overall: '기본값',
+      wealth: '기본값',
+      love: '기본값',
+      career: '기본값',
+      health: '기본값'
     },
     화: {
-      overall: '2026년은 열정과 활력이 넘치는 해입니다. 적극적으로 행동하세요.',
-      wealth: '사업이나 투자에 좋은 시기입니다. 하지만 충동적인 결정은 피하세요.',
-      love: '뜨거운 인연이 찾아올 수 있습니다. 감정에 솔직해지세요.',
-      career: '리더십을 발휘할 기회가 많습니다. 자신감을 가지고 임하세요.',
-      health: '심장과 혈액 순환에 주의하세요. 과로를 피하고 충분한 휴식을 취하세요.'
+      overall: '기본값',
+      wealth: '기본값',
+      love: '기본값',
+      career: '기본값',
+      health: '기본값'
     },
     토: {
-      overall: '2026년은 안정과 균형의 해입니다. 차근차근 계획을 실행하세요.',
-      wealth: '안정적인 재물 관리가 중요합니다. 무리한 투자는 자제하세요.',
-      love: '신뢰를 바탕으로 한 관계가 발전합니다. 인내심을 가지세요.',
-      career: '현재 위치를 굳건히 하는 것이 좋습니다. 기반을 다지는 시기입니다.',
-      health: '소화기와 비장 건강에 신경 쓰세요. 규칙적인 식사가 중요합니다.'
+      overall: '기본값',
+      wealth: '기본값',
+      love: '기본값',
+      career: '기본값',
+      health: '기본값'
     },
     금: {
-      overall: '2026년은 결실을 맺는 해입니다. 그동안의 노력이 빛을 발할 것입니다.',
-      wealth: '재물운이 좋은 시기입니다. 수익 창출의 기회를 놓치지 마세요.',
-      love: '진지한 만남이 이어질 수 있습니다. 신중하게 접근하세요.',
-      career: '성과를 인정받을 수 있습니다. 승진이나 이직의 기회가 있을 수 있습니다.',
-      health: '폐와 호흡기 건강에 주의하세요. 환절기 관리가 중요합니다.'
+      overall: '기본값',
+      wealth: '기본값',
+      love: '기본값',
+      career: '기본값',
+      health: '기본값'
     },
     수: {
-      overall: '2026년은 변화와 적응의 해입니다. 유연한 자세가 필요합니다.',
-      wealth: '흐름을 잘 읽어야 하는 시기입니다. 신중한 판단이 필요합니다.',
-      love: '자연스러운 만남이 좋은 인연으로 이어집니다. 서두르지 마세요.',
-      career: '환경 변화에 잘 적응하는 것이 중요합니다. 학습과 발전에 집중하세요.',
-      health: '신장과 방광 건강에 신경 쓰세요. 수분 섭취를 충분히 하세요.'
+      overall: '기본값',
+      wealth: '기본값',
+      love: '기본값',
+      career: '기본값',
+      health: '기본값'
     }
   };
 

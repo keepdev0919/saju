@@ -16,6 +16,7 @@ function generateAccessToken() {
 /**
  * 사용자 생성
  * 결제 전 사용자 정보를 저장하고 접근 토큰을 발급
+ * Soft Delete 정책: 이미 탈퇴한 사용자(휴대폰+생일 중복)가 재가입 시 deleted_at을 NULL로 초기화하여 부활시킴
  */
 export async function createUser(req, res) {
   try {
@@ -23,7 +24,7 @@ export async function createUser(req, res) {
 
     // 필수 필드 검증
     if (!name || !phone || !birthDate || !gender) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         error: '필수 정보가 누락되었습니다.',
         required: ['name', 'phone', 'birthDate', 'gender']
       });
@@ -32,7 +33,7 @@ export async function createUser(req, res) {
     // 접근 토큰 생성
     const accessToken = generateAccessToken();
 
-    // 사용자 정보 저장
+    // 사용자 정보 저장 (Soft Deleted 된 유저가 재가입 시 deleted_at = NULL 로 부활)
     const [result] = await db.execute(
       `INSERT INTO users (name, phone, birth_date, birth_time, gender, calendar_type, access_token)
        VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -41,7 +42,8 @@ export async function createUser(req, res) {
          birth_time = VALUES(birth_time),
          gender = VALUES(gender),
          calendar_type = VALUES(calendar_type),
-         access_token = VALUES(access_token)`,
+         access_token = VALUES(access_token),
+         deleted_at = NULL`,
       [name, phone, birthDate, birthTime || null, gender, calendarType || 'solar', accessToken]
     );
 
@@ -55,38 +57,38 @@ export async function createUser(req, res) {
     });
   } catch (error) {
     console.error('사용자 생성 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '사용자 정보 저장에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }
 
 /**
  * 사용자 인증
- * 생년월일과 휴대폰 번호로 본인 확인
+ * 생년월일과 휴대폰 번호로 본인 확인 (탈퇴한 회원 제외)
  */
 export async function verifyUser(req, res) {
   try {
     const { phone, birthDate } = req.body;
 
     if (!phone || !birthDate) {
-      return res.status(400).json({ 
-        error: '휴대폰 번호와 생년월일을 입력해주세요.' 
+      return res.status(400).json({
+        error: '휴대폰 번호와 생년월일을 입력해주세요.'
       });
     }
 
-    // 사용자 조회
+    // 사용자 조회 (삭제된 사용자 제외)
     const [users] = await db.execute(
       `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, access_token 
        FROM users 
-       WHERE phone = ? AND birth_date = ?`,
+       WHERE phone = ? AND birth_date = ? AND deleted_at IS NULL`,
       [phone, birthDate]
     );
 
     if (users.length === 0) {
-      return res.status(404).json({ 
-        error: '일치하는 정보를 찾을 수 없습니다.' 
+      return res.status(404).json({
+        error: '일치하는 정보를 찾을 수 없습니다.'
       });
     }
 
@@ -107,16 +109,16 @@ export async function verifyUser(req, res) {
     });
   } catch (error) {
     console.error('사용자 인증 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '인증 처리에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }
 
 /**
  * 토큰으로 사용자 정보 조회
- * 결과 페이지 접근 시 사용
+ * 결과 페이지 접근 시 사용 (탈퇴한 회원 제외)
  */
 export async function getUserByToken(req, res) {
   try {
@@ -126,9 +128,10 @@ export async function getUserByToken(req, res) {
       return res.status(400).json({ error: '토큰이 필요합니다.' });
     }
 
+    // 삭제된 사용자 제외
     const [users] = await db.execute(
       `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type 
-       FROM users WHERE access_token = ?`,
+       FROM users WHERE access_token = ? AND deleted_at IS NULL`,
       [token]
     );
 
@@ -152,9 +155,9 @@ export async function getUserByToken(req, res) {
     });
   } catch (error) {
     console.error('사용자 조회 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '사용자 정보 조회에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }

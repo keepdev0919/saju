@@ -4,7 +4,15 @@ import { logAdminAction } from '../utils/auditLogger.js';
 
 /**
  * 사주 결과 수정 (관리자용)
- * 특정 사주 결과의 텍스트 내용을 수정합니다.
+ * 특정 사주 결과의 텍스트 내용을 수정합니다. (오타 수정, 내용 보강 등)
+ * 수정 내역은 admin_audit_logs에 기록됩니다.
+ * 
+ * @param {number} req.params.id - 수정할 사주 결과 ID
+ * @param {string} req.body.overall - 총운 텍스트
+ * @param {string} req.body.wealth - 재물운 텍스트
+ * @param {string} req.body.love - 애정운 텍스트
+ * @param {string} req.body.career - 직장운 텍스트
+ * @param {string} req.body.health - 건강운 텍스트
  */
 export async function updateResult(req, res) {
     try {
