@@ -305,11 +305,10 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
                                 </p>
                             </div>
 
-                            {/* 4. 도장 (핵심) - Hard Light Blend for Natural Integration */}
-                            <div className="absolute bottom-5 right-5 z-10 opacity-90 scale-100 mix-blend-hard-light transform rotate-[-2deg]">
-                                <div className="relative border-[3px] border-red-600 bg-red-800/80 shadow-sm w-20 h-20 flex items-center justify-center">
-                                    <div className="absolute inset-1 border border-red-900/30" />
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-red-100 font-serif font-black leading-none p-1 text-3xl" style={{ fontFamily: '"Gungsuh", "Batang", serif', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+                            {/* 4. 도장 (핵심) - Real Analog Ink Stamp Style */}
+                            <div className="absolute bottom-5 right-5 z-10 transform rotate-[-3deg] opacity-85 mix-blend-hard-light blur-[0.5px]">
+                                <div className="relative w-24 h-24 flex items-center justify-center border-double border-4 border-red-700/90 rounded-sm">
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-red-700/90 font-serif font-black leading-none p-1 text-4xl tracking-tighter" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
                                         {(() => {
                                             const rawName = isPurchased ? stampName : '天命錄';
                                             const isHangul = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(rawName);
@@ -321,11 +320,11 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
 
                                             if (displayName.length === 4) {
                                                 return (
-                                                    <div className="grid grid-cols-2 gap-0 w-full h-full text-center items-center justify-center">
-                                                        <span className="flex items-center justify-center w-full h-full pt-1">{displayName[0]}</span>
-                                                        <span className="flex items-center justify-center w-full h-full pt-1">{displayName[1]}</span>
-                                                        <span className="flex items-center justify-center w-full h-full pb-1">{displayName[2]}</span>
-                                                        <span className="flex items-center justify-center w-full h-full pb-1">{displayName[3]}</span>
+                                                    <div className="grid grid-cols-2 gap-0 w-full h-full text-center items-center justify-center leading-none">
+                                                        <span className="flex items-center justify-center w-full h-full pt-1 transform scale-y-110">{displayName[0]}</span>
+                                                        <span className="flex items-center justify-center w-full h-full pt-1 transform scale-y-110">{displayName[1]}</span>
+                                                        <span className="flex items-center justify-center w-full h-full pb-1 transform scale-y-110">{displayName[2]}</span>
+                                                        <span className="flex items-center justify-center w-full h-full pb-1 transform scale-y-110">{displayName[3]}</span>
                                                     </div>
                                                 );
                                             } else {
