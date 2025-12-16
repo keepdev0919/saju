@@ -7,6 +7,8 @@ import { getPayments, getPaymentDetail, refundPayment, getPaymentStats, getDashb
 import { getUsers, getUserDetail } from '../controllers/adminUserController.js';
 import { adminAuth } from '../middleware/adminAuth.js';
 
+import { updateResult } from '../controllers/adminResultController.js';
+
 const router = Router();
 
 // 공개 라우트
@@ -27,5 +29,8 @@ router.post('/payments/:id/refund', adminAuth, refundPayment);
 // 회원 관리 라우트 (인증 필요)
 router.get('/users', adminAuth, getUsers);
 router.get('/users/:id', adminAuth, getUserDetail);
+
+// 사주 결과 수정 (관리자용)
+router.put('/results/:id', adminAuth, updateResult);
 
 export default router;
