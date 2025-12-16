@@ -13,7 +13,7 @@ const apiClient = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  timeout: 10000, // 10초 타임아웃
+  timeout: 60000, // 60초 타임아웃 (JSON 형식 상세 응답 대응)
 });
 
 /**
@@ -119,11 +119,19 @@ export const cancelPayment = async (cancelData) => {
 
 /**
  * 사주 계산
+ * 결제 후 실행되므로 OpenAI API 응답이 올 때까지 무조건 기다려야 함
+ * 타임아웃을 매우 길게 설정 (5분) 또는 제거
  * @param {Object} sajuData - 사주 계산 데이터
  * @returns {Promise} 사주 계산 결과
  */
 export const calculateSaju = async (sajuData) => {
-  const response = await apiClient.post('/saju/calculate', sajuData);
+  // 사주 계산만 별도 axios 인스턴스 사용 (타임아웃 5분)
+  const response = await axios.post(`${API_BASE_URL}/saju/calculate`, sajuData, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    timeout: 300000, // 5분 (300초) - OpenAI API 응답이 올 때까지 기다림
+  });
   return response.data;
 };
 

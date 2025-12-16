@@ -6,21 +6,28 @@
   "main": "src/index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "start": "node src/index.js"
+    "start": "node src/index.js",
+    "update-schema": "node scripts/update_schema.js",
+    "add-detailed-data": "node scripts/add_detailed_data_column.js"
   },
-  "keywords": ["saju", "fortune", "backend"],
+  "keywords": [
+    "saju",
+    "fortune",
+    "backend"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.18.2",
+    "axios": "^1.6.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "lunar-javascript": "^1.7.7",
     "mysql2": "^3.6.5",
-    "axios": "^1.6.2",
+    "openai": "^6.10.0",
     "puppeteer": "^24.15.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
   }
 }
-

@@ -326,17 +326,30 @@ const SajuApp = () => {
         error: err,
         message: err.message,
         response: err.response,
-        status: err.status
+        status: err.status,
+        code: err.code
       });
       
-      const errorMessage = err.message || err.response?.data?.error || '결제 후 처리에 실패했습니다.';
+      // 타임아웃 에러 구분
+      let errorMessage;
+      if (err.code === 'ECONNABORTED' || err.message?.includes('timeout')) {
+        errorMessage = '요청 시간이 초과되었습니다. 네트워크 상태를 확인하고 다시 시도해주세요.';
+      } else if (err.response?.data?.error) {
+        errorMessage = err.response.data.error;
+      } else if (err.message) {
+        errorMessage = err.message;
+      } else {
+        errorMessage = '결제 후 처리에 실패했습니다. 잠시 후 다시 시도해주세요.';
+      }
+      
       setError(errorMessage);
       setLoading(false);
+      setProgress(0);
       
-      // 에러 메시지를 3초간 표시한 후 결제 페이지로 이동
+      // 에러 메시지를 5초간 표시한 후 결제 페이지로 이동
       setTimeout(() => {
         setStep('payment');
-      }, 3000);
+      }, 5000);
     }
   };
 

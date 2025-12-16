@@ -4,38 +4,74 @@
  */
 import db from '../config/database.js';
 import { calculateSaju as callSajuAPI } from '../services/sajuService.js';
+import { interpretSajuWithAI } from '../services/aiService.js';
 
 /**
  * 사주 계산
- * 사주 API를 호출하여 사주를 계산하고 결과를 저장
+ * lunar-javascript로 사주를 계산하고 AI로 해석 생성
  */
 export async function calculateSaju(req, res) {
   try {
     const { userId, birthDate, birthTime, calendarType } = req.body;
 
     if (!userId || !birthDate) {
-      return res.status(400).json({ 
-        error: '사용자 ID와 생년월일이 필요합니다.' 
+      return res.status(400).json({
+        error: '사용자 ID와 생년월일이 필요합니다.'
       });
     }
 
-    // 사주 API 호출
+    // 사용자 정보 조회
+    const [users] = await db.execute(
+      `SELECT name, gender, phone FROM users WHERE id = ?`,
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    const user = users[0];
+
+    console.log('🔮 사주 계산 시작:', {
+      userId,
+      name: user.name,
+      birthDate,
+      birthTime,
+      calendarType
+    });
+
+    // 1단계: lunar-javascript로 사주 계산
     const sajuData = await callSajuAPI({
       birthDate,
       birthTime,
       calendarType: calendarType || 'solar'
     });
 
-    // 사주 결과 해석 (간단한 로직, 추후 개선 필요)
-    const result = interpretSaju(sajuData);
+    console.log('✅ 사주 계산 완료:', {
+      year: `${sajuData.year.gan}${sajuData.year.ji}`,
+      month: `${sajuData.month.gan}${sajuData.month.ji}`,
+      day: `${sajuData.day.gan}${sajuData.day.ji}`,
+      hour: `${sajuData.hour.gan}${sajuData.hour.ji}`,
+      dayMaster: sajuData.dayMaster,
+      wuxing: sajuData.wuxing,
+      yongshen: sajuData.yongshen
+    });
+
+    // 2단계: AI로 해석 생성
+    const result = await interpretSajuWithAI(sajuData, {
+      name: user.name,
+      gender: user.gender,
+      birthDate,
+      birthTime
+    });
 
     // 결과 저장
     const [resultData] = await db.execute(
-      `INSERT INTO saju_results 
-       (user_id, saju_data, overall_fortune, wealth_fortune, love_fortune, 
-        career_fortune, health_fortune, overall_score, wealth_score, 
-        love_score, career_score, health_score, oheng_data)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO saju_results
+       (user_id, saju_data, overall_fortune, wealth_fortune, love_fortune,
+        career_fortune, health_fortune, overall_score, wealth_score,
+        love_score, career_score, health_score, oheng_data, ai_raw_response, detailed_data)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         JSON.stringify(sajuData),
@@ -49,9 +85,13 @@ export async function calculateSaju(req, res) {
         result.scores.love,
         result.scores.career,
         result.scores.health,
-        JSON.stringify(result.oheng)
+        JSON.stringify(result.oheng),
+        result.aiRawResponse || null,  // 원본 응답 저장
+        result.detailedData ? JSON.stringify(result.detailedData) : null  // 상세 데이터 저장
       ]
     );
+
+    console.log('✅ 사주 결과 저장 완료 (ID:', resultData.insertId, ')');
 
     res.json({
       success: true,
@@ -60,10 +100,10 @@ export async function calculateSaju(req, res) {
       message: '사주 계산이 완료되었습니다.'
     });
   } catch (error) {
-    console.error('사주 계산 오류:', error);
-    res.status(500).json({ 
+    console.error('❌ 사주 계산 오류:', error);
+    res.status(500).json({
       error: '사주 계산에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }
@@ -82,7 +122,7 @@ export async function getSajuResult(req, res) {
 
     // 사용자 조회
     const [users] = await db.execute(
-      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type 
+      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type
        FROM users WHERE access_token = ?`,
       [token]
     );
@@ -149,49 +189,16 @@ export async function getSajuResult(req, res) {
           health: result.health_score
         },
         oheng: parseJsonData(result.oheng_data, {}),
-        sajuData: parseJsonData(result.saju_data, {})
+        sajuData: parseJsonData(result.saju_data, {}),
+        aiRawResponse: result.ai_raw_response || null,  // 원본 응답 포함
+        detailedData: parseJsonData(result.detailed_data, null)  // 상세 데이터 포함
       }
     });
   } catch (error) {
     console.error('사주 결과 조회 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: '사주 결과 조회에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }
-
-/**
- * 사주 해석 함수 (임시 로직)
- * 실제로는 더 정교한 사주 해석 로직이 필요
- */
-function interpretSaju(sajuData) {
-  // 임시로 랜덤 점수와 텍스트 생성
-  // 실제로는 사주 데이터를 분석하여 해석해야 함
-  const scores = {
-    overall: Math.floor(Math.random() * 30) + 70,
-    wealth: Math.floor(Math.random() * 30) + 70,
-    love: Math.floor(Math.random() * 30) + 70,
-    career: Math.floor(Math.random() * 30) + 70,
-    health: Math.floor(Math.random() * 30) + 70
-  };
-
-  const oheng = {
-    목: Math.floor(Math.random() * 30) + 10,
-    화: Math.floor(Math.random() * 30) + 10,
-    토: Math.floor(Math.random() * 30) + 10,
-    금: Math.floor(Math.random() * 30) + 10,
-    수: Math.floor(Math.random() * 30) + 10
-  };
-
-  return {
-    overall: '2026년은 당신에게 변화의 해가 될 것입니다. 인내심을 갖고 기다리시면 좋은 결과가 있을 것입니다.',
-    wealth: '상반기에는 신중하게 투자하시고, 하반기부터 큰 수익을 기대할 수 있습니다.',
-    love: '새로운 인연이 찾아올 가능성이 높습니다. 특히 5월과 9월에 주목하세요.',
-    career: '현재 위치에서 실력을 쌓는 것이 좋습니다. 하반기에 승진이나 이직의 기회가 있을 수 있습니다.',
-    health: '과로를 피하고 충분한 휴식을 취하세요. 특히 소화기 계통을 주의하세요.',
-    scores,
-    oheng
-  };
-}
-

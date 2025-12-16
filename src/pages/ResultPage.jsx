@@ -46,6 +46,10 @@ const ResultPage = () => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
+  
+  // 애니메이션 상태
+  const [mounted, setMounted] = useState(false);
+  const [scoreAnimated, setScoreAnimated] = useState(0);
 
   /**
    * 토큰으로 사주 결과 조회
@@ -69,6 +73,8 @@ const ResultPage = () => {
         }
         
         setLoading(false);
+        // 결과 로드 후 애니메이션 시작
+        setTimeout(() => setMounted(true), 100);
       } catch (err) {
         // 결과가 없으면 간편 인증 페이지 표시
         if (err.status === 404) {
@@ -83,6 +89,34 @@ const ResultPage = () => {
 
     fetchResult();
   }, [token]);
+
+  /**
+   * 점수 카운트업 애니메이션
+   */
+  useEffect(() => {
+    if (mounted && sajuResult) {
+      const targetScore = sajuResult.scores?.overall || 82;
+      let start = 0;
+      const duration = 1500;
+      const startTime = performance.now();
+
+      const animate = (currentTime) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease out quart
+        const ease = 1 - Math.pow(1 - progress, 4);
+        
+        setScoreAnimated(Math.floor(start + (targetScore - start) * ease));
+
+        if (progress < 1) {
+          requestAnimationFrame(animate);
+        }
+      };
+
+      requestAnimationFrame(animate);
+    }
+  }, [mounted, sajuResult]);
 
   /**
    * 간편 인증 처리
@@ -518,7 +552,7 @@ const ResultPage = () => {
       
       <div className="p-6 pb-48 space-y-8">
         {/* 기본 정보 요약 */}
-        <div className="text-center space-y-3 pb-6 border-b border-white/10">
+        <div className={`text-center space-y-3 pb-6 border-b border-white/10 transition-all duration-700 transform ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           {userInfo && (
             <>
               <p className="text-slate-400 font-medium text-sm">
@@ -529,17 +563,17 @@ const ResultPage = () => {
               </h1>
             </>
           )}
-          <div className="inline-block bg-gradient-to-r from-pink-500 to-rose-500 text-white px-5 py-2 rounded-full text-sm font-bold mt-3 shadow-lg shadow-pink-500/30">
+          <div className="inline-block bg-gradient-to-r from-pink-500 to-rose-500 text-white px-5 py-2 rounded-full text-sm font-bold mt-3 shadow-lg shadow-pink-500/30 animate-pulse">
             ✨ 총평: {sajuResult.overallFortune || '대기만성형 (大器晩成)'}
           </div>
         </div>
         
         {/* 2026년 종합 점수 */}
-        <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+        <div className={`bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 transition-all duration-700 delay-100 transform ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h3 className="text-center text-slate-400 text-sm mb-3">2026년 종합운세</h3>
           <div className="flex items-center justify-center gap-2">
-            <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-              {sajuResult.scores?.overall || 82}
+            <span className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 transition-all duration-300">
+              {scoreAnimated}
             </span>
             <span className="text-2xl text-slate-400">/100</span>
           </div>
@@ -547,18 +581,18 @@ const ResultPage = () => {
         </div>
         
         {/* 오행 그래프 */}
-        <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+        <div className={`bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 transition-all duration-700 delay-200 transform ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
           <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
             <RefreshCw size={18} className="text-slate-400"/> 오행 분석
           </h3>
           <div className="space-y-4">
-            {ohengData.map((el) => (
+            {ohengData.map((el, idx) => (
               <div key={el.label} className="flex items-center gap-3">
                 <span className="w-12 text-sm font-bold text-slate-300">{el.label}</span>
                 <div className="flex-1 bg-white/10 rounded-full h-4 overflow-hidden">
                   <div 
-                    className={`h-full ${el.color} rounded-full`} 
-                    style={{ width: `${el.val}%` }}
+                    className={`h-full ${el.color} rounded-full transition-all duration-1000 ease-out`} 
+                    style={{ width: mounted ? `${el.val}%` : '0%', transitionDelay: `${idx * 100}ms` }}
                   ></div>
                 </div>
                 <span className="text-sm text-slate-400 w-10 text-right font-mono">{el.val}%</span>
@@ -569,14 +603,15 @@ const ResultPage = () => {
         
         {/* 상세 운세 카드들 */}
         <div className="space-y-4">
-          {fortuneCards.map((card) => (
+          {fortuneCards.map((card, idx) => (
             <div 
               key={card.title} 
-              className="bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10"
+              className={`bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10 transition-all duration-700 transform ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}
+              style={{ transitionDelay: `${300 + (idx * 100)}ms` }}
             >
               <div className="flex items-center justify-between mb-3">
                 <h4 className="font-bold text-lg text-white flex items-center gap-2">
-                  <span className="text-2xl">{card.emoji}</span> {card.title}
+                  <span className="text-2xl animate-bounce" style={{ animationDuration: '2s', animationDelay: `${idx * 0.2}s` }}>{card.emoji}</span> {card.title}
                 </h4>
                 <div className="flex items-center gap-1">
                   <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{card.score}</span>
@@ -585,8 +620,8 @@ const ResultPage = () => {
               </div>
               <div className="w-full bg-white/10 rounded-full h-2 mb-3 overflow-hidden">
                 <div 
-                  className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full"
-                  style={{ width: `${card.score}%` }}
+                  className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: mounted ? `${card.score}%` : '0%', transitionDelay: `${500 + (idx * 100)}ms` }}
                 ></div>
               </div>
               <p className="text-slate-300 text-sm leading-relaxed">
@@ -595,6 +630,361 @@ const ResultPage = () => {
             </div>
           ))}
         </div>
+
+        {/* 상세 해석 섹션 (detailedData가 있을 때만 표시) */}
+        {sajuResult.detailedData && (
+          <div className={`space-y-6 transition-all duration-1000 delay-700 transform ${mounted ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+            {/* 성격 특성 */}
+            {sajuResult.detailedData.personality && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <h3 className="font-bold text-xl mb-4 text-white">성격 특성</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-4">
+                  {sajuResult.detailedData.personality.description}
+                </p>
+                {sajuResult.detailedData.personality.strengths && sajuResult.detailedData.personality.strengths.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-slate-400 text-xs mb-2">강점</p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm">
+                      {sajuResult.detailedData.personality.strengths.map((strength, idx) => (
+                        <li key={idx}>{strength}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {sajuResult.detailedData.personality.weaknesses && sajuResult.detailedData.personality.weaknesses.length > 0 && (
+                  <div>
+                    <p className="text-slate-400 text-xs mb-2">약점</p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm">
+                      {sajuResult.detailedData.personality.weaknesses.map((weakness, idx) => (
+                        <li key={idx}>{weakness}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 사업 */}
+            {sajuResult.detailedData.business && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <h3 className="font-bold text-xl mb-4 text-white">사업</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  {sajuResult.detailedData.business.advice}
+                </p>
+                {sajuResult.detailedData.business.suitableFields && sajuResult.detailedData.business.suitableFields.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-slate-400 text-xs mb-2">적합한 분야</p>
+                    <div className="flex flex-wrap gap-2">
+                      {sajuResult.detailedData.business.suitableFields.map((field, idx) => (
+                        <span key={idx} className="bg-pink-500/20 text-pink-300 px-3 py-1 rounded-full text-xs">
+                          {field}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {sajuResult.detailedData.business.timing && (
+                  <p className="text-slate-400 text-xs">
+                    <span className="font-semibold">사업운 시기:</span> {sajuResult.detailedData.business.timing}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* 재산 */}
+            {sajuResult.detailedData.wealth && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <h3 className="font-bold text-xl mb-4 text-white">재산</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  {sajuResult.detailedData.wealth.description}
+                </p>
+                <div className="space-y-2 text-sm">
+                  {sajuResult.detailedData.wealth.income && (
+                    <p className="text-slate-300"><span className="text-slate-400">수입:</span> {sajuResult.detailedData.wealth.income}</p>
+                  )}
+                  {sajuResult.detailedData.wealth.expense && (
+                    <p className="text-slate-300"><span className="text-slate-400">지출:</span> {sajuResult.detailedData.wealth.expense}</p>
+                  )}
+                  {sajuResult.detailedData.wealth.investment && (
+                    <p className="text-slate-300"><span className="text-slate-400">투자:</span> {sajuResult.detailedData.wealth.investment}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 결혼 */}
+            {sajuResult.detailedData.marriage && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <h3 className="font-bold text-xl mb-4 text-white">결혼</h3>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  {sajuResult.detailedData.marriage.description}
+                </p>
+                <div className="space-y-2 text-sm">
+                  {sajuResult.detailedData.marriage.timing && (
+                    <p className="text-slate-300"><span className="text-slate-400">결혼 적기:</span> {sajuResult.detailedData.marriage.timing}</p>
+                  )}
+                  {sajuResult.detailedData.marriage.partnerType && (
+                    <p className="text-slate-300"><span className="text-slate-400">적합한 배우자:</span> {sajuResult.detailedData.marriage.partnerType}</p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* 향후 예측 */}
+            {sajuResult.detailedData.future && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <h3 className="font-bold text-xl mb-4 text-white">향후 예측</h3>
+                
+                {/* 2025년 */}
+                {sajuResult.detailedData.future['2025'] && (
+                  <div className="mb-6 pb-6 border-b border-white/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🔮</span>
+                      <h4 className="font-bold text-lg text-white">향후 1년 예측 (2025년)</h4>
+                    </div>
+                    {sajuResult.detailedData.future['2025'].energy && (
+                      <p className="text-slate-400 text-xs mb-2">{sajuResult.detailedData.future['2025'].energy}</p>
+                    )}
+                    <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                      {sajuResult.detailedData.future['2025'].description}
+                    </p>
+                    {sajuResult.detailedData.future['2025'].positive && sajuResult.detailedData.future['2025'].positive.length > 0 && (
+                      <div className="mb-2">
+                        {sajuResult.detailedData.future['2025'].positive.map((item, idx) => (
+                          <p key={idx} className="text-green-300 text-xs flex items-center gap-1 mb-1">
+                            <span>✓</span> {item}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {sajuResult.detailedData.future['2025'].warning && sajuResult.detailedData.future['2025'].warning.length > 0 && (
+                      <div>
+                        {sajuResult.detailedData.future['2025'].warning.map((item, idx) => (
+                          <p key={idx} className="text-yellow-300 text-xs flex items-center gap-1 mb-1">
+                            <span>⚠</span> {item}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2026년 */}
+                {sajuResult.detailedData.future['2026'] && (
+                  <div className="mb-6 pb-6 border-b border-white/10">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-2xl">🌅</span>
+                      <h4 className="font-bold text-lg text-white">올해 예측 (2026년)</h4>
+                    </div>
+                    {sajuResult.detailedData.future['2026'].energy && (
+                      <p className="text-slate-400 text-xs mb-2">{sajuResult.detailedData.future['2026'].energy}</p>
+                    )}
+                    <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                      {sajuResult.detailedData.future['2026'].description}
+                    </p>
+                    {sajuResult.detailedData.future['2026'].positive && sajuResult.detailedData.future['2026'].positive.length > 0 && (
+                      <div className="mb-2">
+                        {sajuResult.detailedData.future['2026'].positive.map((item, idx) => (
+                          <p key={idx} className="text-green-300 text-xs flex items-center gap-1 mb-1">
+                            <span>✓</span> {item}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                    {sajuResult.detailedData.future['2026'].warning && sajuResult.detailedData.future['2026'].warning.length > 0 && (
+                      <div>
+                        {sajuResult.detailedData.future['2026'].warning.map((item, idx) => (
+                          <p key={idx} className="text-yellow-300 text-xs flex items-center gap-1 mb-1">
+                            <span>⚠</span> {item}
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 향후 3-5년 */}
+                {sajuResult.detailedData.future.next3to5Years && sajuResult.detailedData.future.next3to5Years.length > 0 && (
+                  <div className="mb-6">
+                    <h4 className="font-bold text-lg text-white mb-4">향후 3~5년간의 동향</h4>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="border-b border-white/10">
+                            <th className="text-left py-2 text-slate-400">연도</th>
+                            <th className="text-left py-2 text-slate-400">주요 기운</th>
+                            <th className="text-left py-2 text-slate-400">주요 운세 포인트</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {sajuResult.detailedData.future.next3to5Years.map((year, idx) => (
+                            <tr key={idx} className="border-b border-white/5">
+                              <td className="py-3 text-white font-semibold">{year.year}</td>
+                              <td className="py-3 text-slate-300">{year.energy}</td>
+                              <td className="py-3 text-slate-300">
+                                {year.keyPoints && year.keyPoints.join(', ')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+                {/* 평생 운명 예측 */}
+                {sajuResult.detailedData.future.lifelong && (
+                  <div>
+                    <h4 className="font-bold text-lg text-white mb-3">평생 운명 예측</h4>
+                    <p className="text-slate-300 text-sm leading-relaxed">
+                      {sajuResult.detailedData.future.lifelong}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 재난 */}
+            {sajuResult.detailedData.disasters && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">⚡</span>
+                  <h3 className="font-bold text-xl text-white">일생에 닥칠 재난</h3>
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  {sajuResult.detailedData.disasters.description}
+                </p>
+                {sajuResult.detailedData.disasters.items && sajuResult.detailedData.disasters.items.length > 0 && (
+                  <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm">
+                    {sajuResult.detailedData.disasters.items.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* 복 */}
+            {sajuResult.detailedData.blessings && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🍀</span>
+                  <h3 className="font-bold text-xl text-white">인생에서 만나게 될 복</h3>
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                  {sajuResult.detailedData.blessings.description}
+                </p>
+                {sajuResult.detailedData.blessings.items && sajuResult.detailedData.blessings.items.length > 0 && (
+                  <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm">
+                    {sajuResult.detailedData.blessings.items.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
+
+            {/* 음식 */}
+            {sajuResult.detailedData.food && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🍲</span>
+                  <h3 className="font-bold text-xl text-white">몸에 나쁜 음식 / 좋은 음식 (오행 기준)</h3>
+                </div>
+                {sajuResult.detailedData.food.avoid && sajuResult.detailedData.food.avoid.length > 0 && (
+                  <div className="mb-4">
+                    <p className="text-red-300 text-sm font-semibold mb-2">피해야 할 음식</p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm">
+                      {sajuResult.detailedData.food.avoid.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {sajuResult.detailedData.food.recommend && sajuResult.detailedData.food.recommend.length > 0 && (
+                  <div>
+                    <p className="text-green-300 text-sm font-semibold mb-2">좋은 음식</p>
+                    <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm">
+                      {sajuResult.detailedData.food.recommend.map((item, idx) => (
+                        <li key={idx}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 방향 */}
+            {sajuResult.detailedData.direction && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🧭</span>
+                  <h3 className="font-bold text-xl text-white">좋은 방향</h3>
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  <span className="font-semibold text-white">{sajuResult.detailedData.direction.good}</span> {sajuResult.detailedData.direction.description}
+                </p>
+              </div>
+            )}
+
+            {/* 색 */}
+            {sajuResult.detailedData.color && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🎨</span>
+                  <h3 className="font-bold text-xl text-white">좋은 색</h3>
+                </div>
+                {sajuResult.detailedData.color.good && sajuResult.detailedData.color.good.length > 0 && (
+                  <div className="mb-3">
+                    <p className="text-slate-300 text-sm mb-2">
+                      {sajuResult.detailedData.color.good.join(', ')} 계열이 좋습니다.
+                    </p>
+                  </div>
+                )}
+                {sajuResult.detailedData.color.avoid && sajuResult.detailedData.color.avoid.length > 0 && (
+                  <p className="text-slate-400 text-sm">
+                    너무 강한 {sajuResult.detailedData.color.avoid.join(', ')}은 피하세요.
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* 장소 */}
+            {sajuResult.detailedData.place && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🏔️</span>
+                  <h3 className="font-bold text-xl text-white">길한 장소</h3>
+                </div>
+                {sajuResult.detailedData.place.good && sajuResult.detailedData.place.good.length > 0 && (
+                  <ul className="list-disc list-inside space-y-1 text-slate-300 text-sm mb-3">
+                    {sajuResult.detailedData.place.good.map((item, idx) => (
+                      <li key={idx}>{item}</li>
+                    ))}
+                  </ul>
+                )}
+                {sajuResult.detailedData.place.description && (
+                  <p className="text-slate-300 text-sm leading-relaxed">
+                    {sajuResult.detailedData.place.description}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {/* 종합 의견 */}
+            {sajuResult.detailedData.overall && (
+              <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-2xl">🌈</span>
+                  <h3 className="font-bold text-xl text-white">종합 의견</h3>
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  {sajuResult.detailedData.overall.summary}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       
       {/* 하단 PDF 다운로드 영역 */}
