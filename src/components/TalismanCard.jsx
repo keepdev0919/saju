@@ -296,18 +296,20 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
                                     {info.title}
                                 </h3>
 
-                                {/* Hanja Subtitle - Authentic Premium Feel */}
-                                <p className="text-[12px] text-amber-200/60 tracking-[0.4em] font-serif font-light"
-                                    style={{ textShadow: '0 1px 2px rgba(0,0,0,0.8)' }}>
+                                {/* Hanja Subtitle - Metallic Gold Gradient */}
+                                <p className="text-[14px] font-serif font-bold tracking-[0.4em] bg-clip-text text-transparent bg-gradient-to-b from-[#fbf8cc] via-[#f59e0b] to-[#b45309]"
+                                    style={{
+                                        filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.8))'
+                                    }}>
                                     {info.hanja}
                                 </p>
                             </div>
 
-                            {/* 4. 도장 (핵심) */}
-                            <div className="absolute bottom-5 right-5 z-10 opacity-90 scale-100 mix-blend-multiply transform rotate-[-2deg]">
-                                <div className="relative border-[3px] border-red-700 bg-red-50/10 shadow-sm w-20 h-20 flex items-center justify-center">
-                                    <div className="absolute inset-1 border border-red-700/50" />
-                                    <div className="w-full h-full flex flex-col items-center justify-center text-red-700 font-serif font-black leading-none p-1 text-3xl" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
+                            {/* 4. 도장 (핵심) - Hard Light Blend for Natural Integration */}
+                            <div className="absolute bottom-5 right-5 z-10 opacity-90 scale-100 mix-blend-hard-light transform rotate-[-2deg]">
+                                <div className="relative border-[3px] border-red-600 bg-red-800/80 shadow-sm w-20 h-20 flex items-center justify-center">
+                                    <div className="absolute inset-1 border border-red-900/30" />
+                                    <div className="w-full h-full flex flex-col items-center justify-center text-red-100 font-serif font-black leading-none p-1 text-3xl" style={{ fontFamily: '"Gungsuh", "Batang", serif', textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
                                         {(() => {
                                             const rawName = isPurchased ? stampName : '天命錄';
                                             const isHangul = /[ㄱ-ㅎ|ㅏ-ㅣ|가-힣]/.test(rawName);
