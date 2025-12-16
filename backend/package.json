@@ -8,7 +8,8 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "update-schema": "node scripts/update_schema.js",
-    "add-detailed-data": "node scripts/add_detailed_data_column.js"
+    "add-detailed-data": "node scripts/add_detailed_data_column.js",
+    "create-admin": "node scripts/createAdmin.js"
   },
   "keywords": [
     "saju",
