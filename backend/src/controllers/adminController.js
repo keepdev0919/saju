@@ -148,7 +148,7 @@ export async function updateMe(req, res) {
     }
 
     // 업데이트 쿼리 구성
-    let updateQuery = `UPDATE admins SET updated_at = NOW()`;
+    let updateQuery = `UPDATE admins SET id = id`; // updated_at 컬럼이 없으므로 id=id (No-op)
     let queryParams = [];
     let logActions = [];
 
@@ -214,7 +214,8 @@ export async function updateMe(req, res) {
     console.error('❌ 관리자 정보 수정 오류:', error);
     res.status(500).json({
       success: false,
-      error: '관리자 정보 수정 중 오류가 발생했습니다.'
+      error: '관리자 정보 수정 중 오류가 발생했습니다.',
+      details: error.message // 디버깅용
     });
   }
 }
