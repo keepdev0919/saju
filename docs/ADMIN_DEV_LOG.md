@@ -43,6 +43,24 @@
     - 실시간 매출, 결제 건수, 평균 객단가(Total Revenue / Count) 표시.
     - **최근 활동 피드**: Audit Log를 연동하여 "누가 들어왔고, 누가 환불했는지" 실시간 중계.
 
+### Phase 5: 사주 결과 콘텐츠 관리 (Content Management)
+- **개별 결과 수정 (Result Editor)**:
+    - AI가 생성한 결과(총평, 재물운 등)가 마음에 들지 않을 때, 관리자가 직접 수정할 수 있는 기능.
+    - **UI**: 회원 상세(User Detail) 페이지 내 팝업 모달 형태.
+    - **목적**: 고객 컴플레인 대응 및 오타/오류 즉각 수정(AS 차원).
+52: 
+53: ### Phase 6: 안정성 및 성능 감사 (Stability & Performance Audit)
+54: - **좀비 회원 박멸 (Soft Delete Enforcement)**:
+55:     - 탈퇴한 회원(`users.deleted_at IS NOT NULL`)이 결제나 조회를 시도하면 즉시 차단.
+56:     - 관리자 페이지에서는 '탈퇴(Deleted)' 배지로 상태 식별 가능.
+57: - **IDOR 보안 패치 (Security)**:
+58:     - 남의 사주 결과를 훔쳐보지 못하게, 단순 `userId` 대신 암호화된 `accessToken` 필수화.
+59: - **DB 성능 최적화 (Indexing)**:
+60:     - `name` (이름 검색) 및 `created_at` (최신순 정렬) 인덱스 추가.
+61:     - 대규모 회원 조회 시 Full Table Scan 방지 (속도 개선).
+62: - **문서화 (Documentation)**:
+63:     - 주요 비즈니스 로직(결제, 사주 계산, 사용자 관리)에 JSDoc 주석 완비.
+
 ---
 
 ## 3. 기술 스택 및 구조 (Tech Stack)
@@ -53,6 +71,7 @@
 - **Controllers**:
     - `adminController.js`: 인증 및 프로필.
     - `adminPaymentController.js`: 결제 통계 및 환불 로직.
+    - `adminResultController.js`: 사주 결과 수정 로직 (New).
 
 ### Frontend (React + Vite)
 - **UI Library**: TailwindCSS + Lucide Icons (직관적인 아이콘 사용).
@@ -60,6 +79,7 @@
 - **Components**:
     - `AdminDashboard`: 실시간 활동 피드 포함.
     - `AdminProfile`: 보안 설정(비번 변경 등).
+    - `ResultEditorModal`: 결과 텍스트 수정 모달 (New).
 
 ---
 

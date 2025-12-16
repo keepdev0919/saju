@@ -112,7 +112,15 @@ export const getPaymentStats = async () => {
     const response = await adminApiClient.get('/admin/payments/stats');
     return response.data;
 };
-
+/**
+ * 사주 결과 내용 수정 (Option A)
+ * @param {number} id - Result ID
+ * @param {Object} data - { overall, wealth, love, career, health }
+ */
+export const updateResult = async (id, data) => {
+    const response = await adminAxios.put(`/results/${id}`, data);
+    return response.data;
+};
 /**
  * 회원 목록 조회
  * @param {Object} params - { page, limit, search }

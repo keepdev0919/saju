@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getUsers, getUserDetail } from '../utils/adminApi';
-import { Search, Users, FileText, CreditCard, X } from 'lucide-react';
+import { Search, Users, FileText, CreditCard, X, Edit2 } from 'lucide-react';
+import ResultEditorModal from '../components/admin/ResultEditorModal';
 
 const AdminUsers = () => {
     const [users, setUsers] = useState([]);
@@ -11,6 +12,7 @@ const AdminUsers = () => {
     const [totalPages, setTotalPages] = useState(1);
     const [selectedUser, setSelectedUser] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
+    const [editTarget, setEditTarget] = useState(null); // Result to edit
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -49,6 +51,17 @@ const AdminUsers = () => {
 
     const closeUserDetail = () => {
         setSelectedUser(null);
+    };
+
+    const handleEditResult = (result) => {
+        setEditTarget(result);
+    };
+
+    const handleUpdateSuccess = () => {
+        // Refresh detail view
+        if (selectedUser) {
+            openUserDetail(selectedUser.user.id);
+        }
     };
 
     return (
@@ -100,8 +113,15 @@ const AdminUsers = () => {
                                 </tr>
                             ) : (
                                 users.map((user) => (
-                                    <tr key={user.id} className="hover:bg-gray-50 transition-colors">
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{user.name}</td>
+                                    <tr key={user.id} className={`${user.deleted_at ? 'bg-red-50 hover:bg-red-100' : 'hover:bg-gray-50'} transition-colors`}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                            {user.name}
+                                            {user.deleted_at && (
+                                                <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
+                                                    탈퇴
+                                                </span>
+                                            )}
+                                        </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {user.birth_date} ({user.calendar_type === 'solar' ? '양력' : '음력'})
@@ -233,16 +253,25 @@ const AdminUsers = () => {
                                             <tr>
                                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">일시</th>
                                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">요약</th>
+                                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">관리</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
                                             {selectedUser.sajuResults.length === 0 ? (
-                                                <tr><td colSpan="2" className="p-4 text-center text-sm text-gray-500">이력이 없습니다.</td></tr>
+                                                <tr><td colSpan="3" className="p-4 text-center text-sm text-gray-500">이력이 없습니다.</td></tr>
                                             ) : (
                                                 selectedUser.sajuResults.map(result => (
                                                     <tr key={result.id}>
                                                         <td className="px-4 py-2 text-sm text-gray-500">{new Date(result.created_at).toLocaleDateString()}</td>
                                                         <td className="px-4 py-2 text-sm text-gray-900 truncate max-w-xs">{result.request_summary || '전체 풀이'}</td>
+                                                        <td className="px-4 py-2 text-sm text-right">
+                                                            <button
+                                                                onClick={() => handleEditResult(result)}
+                                                                className="text-blue-600 hover:text-blue-800 flex items-center justify-end gap-1 ml-auto text-xs font-bold border border-blue-200 bg-blue-50 px-2 py-1 rounded"
+                                                            >
+                                                                <Edit2 size={12} /> 수정
+                                                            </button>
+                                                        </td>
                                                     </tr>
                                                 ))
                                             )}
@@ -277,7 +306,7 @@ const AdminUsers = () => {
                                                         <td className="px-4 py-2 text-sm text-gray-900">₩{parseInt(payment.amount).toLocaleString()}</td>
                                                         <td className="px-4 py-2 text-sm">
                                                             <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${payment.status === 'paid' ? 'bg-green-100 text-green-800' :
-                                                                    payment.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
+                                                                payment.status === 'cancelled' ? 'bg-red-100 text-red-800' : 'bg-gray-100 text-gray-800'
                                                                 }`}>
                                                                 {payment.status === 'paid' ? '결제완료' : payment.status === 'cancelled' ? '취소됨' : payment.status}
                                                             </span>
@@ -302,6 +331,15 @@ const AdminUsers = () => {
                         </div>
                     </div>
                 </div>
+            )}
+
+            {/* Result Edit Modal */}
+            {editTarget && (
+                <ResultEditorModal
+                    result={editTarget}
+                    onClose={() => setEditTarget(null)}
+                    onUpdateSuccess={handleUpdateSuccess}
+                />
             )}
         </div>
     );

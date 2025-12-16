@@ -23,6 +23,7 @@ function App() {
       <Route path="/" element={<SajuApp />} />
 
       {/* URL 파라미터로 결과 조회: /result/:token */}
+      <Route path="/result" element={<ResultPage />} />
       <Route path="/result/:token" element={<ResultPage />} />
 
       {/* 관리자 페이지 */}

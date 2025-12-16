@@ -6,6 +6,7 @@
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -16,6 +17,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -25,6 +27,7 @@
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -42,6 +45,7 @@
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -52,6 +56,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -79,14 +84,37 @@
 }
 
 /* 순차적 딜레이 */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
-.delay-600 { animation-delay: 600ms; }
-.delay-700 { animation-delay: 700ms; }
-.delay-800 { animation-delay: 800ms; }
+.delay-100 {
+  animation-delay: 100ms;
+}
+
+.delay-200 {
+  animation-delay: 200ms;
+}
+
+.delay-300 {
+  animation-delay: 300ms;
+}
+
+.delay-400 {
+  animation-delay: 400ms;
+}
+
+.delay-500 {
+  animation-delay: 500ms;
+}
+
+.delay-600 {
+  animation-delay: 600ms;
+}
+
+.delay-700 {
+  animation-delay: 700ms;
+}
+
+.delay-800 {
+  animation-delay: 800ms;
+}
 
 /* 초기 상태 (애니메이션 전) */
 .opacity-0-init {
@@ -95,62 +123,80 @@
 
 /* 쉬머 효과 */
 .shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
 }
 
 /* 몽환적인 배경 애니메이션 */
 @keyframes float-slow {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   25% {
     transform: translate(10px, -20px) scale(1.05);
   }
+
   50% {
     transform: translate(-5px, 10px) scale(0.95);
   }
+
   75% {
     transform: translate(-15px, -10px) scale(1.02);
   }
 }
 
 @keyframes float-medium {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0) scale(1);
   }
+
   33% {
     transform: translate(-20px, 15px) scale(1.1);
   }
+
   66% {
     transform: translate(15px, -25px) scale(0.9);
   }
 }
 
 @keyframes float-fast {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: translate(0, 0);
   }
+
   50% {
     transform: translate(25px, -15px);
   }
 }
 
 @keyframes twinkle {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.3;
   }
+
   50% {
     opacity: 0.8;
   }
 }
 
 @keyframes pulse-glow {
-  0%, 100% {
+
+  0%,
+  100% {
     opacity: 0.4;
     transform: scale(1);
   }
+
   50% {
     opacity: 0.7;
     transform: scale(1.2);
@@ -224,18 +270,77 @@
   animation: twinkle 3s ease-in-out infinite;
 }
 
-.mystical-bg .star:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
-.mystical-bg .star:nth-child(2) { top: 20%; left: 80%; animation-delay: 0.5s; }
-.mystical-bg .star:nth-child(3) { top: 30%; left: 40%; animation-delay: 1s; }
-.mystical-bg .star:nth-child(4) { top: 50%; left: 70%; animation-delay: 1.5s; }
-.mystical-bg .star:nth-child(5) { top: 60%; left: 10%; animation-delay: 2s; }
-.mystical-bg .star:nth-child(6) { top: 70%; left: 50%; animation-delay: 0.3s; }
-.mystical-bg .star:nth-child(7) { top: 80%; left: 30%; animation-delay: 0.8s; }
-.mystical-bg .star:nth-child(8) { top: 15%; left: 60%; animation-delay: 1.2s; }
-.mystical-bg .star:nth-child(9) { top: 45%; left: 25%; animation-delay: 1.8s; }
-.mystical-bg .star:nth-child(10) { top: 85%; left: 75%; animation-delay: 2.2s; }
-.mystical-bg .star:nth-child(11) { top: 25%; left: 15%; animation-delay: 0.7s; }
-.mystical-bg .star:nth-child(12) { top: 55%; left: 85%; animation-delay: 1.4s; }
+.mystical-bg .star:nth-child(1) {
+  top: 10%;
+  left: 20%;
+  animation-delay: 0s;
+}
+
+.mystical-bg .star:nth-child(2) {
+  top: 20%;
+  left: 80%;
+  animation-delay: 0.5s;
+}
+
+.mystical-bg .star:nth-child(3) {
+  top: 30%;
+  left: 40%;
+  animation-delay: 1s;
+}
+
+.mystical-bg .star:nth-child(4) {
+  top: 50%;
+  left: 70%;
+  animation-delay: 1.5s;
+}
+
+.mystical-bg .star:nth-child(5) {
+  top: 60%;
+  left: 10%;
+  animation-delay: 2s;
+}
+
+.mystical-bg .star:nth-child(6) {
+  top: 70%;
+  left: 50%;
+  animation-delay: 0.3s;
+}
+
+.mystical-bg .star:nth-child(7) {
+  top: 80%;
+  left: 30%;
+  animation-delay: 0.8s;
+}
+
+.mystical-bg .star:nth-child(8) {
+  top: 15%;
+  left: 60%;
+  animation-delay: 1.2s;
+}
+
+.mystical-bg .star:nth-child(9) {
+  top: 45%;
+  left: 25%;
+  animation-delay: 1.8s;
+}
+
+.mystical-bg .star:nth-child(10) {
+  top: 85%;
+  left: 75%;
+  animation-delay: 2.2s;
+}
+
+.mystical-bg .star:nth-child(11) {
+  top: 25%;
+  left: 15%;
+  animation-delay: 0.7s;
+}
+
+.mystical-bg .star:nth-child(12) {
+  top: 55%;
+  left: 85%;
+  animation-delay: 1.4s;
+}
 
 /* 기본 body 스타일 */
 body {
@@ -245,9 +350,18 @@ body {
   min-height: 100dvh;
 }
 
-/* 프린트 스타일 */
 @media print {
   body {
     background: white !important;
   }
+}
+
+/* 스크롤바 숨김 (가로 스크롤 탭용) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
