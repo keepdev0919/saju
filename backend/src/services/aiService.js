@@ -214,6 +214,57 @@ description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 �
     // 점수 생성 (오행 분포 기반)
     const scores = generateScoresFromWuxing(sajuData.wuxing);
 
+    // --- [NEW] Talisman Recommendation Logic (Expert System) ---
+    // Logic: Yongsin (Color) + Samhap (Ally Animal)
+    // 1. Get User's Year Zodiac (Ji)
+    const userYearJi = sajuData.year.ji; // e.g. '자'
+
+    // 2. Define Samhap (Three Harmony) Groups
+    const SAMHAP = {
+      '신': ['자', '진'], '자': ['신', '진'], '진': ['신', '자'], // Water Harmony
+      '인': ['오', '술'], '오': ['인', '술'], '술': ['인', '오'], // Fire Harmony
+      '해': ['묘', '미'], '묘': ['해', '미'], '미': ['해', '묘'], // Wood Harmony
+      '사': ['유', '축'], '유': ['사', '축'], '축': ['사', '유']  // Metal Harmony
+    };
+
+    const myAllies = SAMHAP[userYearJi] || []; // e.g. ['신', '진']
+
+    // [UPDATE] Randomize the allies to create 50:50 destiny variety
+    if (Math.random() < 0.5) {
+      myAllies.reverse();
+    }
+
+    // 3. Map Yongsin Element to Stems (Colors)
+    const STEM_GROUPS = {
+      '목': { yang: '갑', yin: '을' },
+      '화': { yang: '병', yin: '정' },
+      '토': { yang: '무', yin: '기' },
+      '금': { yang: '경', yin: '신' },
+      '수': { yang: '임', yin: '계' }
+    };
+
+    const targetElement = sajuData.yongshen.korean; // e.g. '화'
+    const targetStems = STEM_GROUPS[targetElement] || STEM_GROUPS['화']; // Default to Fire if error
+
+    // 4. Find the Perfect Match
+    let bestTalisman = null;
+    const YANG_BRANCHES = ['자', '인', '진', '오', '신', '술'];
+
+    for (const allyJi of myAllies) {
+      const isAllyYang = YANG_BRANCHES.includes(allyJi);
+      if (isAllyYang) {
+        bestTalisman = targetStems.yang + allyJi;
+        break;
+      } else {
+        bestTalisman = targetStems.yin + allyJi;
+        break;
+      }
+    }
+
+    if (!bestTalisman) bestTalisman = '갑자';
+
+    // -----------------------------------------------------------
+
     // 기존 형식과 호환되도록 변환 (하위 호환성 유지)
     return {
       overall: parsedData.overall?.summary || parsedData.personality?.description || '총운 정보를 준비 중입니다.',
@@ -223,6 +274,7 @@ description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 �
       health: parsedData.health?.description || '건강운 정보를 준비 중입니다.',
       scores,
       oheng: sajuData.wuxing,
+      talisman: { name: bestTalisman }, // [NEW] Expert System Talisman
       aiRawResponse: aiInterpretation,  // 원본 JSON 응답
       detailedData: parsedData  // 상세 데이터 전체 (새로운 필드)
     };
@@ -312,39 +364,39 @@ function generateFallbackInterpretation(sajuData) {
 
   const elementMessages = {
     목: {
-      overall: '기본값',
-      wealth: '기본값',
-      love: '기본값',
-      career: '기본값',
-      health: '기본값'
+      overall: '나무처럼 굳센 의지로 성장하는 운세입니다.',
+      wealth: '꾸준한 노력으로 재물이 쌓이는 시기입니다.',
+      love: '솔직하고 담백한 만남이 예상됩니다.',
+      career: '새로운 프로젝트에서 두각을 나타낼 수 있습니다.',
+      health: '간 건강과 근육 피로에 유의하세요.'
     },
     화: {
-      overall: '기본값',
-      wealth: '기본값',
-      love: '기본값',
-      career: '기본값',
-      health: '기본값'
+      overall: '불처럼 열정적인 에너지가 가득한 시기입니다.',
+      wealth: '공격적인 투자보다는 흐름을 타는 것이 좋습니다.',
+      love: '화려하고 열정적인 사랑이 찾아올 수 있습니다.',
+      career: '리더십을 발휘하여 팀을 이끄는 것이 좋습니다.',
+      health: '심혈관 계통과 스트레스 관리가 필요합니다.'
     },
     토: {
-      overall: '기본값',
-      wealth: '기본값',
-      love: '기본값',
-      career: '기본값',
-      health: '기본값'
+      overall: '흙처럼 포용력 있고 안정적인 운세입니다.',
+      wealth: '부동산이나 저축 등 안정 자산이 유리합니다.',
+      love: '믿음직하고 편안한 관계가 지속됩니다.',
+      career: '기반을 다지고 내실을 기하는 것이 중요합니다.',
+      health: '소화기 계통 건강을 챙기세요.'
     },
     금: {
-      overall: '기본값',
-      wealth: '기본값',
-      love: '기본값',
-      career: '기본값',
-      health: '기본값'
+      overall: '금처럼 단단하고 결단력 있는 기운입니다.',
+      wealth: '확실한 판단으로 이득을 볼 수 있습니다.',
+      love: '명확하고 깔끔한 관계 정립이 필요합니다.',
+      career: '원칙을 지키며 성과를 내는 시기입니다.',
+      health: '호흡기와 피부 관리에 신경 쓰세요.'
     },
     수: {
-      overall: '기본값',
-      wealth: '기본값',
-      love: '기본값',
-      career: '기본값',
-      health: '기본값'
+      overall: '물처럼 유연하고 지혜로운 흐름입니다.',
+      wealth: '자금 흐름이 원활하며 융통성이 필요합니다.',
+      love: '깊고 감성적인 사랑을 할 수 있습니다.',
+      career: '창의적인 아이디어가 빛을 발합니다.',
+      health: '신장과 혈액 순환에 유의하세요.'
     }
   };
 
@@ -357,7 +409,16 @@ function generateFallbackInterpretation(sajuData) {
     career: messages.career,
     health: messages.health,
     scores,
-    oheng: sajuData.wuxing
+    oheng: sajuData.wuxing,
+    // Fallback Talisman (Default specific to element generally)
+    talisman: { name: '갑자' }, // Default
+    detailedData: {
+      personality: { description: messages.overall },
+      wealth: { description: messages.wealth },
+      marriage: { description: messages.love },
+      business: { advice: messages.career },
+      health: { description: messages.health }
+    }
   };
 }
 
