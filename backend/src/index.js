@@ -9,6 +9,7 @@ import paymentRoutes from './routes/payment.js';
 import sajuRoutes from './routes/saju.js';
 import userRoutes from './routes/user.js';
 import pdfRoutes from './routes/pdf.js';
+import adminRoutes from './routes/admin.js';
 
 // 환경 변수 로드
 dotenv.config();
@@ -34,6 +35,7 @@ app.use('/api/payment', paymentRoutes);
 app.use('/api/saju', sajuRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/pdf', pdfRoutes);
+app.use('/api/admin', adminRoutes);
 
 // 404 핸들러
 app.use((req, res) => {
