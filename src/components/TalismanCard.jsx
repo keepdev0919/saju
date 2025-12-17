@@ -135,8 +135,33 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
 
         // 9. Im (Water) Series
         imin: '/images/talisman/imin.png',
+        imja: '/images/talisman/imja.png',
+        imsul: '/images/talisman/imsul.png',
+        imshin: '/images/talisman/imshin.png',
+        imo: '/images/talisman/imo.png',
+        imjin: '/images/talisman/imjin.png',
         // Korean Mappings (Im)
         '임인': '/images/talisman/imin.png',
+        '임자': '/images/talisman/imja.png',
+        '임술': '/images/talisman/imsul.png',
+        '임신': '/images/talisman/imshin.png',
+        '임오': '/images/talisman/imo.png',
+        '임진': '/images/talisman/imjin.png',
+
+        // 10. Gye (Water) Series
+        gyemyo: '/images/talisman/gyemyo.png',
+        gyechuk: '/images/talisman/gyechuk.png',
+        gyehae: '/images/talisman/gyehae.png',
+        gyeyu: '/images/talisman/gyeyu.png',
+        gyemi: '/images/talisman/gyemi.png',
+        gyesa: '/images/talisman/gyesa.png',
+        // Korean Mappings (Gye)
+        '계묘': '/images/talisman/gyemyo.png',
+        '계축': '/images/talisman/gyechuk.png',
+        '계해': '/images/talisman/gyehae.png',
+        '계유': '/images/talisman/gyeyu.png',
+        '계미': '/images/talisman/gyemi.png',
+        '계사': '/images/talisman/gyesa.png',
     };
 
     const descriptions = {
