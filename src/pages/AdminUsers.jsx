@@ -124,7 +124,7 @@ const AdminUsers = () => {
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.phone}</td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {user.birth_date} ({user.calendar_type === 'solar' ? '양력' : '음력'})
+                                            {user.birth_date} ({user.calendar_type === 'solar' ? '양력' : `음력${user.is_leap ? '(윤)' : ''}`})
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                             {new Date(user.created_at).toLocaleDateString()}
@@ -228,7 +228,7 @@ const AdminUsers = () => {
                                     </div>
                                     <div>
                                         <span className="text-sm text-gray-500 block">생년월일</span>
-                                        <span className="font-medium">{selectedUser.user.birth_date}</span>
+                                        <span className="font-medium">{selectedUser.user.birth_date} ({selectedUser.user.calendar_type === 'solar' ? '양력' : `음력${selectedUser.user.is_leap ? '(윤달)' : ''}`})</span>
                                     </div>
                                     <div>
                                         <span className="text-sm text-gray-500 block">성별</span>

@@ -40,7 +40,7 @@ const getJiAnimal = (ji) => {
 const ResultPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-
+  
   // 상태 관리
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,7 +126,7 @@ const ResultPage = () => {
       } catch (err) {
         if (err.status === 404) setShowAuth(true);
         else setError(err.message || '결과 로드 실패');
-        setLoading(false);
+          setLoading(false);
       }
     };
     fetchResult();
@@ -287,7 +287,7 @@ const ResultPage = () => {
   // Safety helper
   const safeJoin = (arr) => Array.isArray(arr) ? arr.join(', ') : arr;
 
-  return (
+    return (
     <div className="min-h-screen bg-black flex justify-center">
       <div className="min-h-screen bg-[#0f0f10] text-slate-100 pb-20 relative overflow-hidden font-sans">
         {/* 배경: 먹물 느낌의 텍스처와 은은한 금빛 조명 */}
@@ -331,12 +331,19 @@ const ResultPage = () => {
             </h2>
 
             {/* Birth Date: Maintain Hanja Fix */}
-            <div className="flex items-center justify-center gap-2 text-slate-400 text-sm mt-2 font-serif">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-700"></span>
-              <p className="text-stone-500 tracking-[0.2em] font-serif font-medium">
-                {userInfo?.birthDate ? userInfo.birthDate.split('T')[0].split('-').map((v, i) => v + ['年 ', '月 ', '日生'][i]).join('') : '생년월일 정보 없음'}
+            <div className="flex flex-col items-center justify-center gap-1 text-slate-400 text-sm mt-2 font-serif">
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-700"></span>
+                <p className="text-stone-500 tracking-[0.2em] font-serif font-medium">
+                  {userInfo?.birthDate ? userInfo.birthDate.split('T')[0].split('-').map((v, i) => v + ['年 ', '月 ', '日生'][i]).join('') : '생년월일 정보 없음'}
+                </p>
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-700"></span>
+              </div>
+              <p className="text-[10px] text-stone-600 tracking-widest uppercase">
+                {userInfo?.calendarType === 'solar' ? 'Solar Calendar' : `Lunar Calendar${userInfo?.isLeap ? ' (Leap)' : ''}`}
+                <span className="mx-2">/</span>
+                {userInfo?.calendarType === 'solar' ? '양력' : `음력${userInfo?.isLeap ? '(윤달)' : ''}`}
               </p>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-700"></span>
             </div>
           </div>
 
@@ -392,7 +399,7 @@ const ResultPage = () => {
             <div className="fixed inset-0 z-50 bg-black/95 overflow-y-auto p-4 text-left font-mono text-xs text-green-500">
               <button onClick={() => setShowTechData(false)} className="absolute top-4 right-4 text-white p-2 border">Close</button>
               <pre>{JSON.stringify(sajuResult.sajuData.techData, null, 2)}</pre>
-            </div>
+      </div>
           )}
 
           {/* Section 1: Visual Dashboard (Radar) - 톤다운 및 한글화 */}
@@ -411,8 +418,8 @@ const ResultPage = () => {
                     <Radar name="My Saju" dataKey="A" stroke="#d97706" strokeWidth={1} fill="#d97706" fillOpacity={0.3} />
                   </RadarChart>
                 </ResponsiveContainer>
-              </div>
-            </div>
+          </div>
+        </div>
           </div>
 
           {/* Section 2: Card Navigation (Horizontal Scroll) - 인장/패 스타일 */}
@@ -421,8 +428,8 @@ const ResultPage = () => {
               <h3 className="text-lg font-bold text-[#e8dac0] flex items-center gap-2" style={{ fontFamily: '"Gungsuh", serif' }}>
                 상세 운세
               </h3>
-            </div>
-
+        </div>
+        
             <div className="flex overflow-x-auto px-6 pb-8 gap-3 snap-x no-scrollbar mt-4">
               {cards.map((card) => {
                 const isActive = activeTab === card.id;
@@ -443,12 +450,12 @@ const ResultPage = () => {
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-bold mb-1 font-serif" style={{ writingMode: 'horizontal-tb' }}>{card.label}</div>
-                    </div>
+                </div>
                     <div className="w-full h-0.5 bg-current opacity-20"></div>
                   </button>
                 );
               })}
-            </div>
+              </div>
           </div>
 
           {/* Section 2.5: Premium Talisman */}
@@ -461,8 +468,8 @@ const ResultPage = () => {
                 수호 부적
               </h3>
               <p className="text-xs text-stone-500 font-serif">당신의 부족한 기운을 채워줄 수호신</p>
-            </div>
-
+        </div>
+        
             <div className="flex justify-center items-center gap-4 mb-8 relative">
               {/* Left Arrow (Ghost Navigation) */}
               {sajuResult.talisman?.reason && isTalismanFlipped && (
@@ -504,8 +511,8 @@ const ResultPage = () => {
                   <ChevronRight size={32} />
                 </button>
               )}
-            </div>
-
+      </div>
+      
             {/* Page Indicators */}
             {sajuResult.talisman?.reason && isTalismanFlipped && (
               <div className="flex justify-center gap-2 mb-10 -mt-4">
@@ -513,11 +520,11 @@ const ResultPage = () => {
                 <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'reason' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
               </div>
             )}
-
+            
             {/* Premium Download/Purchase Button */}
             {isTalismanFlipped && (
               <div className="flex justify-center px-8 mb-8">
-                <button
+              <button 
                   onClick={() => talismanCardRef.current?.handleDownload()}
                   className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
                 >
@@ -644,9 +651,9 @@ const ResultPage = () => {
                   </div>
                   <Sparkles className="text-amber-700 opacity-30" size={24} />
                 </div>
-              </div>
-            </div>
           </div>
+        </div>
+      </div>
 
           {/* Floating Action Button (PDF) - 전통 목판 스타일 */}
           <div className="fixed bottom-6 left-0 w-full flex justify-center z-50 pointer-events-none">
@@ -692,7 +699,7 @@ const ResultPage = () => {
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
-                  <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
                     <span className="text-2xl">📜</span>
                     <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
                   </div>
@@ -715,7 +722,7 @@ const ResultPage = () => {
                       const isSelected = testTalismanKey === key;
 
                       return (
-                        <button
+                  <button
                           key={key}
                           onClick={() => {
                             setTestTalismanKey(key);
@@ -740,15 +747,15 @@ const ResultPage = () => {
                             </span>
                             <span className="text-[10px] text-stone-500 group-hover:text-stone-400">
                               {talismanNames[key].name.split(' ')[0]}
-                            </span>
+                  </span>
                           </div>
-                        </button>
+                  </button>
                       );
                     })}
                   </div>
                 </div>
               </div>
-            </div>
+                  </div>
           )}
 
           {/* PDF Preview Modal */}
@@ -758,22 +765,22 @@ const ResultPage = () => {
                 <div className="p-4 border-b border-amber-900/30 flex justify-between items-center bg-[#252528]">
                   <h3 className="font-bold text-[#e8dac0] font-serif">미리보기</h3>
                   <button onClick={handleClosePdfPreview} className="text-stone-500 hover:text-[#e8dac0]"><X /></button>
-                </div>
+                      </div>
                 <div className="flex-1 overflow-auto bg-[#101012] p-4 flex justify-center relative">
                   {/* 배경 질감 */}
                   <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
                   <Document file={pdfPreviewUrl} loading={<div className="text-amber-700 font-serif blink">문서를 불러오는 중...</div>}>
                     <Page pageNumber={1} width={300} />
                   </Document>
-                </div>
+              </div>
                 <div className="p-4 bg-[#1a1a1c] border-t border-amber-900/30">
                   <button onClick={handlePdfPayment} className="w-full bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-3 rounded font-bold font-serif border border-amber-700/50 flex items-center justify-center gap-2">
                     <span className="text-lg">🧧</span> 전체 결과 소장하기
-                  </button>
-                </div>
-              </div>
+              </button>
             </div>
-          )}
+          </div>
+        </div>
+      )}
 
         </main>
       </div >

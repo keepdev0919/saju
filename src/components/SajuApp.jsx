@@ -41,6 +41,8 @@ const SajuApp = () => {
     birthTime: '', // HH:MM 형식 (내부 로직용)
     birthTimeLabel: '', // UI 표시용 (예: 축시 01:30~03:29)
     timeUnknown: false,
+    calendarType: 'solar', // 'solar' 또는 'lunar'
+    isLeap: false, // 음력일 때 윤달 여부
     phone: '', // 휴대폰 번호
     userId: null, // 백엔드에서 받은 사용자 ID
     accessToken: null // 결과 페이지 접근용 토큰
@@ -99,6 +101,14 @@ const SajuApp = () => {
   }, []);
 
   /**
+   * 전화번호 유효성 검사 (010-XXXX-XXXX 형식)
+   */
+  const isPhoneValid = (phone) => {
+    const regex = /^010-\d{4}-\d{4}$/;
+    return regex.test(phone);
+  };
+
+  /**
    * 시간 포맷팅 함수
    * @param {number} centiseconds - 1/100초 단위의 시간
    * @returns {string} MM:SS:CS 형식의 문자열
@@ -112,11 +122,36 @@ const SajuApp = () => {
   };
 
   /**
+   * 전화번호 자동 하이픈 포매팅 함수
+   * @param {string} value - 입력된 숫자 문자열
+   * @returns {string} 하이픈이 포함된 포맷팅된 문자열
+   */
+  const formatPhoneNumber = (value) => {
+    if (!value) return value;
+    const phoneNumber = value.replace(/[^\d]/g, ''); // 숫자 외 제거
+    const phoneNumberLength = phoneNumber.length;
+
+    if (phoneNumberLength <= 3) return phoneNumber;
+    if (phoneNumberLength <= 7) {
+      return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3)}`;
+    }
+    // 010-XXXX-XXXX (총 11자리)
+    return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
+  };
+
+  /**
    * 입력 필드 변경 핸들러
    */
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setUserInfo(prev => ({ ...prev, [name]: value }));
+
+    // 전화번호 필드일 경우 포매팅 적용
+    if (name === 'phone') {
+      const formattedValue = formatPhoneNumber(value);
+      setUserInfo(prev => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setUserInfo(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   /**
@@ -290,7 +325,8 @@ const SajuApp = () => {
         accessToken: accessToken.substring(0, 10) + '...',
         birthDate: userInfo.birthDate,
         birthTime: userInfo.timeUnknown ? null : userInfo.birthTime,
-        calendarType: 'solar'
+        calendarType: userInfo.calendarType,
+        isLeap: userInfo.isLeap
       });
 
       // 2. 사주 계산
@@ -298,7 +334,8 @@ const SajuApp = () => {
         accessToken: accessToken,
         birthDate: userInfo.birthDate,
         birthTime: userInfo.timeUnknown ? null : userInfo.birthTime,
-        calendarType: 'solar' // 사주는 양력으로만 처리
+        calendarType: userInfo.calendarType,
+        isLeap: userInfo.isLeap
       });
 
       console.log('✅ 사주 계산 완료:', sajuResponse);
@@ -482,13 +519,22 @@ const SajuApp = () => {
               className="w-full bg-transparent text-white text-center text-xl font-medium placeholder:text-slate-500 outline-none py-3 border-b border-white/20 focus:border-white/40 transition-colors"
               autoFocus
             />
+            {userInfo.phone && !isPhoneValid(userInfo.phone) && (
+              <p className="text-red-400 text-xs mt-2 text-center animate-fade-in">
+                올바른 휴대전화 번호 형식이 아닙니다 (010-0000-0000)
+              </p>
+            )}
           </div>
 
           {/* 완료 버튼 */}
           <div className="p-5">
             <button
               onClick={() => setEditingField(null)}
-              className="w-full bg-slate-300 text-slate-800 font-bold py-4 rounded-xl hover:bg-slate-400 transition-colors"
+              disabled={!isPhoneValid(userInfo.phone)}
+              className={`w-full font-bold py-4 rounded-xl transition-colors ${!isPhoneValid(userInfo.phone)
+                  ? 'bg-white/10 text-slate-500 cursor-not-allowed'
+                  : 'bg-slate-300 text-slate-800 hover:bg-slate-400'
+                }`}
             >
               수정 완료
             </button>
@@ -507,11 +553,11 @@ const SajuApp = () => {
       {/* 상단 타이틀 */}
       <div className="p-6 pt-8">
         <h1 className="text-3xl font-bold text-white mb-2">언제 태어났어요?</h1>
-        <p className="text-slate-400 text-sm">만세력의 기준인 양력으로 입력해주세요</p>
+        <p className="text-slate-400 text-sm">기억하고 계신 생년월일을 입력해주세요</p>
       </div>
 
       {/* 입력 카드 */}
-      <div className="flex-1 flex items-center justify-center px-6 pb-32">
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-32 gap-6">
         <div className="bg-[#1a1a1a] backdrop-blur-md rounded-2xl w-full border border-white/10">
           {/* 헤더 */}
           <div className="p-5 border-b border-white/10 flex items-center justify-between">
@@ -521,32 +567,75 @@ const SajuApp = () => {
             >
               <ChevronRight className="rotate-180" size={24} />
             </button>
-            <span className="text-white font-medium">생년월일</span>
-            <div className="w-6"></div> {/* 공간 맞춤 */}
+            <span className="text-white font-medium">생년월일 및 달력 선택</span>
+            <div className="w-6"></div>
           </div>
 
           {/* 입력 필드 */}
-          <div className="p-6">
-            <input
-              type="date"
-              name="birthDate"
-              value={userInfo.birthDate}
-              onChange={handleInputChange}
-              className="w-full bg-transparent text-white text-center text-xl font-medium outline-none py-3 border-b border-white/20 focus:border-white/40 transition-colors [color-scheme:dark]"
-              autoFocus
-            />
+          <div className="p-6 space-y-8">
+            {/* 양력/음력 선택 버튼 */}
+            <div className="flex bg-black/40 p-1 rounded-xl border border-white/10">
+              <button
+                onClick={() => setUserInfo({ ...userInfo, calendarType: 'solar', isLeap: false })}
+                className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${userInfo.calendarType === 'solar' ? 'bg-white/10 text-white shadow-lg' : 'text-slate-500'}`}
+              >
+                양력
+              </button>
+              <button
+                onClick={() => setUserInfo({ ...userInfo, calendarType: 'lunar' })}
+                className={`flex-1 py-3 rounded-lg text-sm font-bold transition-all ${userInfo.calendarType === 'lunar' ? 'bg-white/10 text-white shadow-lg' : 'text-slate-500'}`}
+              >
+                음력
+              </button>
+            </div>
+
+            {/* 날짜 입력 */}
+            <div className="relative">
+              <input
+                type="date"
+                name="birthDate"
+                value={userInfo.birthDate}
+                onChange={handleInputChange}
+                className="w-full bg-transparent text-white text-center text-2xl font-bold outline-none py-3 border-b border-white/20 focus:border-white/40 transition-colors [color-scheme:dark]"
+                autoFocus
+              />
+            </div>
+
+            {/* 음력 선택 시 윤달 체크박스 */}
+            {userInfo.calendarType === 'lunar' && (
+              <div className="flex items-center justify-center pt-2">
+                <label className="flex items-center gap-3 cursor-pointer group">
+                  <div
+                    onClick={() => setUserInfo({ ...userInfo, isLeap: !userInfo.isLeap })}
+                    className={`w-6 h-6 rounded-md border-2 flex items-center justify-center transition-all ${userInfo.isLeap ? 'bg-pink-600 border-pink-600' : 'border-slate-600 group-hover:border-slate-400'}`}
+                  >
+                    {userInfo.isLeap && <CheckCircle size={16} className="text-white" />}
+                  </div>
+                  <span className={`text-sm font-medium transition-colors ${userInfo.isLeap ? 'text-white' : 'text-slate-400'}`}>
+                    윤달(閏月) 인가요?
+                  </span>
+                </label>
+              </div>
+            )}
           </div>
 
           {/* 완료 버튼 */}
           <div className="p-5">
             <button
               onClick={() => setEditingField(null)}
-              className="w-full bg-slate-300 text-slate-800 font-bold py-4 rounded-xl hover:bg-slate-400 transition-colors"
+              className="w-full bg-slate-300 text-slate-800 font-bold py-4 rounded-xl hover:bg-slate-400 transition-colors shadow-lg"
             >
-              수정 완료
+              설정 완료
             </button>
           </div>
         </div>
+
+        {/* 도움말 안내 */}
+        <p className="text-slate-500 text-xs text-center px-4 leading-relaxed">
+          {userInfo.calendarType === 'solar'
+            ? "대부분의 현대인은 양력(태양력) 생일을 사용합니다."
+            : "부모님 세대나 전통 생일을 사용하신다면 음력으로 선택해주세요."}
+        </p>
       </div>
     </div>
   );
@@ -624,7 +713,12 @@ const SajuApp = () => {
                   onClick={() => setEditingField('birthDate')}
                   className="flex items-center gap-2 text-white hover:text-slate-300 transition-colors"
                 >
-                  <span>{userInfo.birthDate ? formatDate(userInfo.birthDate) : '0000년 00월 00일'}</span>
+                  <div className="flex flex-col items-end">
+                    <span>{userInfo.birthDate ? formatDate(userInfo.birthDate) : '0000년 00월 00일'}</span>
+                    <span className="text-xs text-slate-500">
+                      {userInfo.calendarType === 'solar' ? '양력' : `음력${userInfo.isLeap ? '(윤달)' : ''}`}
+                    </span>
+                  </div>
                   <span className="text-slate-500">✏️</span>
                 </button>
               </div>
@@ -660,7 +754,7 @@ const SajuApp = () => {
             <button
               onClick={async () => {
                 // 사용자 정보 검증
-                if (!userInfo.name || !userInfo.birthDate || !userInfo.phone) {
+                if (!userInfo.name || !userInfo.birthDate || !isPhoneValid(userInfo.phone)) {
                   return;
                 }
 
@@ -669,13 +763,17 @@ const SajuApp = () => {
 
                 try {
                   // 사용자 생성 API 호출
+                  // DB 저장 시에는 하이픈 제거 (선택 사항이나 보통 제거하여 저장)
+                  const cleanPhone = userInfo.phone.replace(/-/g, '');
+                  
                   const userData = {
                     name: userInfo.name,
-                    phone: userInfo.phone,
+                    phone: cleanPhone,
                     birthDate: userInfo.birthDate,
                     birthTime: userInfo.timeUnknown ? null : userInfo.birthTime,
                     gender: userInfo.gender,
-                    calendarType: 'solar' // 사주는 양력으로만 처리
+                    calendarType: userInfo.calendarType,
+                    isLeap: userInfo.isLeap
                   };
 
                   const response = await createUser(userData);
@@ -696,14 +794,19 @@ const SajuApp = () => {
                   setLoading(false);
                 }
               }}
-              disabled={!userInfo.name || !userInfo.birthDate || !userInfo.phone || loading}
-              className={`w-full py-4 rounded-xl text-lg font-bold transition-all ${!userInfo.name || !userInfo.birthDate || !userInfo.phone || loading
+              disabled={!userInfo.name || !userInfo.birthDate || !isPhoneValid(userInfo.phone) || loading}
+              className={`w-full py-4 rounded-xl text-lg font-bold transition-all ${!userInfo.name || !userInfo.birthDate || !isPhoneValid(userInfo.phone) || loading
                   ? 'bg-white/10 text-slate-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:opacity-90'
                 }`}
             >
               {loading ? '처리 중...' : '다음으로'}
             </button>
+            {userInfo.phone && !isPhoneValid(userInfo.phone) && (
+              <p className="text-red-400 text-xs mt-2 text-center animate-fade-in">
+                올바른 휴대전화 번호 형식이 아닙니다 (010-0000-0000)
+              </p>
+            )}
             {error && (
               <p className="text-red-400 text-sm mt-2 text-center">{error}</p>
             )}
@@ -795,7 +898,7 @@ const SajuApp = () => {
               <div>
                 <h3 className="text-xl font-bold text-white">{userInfo.name}님</h3>
                 <p className="text-slate-400 text-sm">
-                  {formatDate(userInfo.birthDate)} · 양력
+                  {formatDate(userInfo.birthDate)} · {userInfo.calendarType === 'solar' ? '양력' : `음력${userInfo.isLeap ? '(윤달)' : ''}`}
                 </p>
               </div>
             </div>

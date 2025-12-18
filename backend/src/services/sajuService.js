@@ -9,7 +9,7 @@ import { Solar, Lunar } from 'lunar-javascript';
  * @param {Object} userData - 사용자 생년월일 정보
  * @returns {Object} 정확한 사주 데이터
  */
-export async function calculateSaju({ birthDate, birthTime, calendarType, gender }) {
+export async function calculateSaju({ birthDate, birthTime, calendarType, gender, isLeap = false }) {
   try {
     // 날짜 유효성 검사
     if (!birthDate) throw new Error('생년월일이 필요합니다.');
@@ -27,7 +27,8 @@ export async function calculateSaju({ birthDate, birthTime, calendarType, gender
       const solar = Solar.fromYmd(year, month, day);
       lunar = solar.getLunar();
     } else {
-      lunar = Lunar.fromYmd(year, month, day);
+      // 음력인 경우 윤달 여부(isLeap) 반영
+      lunar = Lunar.fromYmd(year, month, day, isLeap);
     }
 
     // 사주팔자 객체 생성 (八字)

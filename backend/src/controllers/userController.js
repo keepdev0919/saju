@@ -20,7 +20,7 @@ function generateAccessToken() {
  */
 export async function createUser(req, res) {
   try {
-    const { name, phone, birthDate, birthTime, gender, calendarType } = req.body;
+    const { name, phone, birthDate, birthTime, gender, calendarType, isLeap } = req.body;
 
     // 필수 필드 검증
     if (!name || !phone || !birthDate || !gender) {
@@ -35,16 +35,17 @@ export async function createUser(req, res) {
 
     // 사용자 정보 저장 (Soft Deleted 된 유저가 재가입 시 deleted_at = NULL 로 부활)
     const [result] = await db.execute(
-      `INSERT INTO users (name, phone, birth_date, birth_time, gender, calendar_type, access_token)
-       VALUES (?, ?, ?, ?, ?, ?, ?)
+      `INSERT INTO users (name, phone, birth_date, birth_time, gender, calendar_type, is_leap, access_token)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE 
          name = VALUES(name),
          birth_time = VALUES(birth_time),
          gender = VALUES(gender),
          calendar_type = VALUES(calendar_type),
+         is_leap = VALUES(is_leap),
          access_token = VALUES(access_token),
          deleted_at = NULL`,
-      [name, phone, birthDate, birthTime || null, gender, calendarType || 'solar', accessToken]
+      [name, phone, birthDate, birthTime || null, gender, calendarType || 'solar', isLeap ? 1 : 0, accessToken]
     );
 
     const userId = result.insertId || result.affectedRows;
@@ -80,7 +81,7 @@ export async function verifyUser(req, res) {
 
     // 사용자 조회 (삭제된 사용자 제외)
     const [users] = await db.execute(
-      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, access_token 
+      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, is_leap, access_token 
        FROM users 
        WHERE phone = ? AND birth_date = ? AND deleted_at IS NULL`,
       [phone, birthDate]
@@ -103,6 +104,7 @@ export async function verifyUser(req, res) {
         birthTime: user.birth_time,
         gender: user.gender,
         calendarType: user.calendar_type,
+        isLeap: !!user.is_leap,
         accessToken: user.access_token
       },
       message: '인증이 완료되었습니다.'
@@ -130,7 +132,7 @@ export async function getUserByToken(req, res) {
 
     // 삭제된 사용자 제외
     const [users] = await db.execute(
-      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type 
+      `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, is_leap 
        FROM users WHERE access_token = ? AND deleted_at IS NULL`,
       [token]
     );
@@ -150,7 +152,8 @@ export async function getUserByToken(req, res) {
         birthDate: user.birth_date,
         birthTime: user.birth_time,
         gender: user.gender,
-        calendarType: user.calendar_type
+        calendarType: user.calendar_type,
+        isLeap: !!user.is_leap
       }
     });
   } catch (error) {

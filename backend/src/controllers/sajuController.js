@@ -15,10 +15,11 @@ import { interpretSajuWithAI } from '../services/aiService.js';
  * @param {string} req.body.birthDate - 생년월일 (YYYY-MM-DD)
  * @param {string} req.body.birthTime - 생시 (HH:MM 또는 null)
  * @param {string} req.body.calendarType - 양력/음력 (solar/lunar)
+ * @param {boolean} req.body.isLeap - 윤달 여부 (음력일 때만 유효)
  */
 export async function calculateSaju(req, res) {
   try {
-    const { accessToken, birthDate, birthTime, calendarType } = req.body;
+    const { accessToken, birthDate, birthTime, calendarType, isLeap } = req.body;
 
     if (!accessToken || !birthDate) {
       return res.status(400).json({
@@ -44,7 +45,8 @@ export async function calculateSaju(req, res) {
       name: user.name,
       birthDate,
       birthTime,
-      calendarType
+      calendarType,
+      isLeap: !!isLeap
     });
 
     // 1단계: lunar-javascript로 사주 계산
@@ -52,6 +54,7 @@ export async function calculateSaju(req, res) {
       birthDate,
       birthTime,
       calendarType: calendarType || 'solar',
+      isLeap: !!isLeap,
       gender: user.gender // Tech Demo용 (대운 계산에 필요)
     });
 
