@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Download, ChevronRight, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock } from 'lucide-react';
 import { createUser, createPayment, verifyPayment, calculateSaju, getSajuResult } from '../utils/api';
+import { getGanColor, getJiAnimal, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
+import { talismanNames } from '../data/talismanData';
 
 /**
  * 사주 시간대 데이터
@@ -47,6 +49,10 @@ const SajuApp = () => {
     userId: null, // 백엔드에서 받은 사용자 ID
     accessToken: null // 결과 페이지 접근용 토큰
   });
+
+  // 수호신 도감(Library) 모달 상태
+  const [showLibrary, setShowLibrary] = useState(false);
+  const [testTalismanKey, setTestTalismanKey] = useState(null);
 
   // 사주 결과 상태
   const [sajuResult, setSajuResult] = useState(null);
@@ -561,26 +567,125 @@ const SajuApp = () => {
               </h2>
             </div>
 
-            {/* 인터랙티브 Scroll 아이콘 - 하이엔드 브랜드: 작은 크기 + 절제된 애니메이션 */}
+            {/* 인터랙티브 Scroll 아이콘 - 하이엔드 브랜드: 도서관 진입점 */}
             <div className="mt-12 animate-fade-in-landing">
-              <div className="group cursor-pointer relative inline-block">
-                {/* 호버 시 미세한 황금빛 발광 효과 */}
-                <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 scale-125"></div>
+              <div
+                className="group cursor-pointer relative inline-block"
+                onClick={() => setShowLibrary(true)}
+              >
+                {/* 호버 시 황금빛 후광 효과 */}
+                <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 scale-150"></div>
 
-                {/* Scroll 아이콘 - 작은 크기, 부드러운 펄스 효과만, 약간 기울임 */}
+                {/* 안내 문구: 관조(觀照) 제안 */}
+                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-max opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none">
+                  <p className="text-amber-400/60 text-[10px] tracking-[0.4em] font-serif italic">
+                    관조(觀照)를 통해 60갑자의 수호신들을 미리 마주하십시오
+                  </p>
+                </div>
+
+                {/* Scroll 아이콘 */}
                 <Scroll
-                  className="w-8 h-8 text-amber-400/30 mx-auto 
+                  className="w-10 h-10 text-amber-400/20 mx-auto 
                              transition-all duration-700
-                             group-hover:text-amber-400/50 
-                             group-hover:drop-shadow-[0_0_15px_rgba(217,119,6,0.3)]
+                             group-hover:text-amber-400/60 
+                             group-hover:drop-shadow-[0_0_20px_rgba(217,119,6,0.4)]
+                             group-hover:scale-110
                              animate-pulse-subtle
                              rotate-[-8deg]"
-                  strokeWidth={1}
+                  strokeWidth={0.5}
                 />
+
+                {/* 하단 화살표 힌트 */}
+                <div className="mt-4 opacity-30 group-hover:opacity-80 transition-opacity duration-700">
+                  <div className="w-px h-8 bg-gradient-to-b from-amber-500/50 to-transparent mx-auto"></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* --- 천상의 아카이브 (Talisman Library) 모달 --- */}
+        {showLibrary && (
+          <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-2 backdrop-blur-md animate-fade-in">
+            <div className="bg-[#0f0f11] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-[0_0_50px_rgba(0,0,0,1)] flex flex-col max-h-[95vh] relative overflow-hidden">
+              {/* 장식적 배경 */}
+              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }}></div>
+              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-600/50 to-transparent"></div>
+
+              {/* 헤더 */}
+              <div className="p-6 border-b border-amber-900/20 flex justify-between items-center bg-[#151518] relative z-10">
+                <div className="flex flex-col">
+                  <h3 className="text-amber-500 font-serif text-lg tracking-widest flex items-center gap-3">
+                    <Sparkles size={16} className="text-amber-600" />
+                    천상의 기록 보관소 (Celestial Archive)
+                  </h3>
+                  <p className="text-stone-500 text-[10px] tracking-wider mt-1">60갑자의 수호신들이 이곳에 봉인되어 있습니다.</p>
+                </div>
+                <button
+                  onClick={() => setShowLibrary(false)}
+                  className="p-2 text-stone-500 hover:text-amber-500 transition-colors"
+                >
+                  <X size={24} strokeWidth={1} />
+                </button>
+              </div>
+
+              {/* 도감 그리드 영역 */}
+              <div className="flex-1 overflow-y-auto p-4 relative z-10 custom-scrollbar bg-[#0a0a0c]">
+                <div className="grid grid-flow-col grid-rows-5 gap-2 mt-2 overflow-x-auto custom-scrollbar pb-6 px-2">
+                  {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
+                    Object.keys(talismanNames).filter(k => k.endsWith(animal))
+                  ).map((key) => {
+                    const gan = key[0];
+                    const { color } = getGanColor(gan);
+
+                    return (
+                      <div
+                        key={key}
+                        className="relative p-2 rounded-md border border-white/5 bg-[#151518] flex flex-col items-center gap-2 group min-w-[70px] aspect-[4/5] flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-700"
+                        title={talismanNames[key].name}
+                      >
+                        {/* 이미지 프리뷰 (강력한 블러 처리 - Spectral Teasing) */}
+                        <div className="absolute inset-0 z-0 opacity-20 blur-sm overflow-hidden rounded-md">
+                          <img
+                            src={`/images/talisman/${key === '갑자' ? 'gapja' : key === '병자' ? 'byeongja' : 'placeholder'}.png`}
+                            alt=""
+                            className="w-full h-full object-cover scale-150"
+                            onError={(e) => { e.target.src = 'https://via.placeholder.com/100/101012/101012'; }}
+                          />
+                        </div>
+
+                        {/* 잠금 아이콘 */}
+                        <div className="absolute top-1 right-1 z-20">
+                          <Lock size={10} className="text-amber-900/40" />
+                        </div>
+
+                        <div className="relative z-10 flex flex-col items-center gap-1 mt-auto">
+                          <span className={`font-serif font-bold text-xs ${color} opacity-60`}>
+                            {key}
+                          </span>
+                          <div className="w-1 h-1 rounded-full bg-amber-900/30"></div>
+                        </div>
+
+                        {/* 호버 시 툴팁 느낌의 효과 */}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30">
+                          <p className="text-amber-500/90 text-[8px] font-serif leading-tight">{talismanNames[key].name}</p>
+                          <p className="text-stone-400 text-[6px] mt-1 leading-none italic">당신의 운명이 아닙니다</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* 푸터 안내 */}
+              <div className="p-4 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
+                <p className="text-stone-500 text-[10px] tracking-widest italic">
+                  "인연이 닿으면 그 진정한 모습을 드러낼 것입니다."
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* 하단 CTA 영역: 모바일 최적화 인장 스타일 버튼 - 밝기 개선 */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-10 pb-20">
