@@ -237,7 +237,7 @@ const ResultPage = () => {
       <div className="flex flex-col items-center gap-6">
         <div className="w-16 h-16 border-t-2 border-amber-600 rounded-full animate-spin"></div>
         <p className={`text-sm tracking-[0.3em] uppercase ${titleFont}`}>天命錄 로딩 중...</p>
-      </div>
+        </div>
       </div>
     );
 
@@ -279,7 +279,7 @@ const ResultPage = () => {
             確認 (확인)
               </button>
             </form>
-      </div>
+        </div>
       </div>
     );
   if (error) return <div className="text-white p-10 text-center">{error}</div>;
@@ -369,21 +369,6 @@ const ResultPage = () => {
               <span className="text-amber-500">운명 분석</span>
             </h2>
 
-            {/* Birth Date: Maintain Hanja Fix */}
-            <div className="flex flex-col items-center justify-center gap-1 text-slate-400 text-sm mt-2 font-serif">
-              <div className="flex items-center justify-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-700"></span>
-                <p className="text-stone-500 tracking-[0.2em] font-serif font-medium">
-                  {userInfo?.birthDate ? userInfo.birthDate.split('T')[0].split('-').map((v, i) => v + ['年 ', '月 ', '日生'][i]).join('') : '생년월일 정보 없음'}
-                </p>
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-700"></span>
-              </div>
-              <p className="text-[10px] text-stone-600 tracking-widest uppercase">
-                {userInfo?.calendarType === 'solar' ? 'Solar Calendar' : `Lunar Calendar${userInfo?.isLeap ? ' (Leap)' : ''}`}
-                <span className="mx-2">/</span>
-                {userInfo?.calendarType === 'solar' ? '양력' : `음력${userInfo?.isLeap ? '(윤달)' : ''}`}
-              </p>
-            </div>
           </div>
 
           {/* 2. 종합 점수: 전통 현판 스타일 */}
