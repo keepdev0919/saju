@@ -149,6 +149,46 @@
   }
 }
 
+/* 천상의 공명 (Celestial Resonance) - 파장 효과 */
+@keyframes celestial-resonance {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+
+  50% {
+    opacity: 0.3;
+  }
+
+  100% {
+    transform: scale(2);
+    opacity: 0;
+  }
+}
+
+/* 영혼의 호흡 (Soul Breathing) - 부드러운 맥동 */
+@keyframes soul-breathing {
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 5px rgba(217, 119, 6, 0.1));
+  }
+
+  50% {
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 20px rgba(217, 119, 6, 0.4));
+  }
+}
+
+.animate-celestial-resonance {
+  animation: celestial-resonance 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.animate-soul-breathing {
+  animation: soul-breathing 5s ease-in-out infinite;
+}
+
 @keyframes ink-bleeding {
   0% {
     filter: blur(60px) opacity(0);

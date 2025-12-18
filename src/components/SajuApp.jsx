@@ -583,15 +583,14 @@ const SajuApp = () => {
                   </p>
                 </div>
 
-                {/* Scroll 아이콘 */}
+
+                {/* Scroll 아이콘 - 영혼의 호흡(Soul Breathing) 애니메이션 적용 */}
                 <Scroll
-                  className="w-10 h-10 text-amber-400/20 mx-auto 
+                  className="w-10 h-10 text-amber-500/40 mx-auto 
                              transition-all duration-700
-                             group-hover:text-amber-400/60 
-                             group-hover:drop-shadow-[0_0_20px_rgba(217,119,6,0.4)]
-                             group-hover:scale-110
-                             animate-pulse-subtle
-                             rotate-[-8deg]"
+                             group-hover:text-amber-400 group-hover:scale-110
+                             animate-soul-breathing
+                             rotate-[-8deg] relative z-10"
                   strokeWidth={0.5}
                 />
 
