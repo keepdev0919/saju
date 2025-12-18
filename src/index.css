@@ -469,3 +469,104 @@ body {
   backdrop-filter: blur(2px);
   border-radius: 4px;
 }
+
+/* ========================================
+   8가지 텍스트 가리기 효과 (A/B 테스트용)
+   ======================================== */
+
+/* 1. Frosted Glass - 서리 낀 유리 */
+.blur-effect-frosted {
+  backdrop-filter: blur(8px) saturate(120%);
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 4px;
+}
+
+/* 2. Redacted - 검열 효과 */
+.blur-effect-redacted {
+  background: repeating-linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.95) 0px,
+    rgba(0, 0, 0, 0.95) 2px,
+    transparent 2px,
+    transparent 3px
+  );
+  backdrop-filter: brightness(0.3);
+}
+
+/* 3. Gradient Fade - 그라데이션 페이드 */
+.blur-effect-gradient {
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.2) 0%,
+    rgba(0, 0, 0, 0.95) 100%
+  );
+  -webkit-mask-image: linear-gradient(
+    to top,
+    transparent 0%,
+    black 60%
+  );
+  mask-image: linear-gradient(
+    to top,
+    transparent 0%,
+    black 60%
+  );
+}
+
+/* 4. Ink Blur - 잉크 번짐 (먹물 효과) */
+.blur-effect-ink {
+  filter: blur(5px) contrast(0.6);
+  opacity: 0.4;
+  background: radial-gradient(
+    circle at center,
+    rgba(0, 0, 0, 0.3),
+    rgba(0, 0, 0, 0.8)
+  );
+}
+
+/* 5. Grid Overlay - 격자 오버레이 */
+.blur-effect-grid {
+  background-image:
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.85) 2px,
+      rgba(0, 0, 0, 0.85) 4px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      rgba(0, 0, 0, 0.85) 2px,
+      rgba(0, 0, 0, 0.85) 4px
+    );
+}
+
+/* 6. Mosaic - 모자이크/픽셀 효과 */
+.blur-effect-mosaic {
+  filter: blur(6px);
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.5);
+  image-rendering: pixelated;
+  transform: scale(1.05);
+}
+
+/* 7. Brightness Overexposure - 밝기 날림 (신성한 빛) */
+.blur-effect-brightness {
+  filter: brightness(4) blur(5px) saturate(0.5);
+  opacity: 0.5;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+}
+
+/* 8. Noise/Scramble - 노이즈 (정적 효과) */
+.blur-effect-noise {
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' /%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.6'/%3E%3C/svg%3E");
+  backdrop-filter: blur(3px);
+  opacity: 0.95;
+  mix-blend-mode: overlay;
+}

@@ -515,10 +515,11 @@ const SajuApp = () => {
           <div className="w-full flex justify-between items-center mb-8 px-6">
             <div className="flex flex-col">
               <h3 className="text-amber-500 font-serif text-lg tracking-widest">
-                수호신 열람 (閱覽)
+                열람용 사본 (閱覽用 寫本)
               </h3>
-              <p className="text-stone-600 text-[9px] tracking-wider mt-1 uppercase">
-                Sacred Archive Preview
+              <p className="text-stone-600 text-[10px] tracking-tight mt-1 leading-relaxed">
+                인연 확인 시 중앙 인장이 해제되며, 우측 하단에 천명록의 공식 낙인이 깃듭니다.<br />
+                <span className="text-amber-700/80 font-medium">(추가 각인 시 개인 성함 포함 소장 가능)</span>
               </p>
             </div>
             <button
@@ -714,7 +715,9 @@ const SajuApp = () => {
                     <Sparkles size={16} className="text-amber-600" />
                     천상의 기록 보관소 (Celestial Archive)
                   </h3>
-                  <p className="text-stone-500 text-[10px] tracking-wider mt-1">천기(天機)의 흐름 속에 나열된 60甲子 수호신들의 장엄한 자태를 관조하십시오.</p>
+                  <p className="text-stone-500 text-[10px] tracking-wider mt-1">
+                    천기(天機)의 흐름 속에 나열된 <span className="text-amber-600/80 font-bold">60甲子 수호신</span>들의 장엄한 자태를 관조하십시오.
+                  </p>
                 </div>
                 <button
                   onClick={() => setShowLibrary(false)}

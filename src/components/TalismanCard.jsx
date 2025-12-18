@@ -3,6 +3,22 @@ import html2canvas from 'html2canvas';
 import { Download, Lock, Zap, Heart, Info, Image as ImageIcon } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
 
+// Helper function: 8가지 텍스트 가리기 효과 매핑 (A/B 테스트용)
+const getBlurEffectClass = (type) => {
+    const effectMap = {
+        'water_im': 'blur-effect-frosted',      // 갑자 - Frosted Glass
+        'water_gye': 'blur-effect-redacted',    // 을축 - 검열
+        'wood_gap': 'blur-effect-gradient',     // 병인 - Gradient Fade
+        'wood_eul': 'blur-effect-ink',          // 정묘 - 잉크 번짐
+        'earth_byeong': 'blur-effect-grid',     // 무진 - 격자
+        'earth_jeong': 'blur-effect-mosaic',    // 기사 - 모자이크
+        'metal_mu': 'blur-effect-brightness',   // 경오 - 밝기 날림
+        'metal_gi': 'blur-effect-noise'         // 신미 - 노이즈
+    };
+
+    return effectMap[type] || ''; // 나머지 52개는 효과 없음
+};
+
 const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talismanData, reason, activeTab = 'image', onFlip, isPurchased = false, setIsPurchased, isArchiveMode = false }, ref) => {
     const [isFlipped, setIsFlipped] = useState(false); // 카드 뒤집힘 상태
     const [stampName, setStampName] = useState(userName); // 기본은 한글 이름
@@ -261,11 +277,16 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
 
                     {/* 우측 하단 도장은 도감 모드에서 제외 */}
 
-                    {/* 설명 텍스트 (하단) */}
+                    {/* 설명 텍스트 (하단) - A/B 테스트용 다양한 가리기 효과 */}
                     <div className="absolute bottom-8 left-6 right-6 text-center z-20">
-                        <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-                            {info.desc}
-                        </p>
+                        <div className="relative">
+                            <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                                {info.desc}
+                            </p>
+
+                            {/* 가리기 효과 오버레이 - type에 따라 다른 클래스 적용 */}
+                            <div className={`absolute inset-0 ${getBlurEffectClass(type)}`} />
+                        </div>
                     </div>
 
                     {/* 테두리 장식 */}
