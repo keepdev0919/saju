@@ -646,7 +646,7 @@ const SajuApp = () => {
                         {/* 이미지 프리뷰 (강력한 블러 처리 - Spectral Teasing) */}
                         <div className="absolute inset-0 z-0 opacity-20 blur-sm overflow-hidden rounded-md grayscale group-hover:grayscale-0 transition-all duration-700">
                           <img
-                            src={`/images/talisman/${key === '갑자' ? 'gapja' : key === '병자' ? 'byeongja' : 'placeholder'}.png`}
+                            src="/images/talisman/placeholder.png"
                             alt=""
                             className="w-full h-full object-cover scale-150"
                             onError={(e) => { e.target.src = 'https://via.placeholder.com/100/101012/101012'; }}
