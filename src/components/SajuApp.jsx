@@ -562,7 +562,7 @@ const SajuApp = () => {
 
           {/* 하단: 설명 문구만 */}
           <div className="text-center">
-            <p className="text-amber-500/60 text-[10px] font-serif italic tracking-widest leading-relaxed">
+            <p className="text-stone-700/80 text-[10px] font-serif italic tracking-widest leading-relaxed">
               " 인연의 주인을 기다리고 있습니다 "
             </p>
           </div>

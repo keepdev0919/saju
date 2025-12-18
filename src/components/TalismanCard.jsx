@@ -3,20 +3,9 @@ import html2canvas from 'html2canvas';
 import { Download, Lock, Zap, Heart, Info, Image as ImageIcon } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
 
-// Helper function: 8가지 텍스트 가리기 효과 매핑 (A/B 테스트용)
-const getBlurEffectClass = (type) => {
-    const effectMap = {
-        'water_im': 'blur-effect-frosted',      // 갑자 - Frosted Glass
-        'water_gye': 'blur-effect-redacted',    // 을축 - 검열
-        'wood_gap': 'blur-effect-gradient',     // 병인 - Gradient Fade
-        'wood_eul': 'blur-effect-ink',          // 정묘 - 잉크 번짐
-        'earth_byeong': 'blur-effect-grid',     // 무진 - 격자
-        'earth_jeong': 'blur-effect-mosaic',    // 기사 - 모자이크
-        'metal_mu': 'blur-effect-brightness',   // 경오 - 밝기 날림
-        'metal_gi': 'blur-effect-noise'         // 신미 - 노이즈
-    };
-
-    return effectMap[type] || ''; // 나머지 52개는 효과 없음
+// Helper function: 보관소 가리기 효과 (모든 카드 동일 적용)
+const getBlurEffectClass = () => {
+    return 'blur-effect-mosaic';
 };
 
 const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talismanData, reason, activeTab = 'image', onFlip, isPurchased = false, setIsPurchased, isArchiveMode = false }, ref) => {
@@ -284,8 +273,16 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                                 {info.desc}
                             </p>
 
-                            {/* 가리기 효과 오버레이 - type에 따라 다른 클래스 적용 */}
-                            <div className={`absolute inset-0 ${getBlurEffectClass(type)}`} />
+                            {/* 가리기 효과 레이어 (배경 흐림) */}
+                            <div className={`absolute inset-0 z-10 ${getBlurEffectClass()}`} />
+
+                            {/* 안내 문구 레이어 (위에 배치하여 선명도 유지) */}
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 animate-pulse pointer-events-none">
+                                <Lock size={12} className="text-slate-400/80" />
+                                <span className="text-[10px] text-slate-200/90 font-serif tracking-tighter whitespace-nowrap">
+                                    수호신의 신묘한 효험(效驗)은 인연 확인 시 열람 가능합니다
+                                </span>
+                            </div>
                         </div>
                     </div>
 
