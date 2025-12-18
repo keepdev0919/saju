@@ -370,6 +370,31 @@
   animation-delay: 1.4s;
 }
 
+/* 앰비언트 브리딩 애니메이션 (천명록 랜딩용) */
+@keyframes ambient-breathing {
+  0%, 100% {
+    transform: translate(-10%, -10%) scale(1);
+    opacity: 0.15;
+  }
+  33% {
+    transform: translate(5%, -5%) scale(1.1);
+    opacity: 0.2;
+  }
+  66% {
+    transform: translate(-5%, 5%) scale(0.95);
+    opacity: 0.18;
+  }
+}
+
+.animate-ambient-breathing {
+  animation: ambient-breathing 15s ease-in-out infinite;
+}
+
+/* 프리미엄 타이포그래피 */
+.font-serif {
+  font-family: 'Gungsuh', 'Batang', serif;
+}
+
 /* 기본 body 스타일 */
 body {
   margin: 0;

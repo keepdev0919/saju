@@ -228,21 +228,60 @@ const ResultPage = () => {
   };
 
 
+  const titleFont = "font-serif tracking-[0.2em]";
+  const bodyFont = "font-sans tracking-normal";
+
   // --- Render Helpers ---
-  if (loading) return <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-pink-500"></div></div>;
-  if (showAuth) return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      <div className="bg-white/10 backdrop-blur p-8 rounded-2xl w-full max-w-md text-white">
-        <h2 className="text-2xl font-bold mb-4">본인 확인</h2>
-        <form onSubmit={handleAuth} className="space-y-4">
-          <input type="tel" placeholder="010-0000-0000" className="w-full bg-black/20 p-3 rounded-lg" value={authData.phone} onChange={e => setAuthData({ ...authData, phone: e.target.value })} />
-          <input type="date" className="w-full bg-black/20 p-3 rounded-lg" value={authData.birthDate} onChange={e => setAuthData({ ...authData, birthDate: e.target.value })} />
-          {authError && <p className="text-red-400 text-sm">{authError}</p>}
-          <button className="w-full bg-pink-600 py-3 rounded-lg font-bold">확인하기</button>
-        </form>
+  if (loading) return (
+    <div className="min-h-screen bg-[#0f0f10] flex items-center justify-center text-amber-900">
+      <div className="flex flex-col items-center gap-6">
+        <div className="w-16 h-16 border-t-2 border-amber-600 rounded-full animate-spin"></div>
+        <p className={`text-sm tracking-[0.3em] uppercase ${titleFont}`}>天命錄 로딩 중...</p>
       </div>
-    </div>
-  );
+      </div>
+    );
+
+  if (showAuth) return (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-full h-full bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
+      
+      <div className="bg-stone-900/40 backdrop-blur-xl p-10 rounded-sm w-full max-w-md text-stone-200 border border-amber-900/20 shadow-2xl relative z-10">
+        <div className="text-center mb-10">
+          <h2 className={`text-2xl font-bold text-amber-500/90 mb-2 ${titleFont}`}>本人確認</h2>
+          <p className="text-stone-500 text-xs font-light tracking-widest uppercase">Identity Verification</p>
+        </div>
+        
+        <form onSubmit={handleAuth} className="space-y-8">
+          <div className="space-y-2">
+            <label className="text-[10px] text-stone-600 uppercase tracking-widest ml-1">Phone Number</label>
+                <input
+                  type="tel"
+              placeholder="010-0000-0000" 
+              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all tracking-widest" 
+                  value={authData.phone}
+              onChange={e => setAuthData({ ...authData, phone: e.target.value })} 
+                />
+              </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] text-stone-600 uppercase tracking-widest ml-1">Birth Date</label>
+                <input
+                  type="date"
+              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all [color-scheme:dark]" 
+                  value={authData.birthDate}
+              onChange={e => setAuthData({ ...authData, birthDate: e.target.value })} 
+                />
+              </div>
+
+          {authError && <p className="text-red-900/80 text-[10px] text-center uppercase tracking-tighter">{authError}</p>}
+          
+          <button className="w-full bg-amber-800/80 hover:bg-amber-700 text-amber-100 py-4 rounded-sm font-medium tracking-[0.3em] transition-all border border-amber-600/30">
+            確認 (확인)
+              </button>
+            </form>
+      </div>
+      </div>
+    );
   if (error) return <div className="text-white p-10 text-center">{error}</div>;
   if (!sajuResult) return null;
   // 이름 생성 (Day Gan-Ji) - 데이터 누락 시 안전장치
@@ -287,7 +326,7 @@ const ResultPage = () => {
   // Safety helper
   const safeJoin = (arr) => Array.isArray(arr) ? arr.join(', ') : arr;
 
-    return (
+  return (
     <div className="min-h-screen bg-black flex justify-center">
       <div className="min-h-screen bg-[#0f0f10] text-slate-100 pb-20 relative overflow-hidden font-sans">
         {/* 배경: 먹물 느낌의 텍스처와 은은한 금빛 조명 */}
@@ -302,12 +341,12 @@ const ResultPage = () => {
 
           {/* [Fixed] Top Navigation Bar */}
           <div className="flex justify-between items-center mb-12 px-2">
-            <button
+        <button 
               onClick={() => navigate(-1)}
               className="text-stone-500 hover:text-amber-600 transition-colors p-2"
-            >
+        >
               <ChevronLeft size={24} />
-            </button>
+        </button>
 
             <div className="flex flex-col items-center">
               <div className="border-t border-amber-800/30 w-12 mb-1"></div>
@@ -360,8 +399,8 @@ const ResultPage = () => {
               <div className="flex justify-center items-end gap-2 mb-4 relative">
                 <span className="text-7xl font-bold text-[#e8dac0] drop-shadow-md font-serif tracking-tighter">{sajuResult?.scores?.overall || 0}</span>
                 <span className="text-xl text-amber-800/60 font-serif mb-4">점</span>
-              </div>
-
+      </div>
+      
               <p className="text-stone-400 text-sm font-light leading-relaxed break-keep px-2">
                 오행의 조화가 {sajuResult?.scores?.overall >= 80 ? '매우 훌륭합니다' : sajuResult?.scores?.overall >= 60 ? '무난한 편입니다' : '조금 불안정합니다'}.<br />
                 당신에게 필요한 것은 <span className="text-amber-600 font-bold">{sajuResult?.oheng_deficiency?.most_deficient || '균형'}</span>의 기운입니다.
