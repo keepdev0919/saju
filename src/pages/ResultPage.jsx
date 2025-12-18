@@ -779,10 +779,12 @@ const ResultPage = () => {
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-2 relative z-10 custom-scrollbar">
-                  <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1 mt-2">
-                    {Object.keys(talismanNames).map((key) => {
+                  <div className="grid grid-flow-col grid-rows-5 gap-1 mt-2 overflow-x-auto custom-scrollbar pb-2">
+                    {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
+                      Object.keys(talismanNames).filter(k => k.endsWith(animal))
+                    ).map((key) => {
                       const gan = key[0];
-                      const { bg } = getGanColor(gan) || { bg: 'from-slate-700 to-slate-800' };
+                      const { color, bg } = getGanColor(gan) || { color: 'text-stone-300', bg: 'from-slate-700 to-slate-800' };
                       const isSelected = testTalismanKey === key;
 
                       return (
@@ -795,7 +797,7 @@ const ResultPage = () => {
                             if (talismanSection) talismanSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
                           }}
                           className={`
-                                relative p-1 rounded-md border transition-all duration-300 group overflow-hidden
+                                relative p-1 rounded-md border transition-all duration-300 group overflow-hidden min-w-[45px]
                                 ${isSelected
                               ? 'border-amber-400 bg-amber-900/40 shadow-[0_0_10px_rgba(251,191,36,0.2)] scale-105'
                               : 'border-white/5 bg-[#252528] hover:border-white/20 hover:bg-[#2a2a2d]'
@@ -806,7 +808,7 @@ const ResultPage = () => {
                           <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br ${bg}`} />
 
                           <div className="relative z-10 flex flex-col items-center">
-                            <span className={`font-serif font-bold text-xs ${isSelected ? 'text-amber-200' : 'text-stone-300 group-hover:text-stone-100'}`}>
+                            <span className={`font-serif font-bold text-xs ${isSelected ? 'text-amber-200' : `${color} opacity-70 group-hover:opacity-100`}`}>
                               {key}
                             </span>
                           </div>

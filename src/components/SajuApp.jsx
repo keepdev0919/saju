@@ -547,7 +547,7 @@ const SajuApp = () => {
               {/* 슬로건을 브랜드명 바로 아래로 이동 */}
               <div className="inline-block mt-2">
                 <p className="text-stone-400/80 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
-                  당신의 운명이 기록된 단 하나의 기록
+                  당신의 운명이 새겨진 단 하나의 기록
                 </p>
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-8"></div>
               </div>
@@ -592,7 +592,7 @@ const SajuApp = () => {
               <div className="relative flex items-center justify-center gap-6">
                 <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
                 <span className="text-amber-500/85 font-light tracking-[0.6em] text-[11px] group-active:text-amber-400 transition-colors">
-                  기록 시작하기
+                  기록 열람하기
                 </span>
                 <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
               </div>
