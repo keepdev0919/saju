@@ -522,9 +522,9 @@ const SajuApp = () => {
         <div className="z-10 flex flex-col items-center justify-center h-full p-8 text-center relative pb-40">
           <div className="space-y-16">
             {/* 로고 영역: 브랜드 정체성 강화 - 슬로건을 브랜드명 바로 아래로 이동 */}
-            <div className="space-y-4 animate-fade-in" style={{ animationDuration: '2.5s' }}>
+            <div className="space-y-4 animate-fade-in-landing">
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
-              <h1 className={`text-6xl font-bold text-amber-400/95 tracking-[0.3em] font-serif drop-shadow-[0_0_30px_rgba(217,119,6,0.4)]`}>
+              <h1 className={`text-6xl font-bold text-amber-400/80 tracking-[0.3em] font-serif drop-shadow-[0_0_30px_rgba(217,119,6,0.4)]`}>
                 天命錄
             </h1>
               {/* 슬로건을 브랜드명 바로 아래로 이동 */}
@@ -533,34 +533,32 @@ const SajuApp = () => {
                   당신의 운명이 기록된 단 하나의 기록
                 </p>
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-8"></div>
-              </div>
             </div>
+        </div>
 
             {/* 메인 카피: 궁서체 계열 Serif 폰트로 전통적 권위감 부여 - 텍스트 밝기 개선 */}
-            <div className="space-y-8 animate-fade-in-up" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
+            <div className="space-y-8 animate-fade-in-landing">
               <h2 className={`text-xl font-medium leading-relaxed text-stone-50/95 tracking-[0.2em] break-keep ${titleFont}`}>
                 천기(天機)를 읽어<br />
                 삶의 지혜를 마주하십시오
               </h2>
       </div>
       
-            {/* 인터랙티브 Scroll 아이콘 - 옵션 2: 회전 + 펄스 효과 */}
-            <div className="mt-12 animate-fade-in-up" style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}>
+            {/* 인터랙티브 Scroll 아이콘 - 하이엔드 브랜드: 작은 크기 + 절제된 애니메이션 */}
+            <div className="mt-12 animate-fade-in-landing">
               <div className="group cursor-pointer relative inline-block">
-                {/* 호버 시 황금빛 발광 효과 */}
-                <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 scale-150"></div>
+                {/* 호버 시 미세한 황금빛 발광 효과 */}
+                <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 scale-125"></div>
                 
-                {/* Scroll 아이콘 - 기본: 천천히 회전, 호버: 빠르게 회전 + 펄스 */}
+                {/* Scroll 아이콘 - 작은 크기, 부드러운 펄스 효과만, 약간 기울임 */}
                 <Scroll 
-                  className="w-20 h-20 text-amber-400/60 mx-auto 
-                             transition-all duration-500
-                             group-hover:text-amber-400/90 
-                             group-hover:drop-shadow-[0_0_30px_rgba(217,119,6,0.8)]
-                             group-active:scale-95
-                             animate-rotate-slow
-                             group-hover:animate-rotate-fast
-                             group-hover:animate-pulse-glow" 
-                  strokeWidth={1.5} 
+                  className="w-8 h-8 text-amber-400/30 mx-auto 
+                             transition-all duration-700
+                             group-hover:text-amber-400/50 
+                             group-hover:drop-shadow-[0_0_15px_rgba(217,119,6,0.3)]
+                             animate-pulse-subtle
+                             rotate-[-8deg]" 
+                  strokeWidth={1} 
                 />
              </div>
         </div>

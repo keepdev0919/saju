@@ -71,6 +71,11 @@
   animation: fade-in 0.4s ease-out forwards;
 }
 
+/* 랜딩 페이지 전용 느린 페이드인 */
+.animate-fade-in-landing {
+  animation: fade-in 4s ease-out forwards;
+}
+
 .animate-slide-up {
   animation: slide-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
 }
@@ -390,46 +395,18 @@
   animation: ambient-breathing 15s ease-in-out infinite;
 }
 
-/* Scroll 아이콘 회전 애니메이션 (옵션 2: 회전 + 펄스) */
-@keyframes rotate-slow {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes rotate-fast {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse-glow {
+/* Scroll 아이콘 절제된 애니메이션 (하이엔드 브랜드용) */
+@keyframes pulse-subtle {
   0%, 100% {
-    opacity: 0.6;
-    transform: scale(1);
+    opacity: 0.5;
   }
   50% {
-    opacity: 1;
-    transform: scale(1.1);
+    opacity: 0.7;
   }
 }
 
-.animate-rotate-slow {
-  animation: rotate-slow 20s linear infinite;
-}
-
-.animate-rotate-fast {
-  animation: rotate-fast 3s linear infinite;
-}
-
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
+.animate-pulse-subtle {
+  animation: pulse-subtle 3s ease-in-out infinite;
 }
 
 /* 프리미엄 타이포그래피 */
