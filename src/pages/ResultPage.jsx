@@ -28,7 +28,7 @@ const getGanColor = (gan) => {
   if (['병', '정'].includes(gan)) return { name: '붉은', color: 'text-red-400', bg: 'from-red-500 to-rose-700' };
   if (['무', '기'].includes(gan)) return { name: '황금', color: 'text-yellow-400', bg: 'from-yellow-400 to-amber-600' };
   if (['경', '신'].includes(gan)) return { name: '백색', color: 'text-slate-100', bg: 'from-slate-300 to-slate-500' };
-  if (['임', '계'].includes(gan)) return { name: '검은', color: 'text-blue-400', bg: 'from-blue-600 to-indigo-800' };
+  if (['임', '계'].includes(gan)) return { name: '검은', color: 'text-zinc-100', bg: 'from-black to-zinc-900' };
   return { name: '신비한', color: 'text-purple-400', bg: 'from-purple-500 to-violet-700' };
 };
 
