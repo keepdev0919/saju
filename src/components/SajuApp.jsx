@@ -579,7 +579,7 @@ const SajuApp = () => {
                 {/* 안내 문구: 관조(觀照) 제안 */}
                 <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-max opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none">
                   <p className="text-amber-400/60 text-[10px] tracking-[0.4em] font-serif italic">
-                    관조(觀照)를 통해 60갑자의 수호신들을 미리 마주하십시오
+                    관조를 통해 60甲子의 수호신들을 미리 조우(遭遇)하십시오
                   </p>
                 </div>
 
@@ -641,11 +641,11 @@ const SajuApp = () => {
                     return (
                       <div
                         key={key}
-                        className="relative p-2 rounded-md border border-white/5 bg-[#151518] flex flex-col items-center gap-2 group min-w-[70px] aspect-[4/5] flex-shrink-0 grayscale hover:grayscale-0 transition-all duration-700"
+                        className="relative p-2 rounded-md border border-white/5 bg-[#151518] flex flex-col items-center gap-2 group min-w-[70px] aspect-[4/5] flex-shrink-0 hover:border-amber-900/40 transition-all duration-700"
                         title={talismanNames[key].name}
                       >
                         {/* 이미지 프리뷰 (강력한 블러 처리 - Spectral Teasing) */}
-                        <div className="absolute inset-0 z-0 opacity-20 blur-sm overflow-hidden rounded-md">
+                        <div className="absolute inset-0 z-0 opacity-20 blur-sm overflow-hidden rounded-md grayscale group-hover:grayscale-0 transition-all duration-700">
                           <img
                             src={`/images/talisman/${key === '갑자' ? 'gapja' : key === '병자' ? 'byeongja' : 'placeholder'}.png`}
                             alt=""
@@ -660,10 +660,10 @@ const SajuApp = () => {
                         </div>
 
                         <div className="relative z-10 flex flex-col items-center gap-1 mt-auto">
-                          <span className={`font-serif font-bold text-xs ${color} opacity-60`}>
+                          <span className={`font-serif font-bold text-[10px] ${color} drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]`}>
                             {key}
                           </span>
-                          <div className="w-1 h-1 rounded-full bg-amber-900/30"></div>
+                          <div className={`w-1 h-1 rounded-full ${color.replace('text-', 'bg-')}/40 animate-pulse`}></div>
                         </div>
 
                         {/* 호버 시 툴팁 느낌의 효과 */}
@@ -678,10 +678,12 @@ const SajuApp = () => {
               </div>
 
               {/* 푸터 안내 */}
-              <div className="p-4 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
-                <p className="text-stone-500 text-[10px] tracking-widest italic">
-                  "인연이 닿으면 그 진정한 모습을 드러낼 것입니다."
+              <div className="p-8 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
+                <div className="absolute inset-0 bg-amber-500/5 opacity-20 blur-2xl"></div>
+                <p className="relative text-amber-500/80 text-[12px] tracking-[0.3em] font-serif italic drop-shadow-[0_0_10px_rgba(217,119,6,0.3)]">
+                  "인연이 닿으면, 그 진정한 모습을 드러낼 것입니다."
                 </p>
+                <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-4"></div>
               </div>
             </div>
           </div>
