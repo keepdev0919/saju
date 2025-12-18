@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Download, ChevronRight, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock } from 'lucide-react';
+import { CreditCard, Download, ChevronRight, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock, ChevronLeft } from 'lucide-react';
 import { createUser, createPayment, verifyPayment, calculateSaju, getSajuResult } from '../utils/api';
 import { getGanColor, getJiAnimal, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
 import { talismanNames } from '../data/talismanData';
+import TalismanCard from './TalismanCard';
 
 /**
  * 사주 시간대 데이터
@@ -53,6 +54,14 @@ const SajuApp = () => {
   // 수호신 도감(Library) 모달 상태
   const [showLibrary, setShowLibrary] = useState(false);
   const [testTalismanKey, setTestTalismanKey] = useState(null);
+  const [selectedTalismanKey, setSelectedTalismanKey] = useState(null);
+  const [showTalismanDetail, setShowTalismanDetail] = useState(false);
+
+  // 수호신 카드 미리보기 상태 (신성한 인장 전략용)
+  const [talismanViewMode, setTalismanViewMode] = useState('image');
+  const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
+  const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
+  const talismanCardRef = useRef(null);
 
   // 사주 결과 상태
   const [sajuResult, setSajuResult] = useState(null);
@@ -109,6 +118,23 @@ const SajuApp = () => {
     }, 10);
     return () => clearInterval(timer);
   }, []);
+
+  /**
+   * ESC 키로 수호신 상세 모달 닫기
+   */
+  useEffect(() => {
+    if (showTalismanDetail) {
+      const handleEsc = (e) => {
+        if (e.key === 'Escape') {
+          setShowTalismanDetail(false);
+          setIsTalismanFlipped(false);
+          setTalismanViewMode('image');
+        }
+      };
+      window.addEventListener('keydown', handleEsc);
+      return () => window.removeEventListener('keydown', handleEsc);
+    }
+  }, [showTalismanDetail]);
 
   /**
    * 전화번호 유효성 검사 (010-XXXX-XXXX 형식)
@@ -475,6 +501,76 @@ const SajuApp = () => {
   const bodyFont = "font-sans tracking-normal";
 
   /**
+   * 수호신 카드 상세 미리보기 (신성한 인장 전략)
+   * ResultPage의 TalismanCard 컴포넌트를 직접 사용하여 일관성 확보
+   */
+  const renderTalismanPreviewModal = () => {
+    if (!selectedTalismanKey) return null;
+
+    return (
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
+        <div className="relative w-full max-w-[480px] flex flex-col items-center animate-modal-entrance">
+
+          {/* 헤더: 제목과 닫기 */}
+          <div className="w-full flex justify-between items-center mb-8 px-6">
+            <div className="flex flex-col">
+              <h3 className="text-amber-500 font-serif text-lg tracking-widest">
+                수호신 열람 (閱覽)
+              </h3>
+              <p className="text-stone-600 text-[9px] tracking-wider mt-1 uppercase">
+                Sacred Archive Preview
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setShowTalismanDetail(false);
+                setIsTalismanFlipped(false);
+                setTalismanViewMode('image');
+              }}
+              className="p-2 text-stone-500 hover:text-amber-500 transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          {/* 메인: TalismanCard 직접 렌더링 (도감 모드) */}
+          <div className="flex items-center justify-center mb-4">
+            <div className="relative">
+              <TalismanCard
+                ref={talismanCardRef}
+                type={selectedTalismanKey}
+                userName="[ 因緣之主人 ]"
+                talismanData={talismanNames[selectedTalismanKey]}
+                reason={null}
+                activeTab={talismanViewMode}
+                onFlip={(flipped) => setIsTalismanFlipped(flipped)}
+                isPurchased={false}
+                setIsPurchased={setIsTalismanPurchased}
+                isArchiveMode={true}
+              />
+
+              {/* 큰 도장 오버레이 (도감 모드에서는 항상 표시) */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
+                <div className="sacred-seal-large animate-seal-arrival-premium flex flex-col items-center justify-center gap-2">
+                  <span className="text-6xl font-bold tracking-tighter leading-none">天命錄</span>
+                  <span className="text-xs tracking-[0.3em] opacity-80 uppercase">Sacred Archive</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* 하단: 설명 문구만 */}
+          <div className="text-center">
+            <p className="text-amber-500/60 text-[10px] font-serif italic tracking-widest leading-relaxed">
+              " 인연의 주인을 기다리고 있습니다 "
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  /**
    * 랜딩 페이지 렌더링
    * 첫 화면으로 마케팅 문구와 CTA 버튼 표시 (모바일 최적화 인터랙티브 버전)
    */
@@ -618,7 +714,7 @@ const SajuApp = () => {
                     <Sparkles size={16} className="text-amber-600" />
                     천상의 기록 보관소 (Celestial Archive)
                   </h3>
-                  <p className="text-stone-500 text-[10px] tracking-wider mt-1">60갑자의 수호신들이 이곳에 봉인되어 있습니다.</p>
+                  <p className="text-stone-500 text-[10px] tracking-wider mt-1">천기(天機)의 흐름 속에 나열된 60甲子 수호신들의 장엄한 자태를 관조하십시오.</p>
                 </div>
                 <button
                   onClick={() => setShowLibrary(false)}
@@ -640,35 +736,44 @@ const SajuApp = () => {
                     return (
                       <div
                         key={key}
-                        className="relative p-2 rounded-md border border-white/5 bg-[#151518] flex flex-col items-center gap-2 group min-w-[70px] aspect-[4/5] flex-shrink-0 hover:border-amber-900/40 transition-all duration-700"
+                        onClick={() => {
+                          setSelectedTalismanKey(key);
+                          setShowTalismanDetail(true);
+                        }}
+                        className="relative p-2 rounded-md border border-white/5 bg-[#151518] flex flex-col items-center gap-2 group min-w-[70px] aspect-[4/5] flex-shrink-0 hover:border-amber-900/60 hover:scale-105 hover:shadow-lg hover:shadow-amber-900/20 transition-all duration-700 cursor-pointer"
                         title={talismanNames[key].name}
                       >
                         {/* 이미지 프리뷰 (강력한 블러 처리 - Spectral Teasing) */}
-                        <div className="absolute inset-0 z-0 opacity-20 blur-sm overflow-hidden rounded-md grayscale group-hover:grayscale-0 transition-all duration-700">
+                        <div className="absolute inset-0 z-0 opacity-20 blur-md group-hover:blur-sm overflow-hidden rounded-md grayscale group-hover:grayscale-0 transition-all duration-700">
                           <img
                             src="/images/talisman/placeholder.png"
                             alt=""
-                            className="w-full h-full object-cover scale-150"
+                            className="w-full h-full object-cover scale-150 group-hover:scale-110 transition-transform duration-1000"
                             onError={(e) => { e.target.src = 'https://via.placeholder.com/100/101012/101012'; }}
                           />
                         </div>
 
-                        {/* 잠금 아이콘 */}
-                        <div className="absolute top-1 right-1 z-20">
-                          <Lock size={10} className="text-amber-900/40" />
+                        {/* 잠금 아이콘: 호버 시 색상 변화 */}
+                        <div className="absolute top-1 right-1 z-20 group-hover:animate-pulse">
+                          <Lock size={10} className="text-amber-900/40 group-hover:text-amber-700/60 transition-colors" />
                         </div>
 
                         <div className="relative z-10 flex flex-col items-center gap-1 mt-auto">
-                          <span className={`font-serif font-bold text-[10px] ${color} drop-shadow-[0_0_8px_rgba(0,0,0,0.8)]`}>
+                          <span className={`font-serif font-bold text-[10px] ${color} drop-shadow-[0_0_8px_rgba(0,0,0,0.8)] group-hover:drop-shadow-[0_0_12px_rgba(217,119,6,0.4)] transition-all`}>
                             {key}
                           </span>
                           <div className={`w-1 h-1 rounded-full ${color.replace('text-', 'bg-')}/40 animate-pulse`}></div>
                         </div>
 
-                        {/* 호버 시 툴팁 느낌의 효과 */}
-                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30">
-                          <p className="text-amber-500/90 text-[8px] font-serif leading-tight">{talismanNames[key].name}</p>
-                          <p className="text-stone-400 text-[6px] mt-1 leading-none italic">당신의 운명이 아닙니다</p>
+                        {/* 호버 툴팁: "기록 상세보기" */}
+                        <div className="absolute inset-0 bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 backdrop-blur-sm rounded-md">
+                          <p className="text-amber-500/90 text-[8px] font-serif leading-tight mb-1">
+                            {talismanNames[key].name}
+                          </p>
+                          <div className="flex items-center gap-1 text-stone-400 text-[6px] italic">
+                            <Eye size={8} />
+                            <span>기록 상세보기</span>
+                          </div>
                         </div>
                       </div>
                     );
@@ -680,7 +785,7 @@ const SajuApp = () => {
               <div className="p-8 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
                 <div className="absolute inset-0 bg-amber-500/5 opacity-20 blur-2xl"></div>
                 <p className="relative text-amber-500/80 text-[12px] tracking-[0.3em] font-serif italic drop-shadow-[0_0_10px_rgba(217,119,6,0.3)]">
-                  "인연이 닿으면, 그 진정한 모습을 드러낼 것입니다."
+                  "형상은 모두에게 열려 있으나, 당신이 타고난 운명과의 연결은 오직 천기(天機) 속에 기록되어 있습니다."
                 </p>
                 <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-4"></div>
               </div>
@@ -709,6 +814,9 @@ const SajuApp = () => {
             </p>
           </div>
         </div>
+
+        {/* 수호신 카드 프리뷰 모달 (인장 포함) */}
+        {showTalismanDetail && renderTalismanPreviewModal()}
       </div>
     );
   };

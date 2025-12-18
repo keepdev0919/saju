@@ -3,7 +3,7 @@ import html2canvas from 'html2canvas';
 import { Download, Lock, Zap, Heart, Info, Image as ImageIcon } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
 
-const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talismanData, reason, activeTab = 'image', onFlip, isPurchased = false, setIsPurchased }, ref) => {
+const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talismanData, reason, activeTab = 'image', onFlip, isPurchased = false, setIsPurchased, isArchiveMode = false }, ref) => {
     const [isFlipped, setIsFlipped] = useState(false); // 카드 뒤집힘 상태
     const [stampName, setStampName] = useState(userName); // 기본은 한글 이름
     const [showModal, setShowModal] = useState(false);
@@ -227,6 +227,55 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
         setShowModal(false); // 모달 닫기
     };
 
+    // 도감 모드: 3D 플립 없이 이미지 카드만 표시
+    if (isArchiveMode) {
+        return (
+            <div className="flex flex-col items-center animate-fade-in-up">
+                <div ref={cardRef} className="relative w-[320px] h-[480px] rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-[#0d0d12]">
+                    {/* 이미지 배경 */}
+                    <img
+                        src={bgImage}
+                        alt={info.title}
+                        className="absolute inset-0 w-full h-full object-cover"
+                    />
+
+                    {/* 그라데이션 오버레이 */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+
+                    {/* 텍스트 정보 (상단 중앙) */}
+                    <div className="absolute top-10 left-0 w-full text-center z-10 flex flex-col items-center pointer-events-none">
+                        <h3 className="text-3xl font-bold text-[#f5efe0] tracking-[0.15em] drop-shadow-2xl mb-1"
+                            style={{
+                                fontFamily: '"Nanum Myeongjo", serif',
+                                textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.6)'
+                            }}>
+                            {info.title}
+                        </h3>
+                        <p className="text-[14px] font-serif font-bold tracking-[0.4em] bg-clip-text text-transparent bg-gradient-to-b from-[#fbf8cc] via-[#f59e0b] to-[#b45309]"
+                            style={{
+                                filter: 'drop-shadow(0 2px 2px rgba(0,0,0,0.8))'
+                            }}>
+                            {info.hanja}
+                        </p>
+                    </div>
+
+                    {/* 우측 하단 도장은 도감 모드에서 제외 */}
+
+                    {/* 설명 텍스트 (하단) */}
+                    <div className="absolute bottom-8 left-6 right-6 text-center z-20">
+                        <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                            {info.desc}
+                        </p>
+                    </div>
+
+                    {/* 테두리 장식 */}
+                    <div className="absolute inset-4 border border-white/20 rounded-lg pointer-events-none" />
+                </div>
+            </div>
+        );
+    }
+
+    // 결과 페이지 모드: 기존 3D 플립 전체
     return (
         <div className="flex flex-col items-center animate-fade-in-up">
             {/* 3D Flip Container */}
