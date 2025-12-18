@@ -243,25 +243,33 @@ description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 �
       '수': { yang: '임', yin: '계' }
     };
 
-    const targetElement = sajuData.yongshen.korean; // e.g. '화'
+    const targetElement = sajuData.yongshen; // e.g. '화' (Fix: Removed .korean since it's already a string)
     const targetStems = STEM_GROUPS[targetElement] || STEM_GROUPS['화']; // Default to Fire if error
 
     // 4. Find the Perfect Match
     let bestTalisman = null;
+    let selectionReason = null;
     const YANG_BRANCHES = ['자', '인', '진', '오', '신', '술'];
 
     for (const allyJi of myAllies) {
       const isAllyYang = YANG_BRANCHES.includes(allyJi);
-      if (isAllyYang) {
-        bestTalisman = targetStems.yang + allyJi;
-        break;
-      } else {
-        bestTalisman = targetStems.yin + allyJi;
-        break;
-      }
+      const stem = isAllyYang ? targetStems.yang : targetStems.yin;
+      bestTalisman = stem + allyJi;
+
+      selectionReason = {
+        element: targetElement, // e.g. '화'
+        stem: stem,           // e.g. '병'
+        branch: allyJi,       // e.g. '인'
+        branchAnimal: { '자': '쥐', '축': '소', '인': '호랑이', '묘': '토끼', '진': '용', '사': '뱀', '오': '말', '미': '양', '신': '원숭이', '유': '닭', '술': '개', '해': '돼지' }[allyJi],
+        userYearJi: { '자': '쥐', '축': '소', '인': '호랑이', '묘': '토끼', '진': '용', '사': '뱀', '오': '말', '미': '양', '신': '원숭이', '유': '닭', '술': '개', '해': '돼지' }[userYearJi]
+      };
+      break;
     }
 
-    if (!bestTalisman) bestTalisman = '갑자';
+    if (!bestTalisman) {
+      bestTalisman = '갑자';
+      selectionReason = { element: '목', stem: '갑', branch: '자', branchAnimal: '쥐', userYearJi: '쥐' };
+    }
 
     // -----------------------------------------------------------
 
@@ -274,7 +282,10 @@ description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 �
       health: parsedData.health?.description || '건강운 정보를 준비 중입니다.',
       scores,
       oheng: sajuData.wuxing,
-      talisman: { name: bestTalisman }, // [NEW] Expert System Talisman
+      talisman: {
+        name: bestTalisman,
+        reason: selectionReason
+      }, // [NEW] Expert System Talisman + Reason
       aiRawResponse: aiInterpretation,  // 원본 JSON 응답
       detailedData: parsedData  // 상세 데이터 전체 (새로운 필드)
     };

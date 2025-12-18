@@ -1,14 +1,20 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import html2canvas from 'html2canvas';
-import { Download, Lock } from 'lucide-react';
+import { Download, Lock, Zap, Heart, Info, Image as ImageIcon } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
 
-const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) => {
+const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talismanData, reason, activeTab = 'image', onFlip, isPurchased = false, setIsPurchased }, ref) => {
     const [isFlipped, setIsFlipped] = useState(false); // 카드 뒤집힘 상태
-    const [isPurchased, setIsPurchased] = useState(false); // 구매/완료 상태
     const [stampName, setStampName] = useState(userName); // 기본은 한글 이름
     const [showModal, setShowModal] = useState(false);
     const cardRef = useRef(null);
+
+    // Expose methods to parent
+    useImperativeHandle(ref, () => ({
+        handleDownload: () => {
+            handleDownload();
+        }
+    }));
 
     // 이미지 매핑
     const images = {
@@ -226,7 +232,11 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
             {/* 3D Flip Container */}
             <div
                 className="relative w-[320px] h-[480px] group perspective-1000 cursor-pointer"
-                onClick={() => setIsFlipped(!isFlipped)} // Toggle flip
+                onClick={() => {
+                    const nextFlipped = !isFlipped;
+                    setIsFlipped(nextFlipped);
+                    if (onFlip) onFlip(nextFlipped);
+                }} // Toggle flip
             >
                 {/* Rotating Inner Container */}
                 <div
@@ -290,17 +300,17 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
                         <div className="absolute inset-5 border border-amber-900/5 rounded-lg pointer-events-none" />
                     </div>
 
-                    {/* [BACK FACE] Revealed Talisman (Existing Design) */}
+                    {/* [BACK FACE] Revealed State */}
                     <div
-                        className="absolute inset-0 w-full h-full rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-slate-900"
+                        className="absolute inset-0 w-full h-full rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-[#0d0d12]"
                         style={{
                             transform: 'rotateY(180deg)',
                             backfaceVisibility: 'hidden',
                             WebkitBackfaceVisibility: 'hidden'
                         }}
                     >
-                        {/* 1. 배경 이미지 */}
-                        <div className="relative w-full h-full">
+                        {/* [Tab 1] Image View */}
+                        <div className={`relative w-full h-full transition-opacity duration-500 ${activeTab === 'image' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                             <img
                                 src={bgImage}
                                 alt={info.title}
@@ -374,19 +384,76 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
                             {/* 테두리 장식 */}
                             <div className="absolute inset-4 border border-white/20 rounded-lg pointer-events-none" />
                         </div>
+
+                        {/* [Tab 2] Reason View */}
+                        {reason && (
+                            <div className={`absolute inset-0 w-full h-full p-8 flex flex-col justify-center bg-[#0d0d12] transition-opacity duration-500 ${activeTab === 'reason' ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+                                {/* Background Decorative Element - Deep Inkstone Texture */}
+                                <div className="absolute inset-0 bg-[#0a0a0c]" />
+                                <div className="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] bg-repeat" />
+                                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(217,119,6,0.15),transparent_70%)]" />
+
+                                {/* Professional Vignette & Depth Layer */}
+                                <div className="absolute inset-0 pointer-events-none shadow-[inset_0_0_100px_rgba(0,0,0,1)] z-10" />
+                                <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle,transparent_30%,rgba(0,0,0,0.8)_100%)] z-10" />
+
+                                <div className="relative z-20 space-y-10 h-full flex flex-col justify-center py-4 px-2">
+                                    {/* Animation Wrapper for Title */}
+                                    <div className={`transition-all duration-1000 transform ${activeTab === 'reason' ? 'translate-y-0 opacity-100' : 'translate-y-4 opacity-0'}`}>
+                                        <h4 className="text-center text-amber-600/70 text-[11px] font-serif tracking-[1em] mb-2 flex items-center justify-center gap-4"
+                                            style={{ textShadow: '0 0 15px rgba(217,119,6,0.4)' }}>
+                                            <span className="w-12 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent"></span>
+                                            選定 秘策
+                                            <span className="w-12 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent"></span>
+                                        </h4>
+                                    </div>
+
+                                    <div className="space-y-10">
+                                        {/* Step 1: Element Balance - Animation delay 200ms */}
+                                        <div className={`flex gap-5 items-start transition-all duration-1000 delay-200 transform ${activeTab === 'reason' ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
+                                            <div className="flex-shrink-0 w-14 h-14 rounded-full border border-amber-600/20 flex items-center justify-center bg-black/80 shadow-[0_0_20px_rgba(217,119,6,0.15)] group-hover:scale-110 transition-transform">
+                                                <Zap size={22} className="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                                            </div>
+                                            <div className="space-y-2 pt-1 font-serif">
+                                                <p className="text-[11px] text-amber-600 font-bold uppercase tracking-[0.3em] text-shadow-sm">기운 보강 (補强)</p>
+                                                <p className="text-[15px] text-stone-200 leading-[2.0] break-keep text-shadow-sm">
+                                                    귀하의 사주에 다소 치우친 <span className="text-amber-500 font-bold drop-shadow-[0_0_5px_rgba(245,158,11,0.3)]">{reason.element}</span> 기운을 다스리기 위해,
+                                                    이를 보강하는 <span className="text-amber-400 font-bold">{reason.stem}</span>의 기운을 수신하여
+                                                    생명력 넘치는 에너지를 부여하였습니다.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        {/* Step 2: Harmony (Samhap) - Animation delay 400ms */}
+                                        <div className={`flex gap-5 items-start transition-all duration-1000 delay-400 transform ${activeTab === 'reason' ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
+                                            <div className="flex-shrink-0 w-14 h-14 rounded-full border border-rose-600/20 flex items-center justify-center bg-black/80 shadow-[0_0_20px_rgba(225,29,72,0.15)] group-hover:scale-110 transition-transform">
+                                                <Heart size={22} className="text-rose-500 drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]" />
+                                            </div>
+                                            <div className="space-y-2 pt-1 font-serif">
+                                                <p className="text-[11px] text-rose-600 font-bold uppercase tracking-[0.3em] text-shadow-sm">영혼의 단짝 (合)</p>
+                                                <p className="text-[15px] text-stone-200 leading-[2.0] break-keep text-shadow-sm">
+                                                    귀하의 타고난 <span className="text-rose-500 font-bold drop-shadow-[0_0_5px_rgba(225,29,72,0.3)]">{reason.userYearJi}띠</span>와 천상의 화합(삼합)을 이루는
+                                                    <span className="text-rose-400 font-bold"> {reason.branchAnimal}</span>의 기운을 결합하여,
+                                                    당신을 수호하는 가장 견고한 방패가 되게 하였습니다.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Footer Stamp - Animation delay 600ms */}
+                                    <div className={`pt-8 flex justify-center transition-all duration-1000 delay-600 transform ${activeTab === 'reason' ? 'translate-y-0 opacity-60' : 'translate-y-4 opacity-0'}`}>
+                                        <div className="text-[12px] border-2 border-amber-900/60 px-4 py-1 text-amber-900/80 font-bold rotate-12 font-serif tracking-[0.3em] shadow-sm">
+                                            天命錄 秘傳
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Inner Border Overlay */}
+                                <div className="absolute inset-4 border border-amber-900/5 rounded-lg pointer-events-none z-30" />
+                            </div>
+                        )}
                     </div>
                 </div>
-            </div>
-
-            {/* 하단 액션 버튼 (Flip 상태에서만 표시하거나 항상 표시) */}
-            <div className={`mt-6 flex flex-col items-center gap-3 w-full max-w-[320px] transition-opacity duration-500 ${isFlipped ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
-                <button
-                    onClick={(e) => { e.stopPropagation(); handleDownload(); }}
-                    className="w-full py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95 border bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-500 hover:to-amber-600 text-white border-amber-400/30 shadow-amber-900/30"
-                >
-                    <Download size={18} />
-                    <span>{isPurchased ? '수호 부적 저장하기' : '내 이름 새겨서 소장하기'}</span>
-                </button>
             </div>
 
             {/* Purchase Modal */}
@@ -397,6 +464,6 @@ const TalismanCard = ({ type = 'water', userName = '사용자', talismanData }) 
             />
         </div>
     );
-};
+});
 
 export default TalismanCard;

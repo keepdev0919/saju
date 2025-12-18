@@ -2,7 +2,7 @@
  * 결과 조회 페이지 (Result Page 2.0)
  * 사용자에게 강렬한 첫인상(Aggro)과 데이터 시각화, 구체적 솔루션을 제공하는 업그레이드 버전
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSajuResult, verifyUser, createPayment, verifyPayment, generatePDF, getPdfDownloadUrl, checkPdfPayment } from '../utils/api';
 import { RefreshCw, Download, X, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Sparkles, TrendingUp, Heart, Briefcase, Activity, Zap, Compass, MapPin, Search } from 'lucide-react';
@@ -69,15 +69,31 @@ const ResultPage = () => {
   const [showTalismanSelector, setShowTalismanSelector] = useState(false);
   const [testTalismanKey, setTestTalismanKey] = useState(null);
 
+  // [Talisman View Interaction]
+  const [talismanViewMode, setTalismanViewMode] = useState('image');
+  const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
+  const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
+
   // 애니메이션 상태
   const [mounted, setMounted] = useState(false);
   const [scoreAnimated, setScoreAnimated] = useState(0);
+  const talismanCardRef = useRef(null);
 
   // [Tech Demo] Mock Data for Testing without Token
   const MOCK_DATA = {
     scores: { overall: 85, wealth: 90, love: 75, career: 88, health: 80 },
     oheng: { 목: 20, 화: 30, 토: 10, 금: 15, 수: 25 },
-    talisman: { name: '갑자' }, // Default Demo Talisman
+    talisman: {
+      name: '갑자',
+      reason: {
+        element: '수(水)',
+        stem: '임(壬)',
+        branch: '자',
+        branchAnimal: '쥐',
+        userYearJi: '쥐'
+      }
+    }, // Default Demo Talisman
+    oheng_deficiency: { most_deficient: '수(水)' },
     detailedData: {
       personality: { description: '당신은 푸른 소나무처럼 굳건한 의지를 지닌 지도자입니다.' },
       wealth: { description: '재물운이 매우 좋으며, 꾸준한 노력으로 큰 부를 쌓을 수 있습니다.' },
@@ -440,34 +456,94 @@ const ResultPage = () => {
           <div className="mt-12 mb-8 relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
 
-            <div className="text-center mb-6 relative z-10">
+            <div className="text-center mb-10 relative z-10">
               <h3 className="text-2xl font-bold text-[#e8dac0] mb-2 tracking-[0.2em]" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
                 수호 부적
               </h3>
               <p className="text-xs text-stone-500 font-serif">당신의 부족한 기운을 채워줄 수호신</p>
             </div>
 
-            <div className="flex justify-center perspective-1000">
-              {/* [Restored Prototype] Forced Fire Talisman as requested */}
-              <TalismanCard
-                type={testTalismanKey || "gapja"}
-                userName={userInfo?.name || '사용자'}
-                // Use selected test talisman data if available, otherwise fallback to result or default
-                talismanData={
-                  testTalismanKey
-                    ? talismanNames[testTalismanKey]
-                    : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
-                      ? talismanNames[sajuResult.talisman.name]
-                      : talismanNames['갑자'])
-                }
-              />
+            <div className="flex justify-center items-center gap-4 mb-8 relative">
+              {/* Left Arrow (Ghost Navigation) */}
+              {sajuResult.talisman?.reason && isTalismanFlipped && (
+                <button
+                  onClick={() => setTalismanViewMode('image')}
+                  className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'reason' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
+                >
+                  <ChevronLeft size={32} />
+                </button>
+              )}
+
+              <div className="perspective-1000">
+                <TalismanCard
+                  ref={talismanCardRef}
+                  type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
+                  userName={userInfo?.name || '사용자'}
+                  reason={sajuResult.talisman?.reason}
+                  activeTab={talismanViewMode}
+                  onFlip={(flipped) => setIsTalismanFlipped(flipped)}
+                  isPurchased={isTalismanPurchased}
+                  setIsPurchased={setIsTalismanPurchased}
+                  // Use selected test talisman data if available, otherwise fallback to result or default
+                  talismanData={
+                    testTalismanKey
+                      ? talismanNames[testTalismanKey]
+                      : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
+                        ? talismanNames[sajuResult.talisman.name]
+                        : talismanNames['갑자'])
+                  }
+                />
+              </div>
+
+              {/* Right Arrow (Ghost Navigation) */}
+              {sajuResult.talisman?.reason && isTalismanFlipped && (
+                <button
+                  onClick={() => setTalismanViewMode('reason')}
+                  className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'image' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
+                >
+                  <ChevronRight size={32} />
+                </button>
+              )}
             </div>
 
-            <div className="text-center mt-4">
-              <span className="inline-block px-3 py-1 bg-amber-900/20 text-amber-700/70 text-[10px] border border-amber-900/10 rounded font-serif">
-                Premium Edition
-              </span>
-            </div>
+            {/* Page Indicators */}
+            {sajuResult.talisman?.reason && isTalismanFlipped && (
+              <div className="flex justify-center gap-2 mb-10 -mt-4">
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'image' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'reason' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+              </div>
+            )}
+
+            {/* Premium Download/Purchase Button */}
+            {isTalismanFlipped && (
+              <div className="flex justify-center px-8 mb-8">
+                <button
+                  onClick={() => talismanCardRef.current?.handleDownload()}
+                  className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
+                >
+                  {/* Button Background: Deep Traditional Ink */}
+                  <div className="absolute inset-0 bg-[#0d0d0f] border border-amber-900/30 group-hover:border-amber-600/50 transition-colors" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent opacity-50" />
+
+                  {/* Subtle Texture Hook */}
+                  <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
+
+                  {/* Button Content */}
+                  <div className="relative flex items-center justify-center gap-3">
+                    <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
+                    <Download size={18} className="text-amber-600 group-hover:scale-110 transition-transform" />
+                    <span className="text-amber-500 font-serif font-bold tracking-[0.2em] text-sm">
+                      {isTalismanPurchased ? '護符 貯藏 (저장하기)' : '名銘 貯藏 (이름 새겨 소장하기)'}
+                    </span>
+                    <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
+                  </div>
+
+                  {/* Glossy Overlay */}
+                  <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
+                </button>
+              </div>
+            )}
+
           </div>
 
           {/* Section 3: Detailed Content */}

@@ -73,6 +73,10 @@ export async function calculateSaju(req, res) {
       birthTime
     });
 
+    // [NEW] talisman 데이터를 detailedData에 포함하여 저장
+    const detailedDataToSave = result.detailedData || {};
+    detailedDataToSave.talisman = result.talisman;
+
     // 결과 저장
     const [resultData] = await db.execute(
       `INSERT INTO saju_results
@@ -95,7 +99,7 @@ export async function calculateSaju(req, res) {
         result.scores.health,
         JSON.stringify(result.oheng),
         result.aiRawResponse || null,  // 원본 응답 저장
-        result.detailedData ? JSON.stringify(result.detailedData) : null  // 상세 데이터 저장
+        JSON.stringify(detailedDataToSave)
       ]
     );
 
@@ -198,6 +202,7 @@ export async function getSajuResult(req, res) {
         },
         oheng: parseJsonData(result.oheng_data, {}),
         sajuData: parseJsonData(result.saju_data, {}),
+        talisman: parseJsonData(result.detailed_data, null)?.talisman || { name: '갑자' },
         aiRawResponse: result.ai_raw_response || null,  // 원본 응답 포함
         detailedData: parseJsonData(result.detailed_data, null)  // 상세 데이터 포함
       }
