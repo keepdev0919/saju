@@ -109,6 +109,53 @@ const SajuApp = () => {
   };
 
   /**
+   * 생년월일 유효성 검사
+   * 1. 미래 날짜 불가 (연도 숫자 비교로 정확도 향상)
+   * 2. 1900년 이전 불가
+   * 3. 연도는 반드시 4자리여야 함
+   */
+  const isBirthDateValid = (date) => {
+    if (!date) return false;
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+
+    const [year, month, day] = date.split('-').map(Number);
+
+    // 연도 길이 및 범위 체크
+    if (year < 1900 || year > todayYear || String(year).length !== 4) return false;
+
+    // 미래 날짜 정밀 체크 (연도가 올해인 경우 월, 일 비교)
+    if (year === todayYear) {
+      if (month > todayMonth) return false;
+      if (month === todayMonth && day > todayDay) return false;
+    }
+
+    return true;
+  };
+
+  /**
+   * 생년월일 에러 메시지 반환
+   */
+  const getBirthDateError = (date) => {
+    if (!date) return null;
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+
+    const [year, month, day] = date.split('-').map(Number);
+
+    if (String(year).length !== 4) return "연도는 4자리로 입력해 주세요.";
+    if (year < 1900) return "1900년 이후의 날짜를 입력해 주세요.";
+    if (year > todayYear || (year === todayYear && (month > todayMonth || (month === todayMonth && day > todayDay)))) {
+      return "미래의 날짜는 입력할 수 없습니다.";
+    }
+    return null;
+  };
+
+  /**
    * 시간 포맷팅 함수
    * @param {number} centiseconds - 1/100초 단위의 시간
    * @returns {string} MM:SS:CS 형식의 문자열
@@ -596,9 +643,14 @@ const SajuApp = () => {
                 name="birthDate"
                 value={userInfo.birthDate}
                 onChange={handleInputChange}
-                className="w-full bg-transparent text-white text-center text-2xl font-bold outline-none py-3 border-b border-white/20 focus:border-white/40 transition-colors [color-scheme:dark]"
+                className={`w-full bg-transparent text-white text-center text-2xl font-bold outline-none py-3 border-b transition-colors [color-scheme:dark] ${getBirthDateError(userInfo.birthDate) ? 'border-red-500' : 'border-white/20 focus:border-white/40'}`}
                 autoFocus
               />
+              {getBirthDateError(userInfo.birthDate) && (
+                <p className="text-red-400 text-xs mt-2 text-center animate-fade-in">
+                  {getBirthDateError(userInfo.birthDate)}
+                </p>
+              )}
             </div>
 
             {/* 음력 선택 시 윤달 체크박스 */}
@@ -623,7 +675,8 @@ const SajuApp = () => {
           <div className="p-5">
             <button
               onClick={() => setEditingField(null)}
-              className="w-full bg-slate-300 text-slate-800 font-bold py-4 rounded-xl hover:bg-slate-400 transition-colors shadow-lg"
+              disabled={!isBirthDateValid(userInfo.birthDate)}
+              className={`w-full bg-slate-300 text-slate-800 font-bold py-4 rounded-xl transition-colors shadow-lg ${!isBirthDateValid(userInfo.birthDate) ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-400'}`}
             >
               설정 완료
             </button>
@@ -754,7 +807,7 @@ const SajuApp = () => {
             <button
               onClick={async () => {
                 // 사용자 정보 검증
-                if (!userInfo.name || !userInfo.birthDate || !isPhoneValid(userInfo.phone)) {
+                if (!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone)) {
                   return;
                 }
 
@@ -794,8 +847,8 @@ const SajuApp = () => {
                   setLoading(false);
                 }
               }}
-              disabled={!userInfo.name || !userInfo.birthDate || !isPhoneValid(userInfo.phone) || loading}
-              className={`w-full py-4 rounded-xl text-lg font-bold transition-all ${!userInfo.name || !userInfo.birthDate || !isPhoneValid(userInfo.phone) || loading
+              disabled={!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading}
+              className={`w-full py-4 rounded-xl text-lg font-bold transition-all ${!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading
                   ? 'bg-white/10 text-slate-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-violet-500 to-purple-600 text-white shadow-lg shadow-violet-500/30 hover:opacity-90'
                 }`}
@@ -805,6 +858,11 @@ const SajuApp = () => {
             {userInfo.phone && !isPhoneValid(userInfo.phone) && (
               <p className="text-red-400 text-xs mt-2 text-center animate-fade-in">
                 올바른 휴대전화 번호 형식이 아닙니다 (010-0000-0000)
+              </p>
+            )}
+            {userInfo.birthDate && !isBirthDateValid(userInfo.birthDate) && (
+              <p className="text-red-400 text-xs mt-2 text-center animate-fade-in">
+                {getBirthDateError(userInfo.birthDate)}
               </p>
             )}
             {error && (
