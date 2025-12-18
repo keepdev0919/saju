@@ -517,17 +517,23 @@ const SajuApp = () => {
         
         {/* 배경 텍스처 (한지 느낌) - 투명도 상향 */}
         <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper.png')]" />
-
-        {/* 메인 콘텐츠 */}
+      
+      {/* 메인 콘텐츠 */}
         <div className="z-10 flex flex-col items-center justify-center h-full p-8 text-center relative pb-40">
           <div className="space-y-16">
-            {/* 로고 영역: 은은한 발광 - 밝기 개선 */}
+            {/* 로고 영역: 브랜드 정체성 강화 - 슬로건을 브랜드명 바로 아래로 이동 */}
             <div className="space-y-4 animate-fade-in" style={{ animationDuration: '2.5s' }}>
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
               <h1 className={`text-6xl font-bold text-amber-400/95 tracking-[0.3em] font-serif drop-shadow-[0_0_30px_rgba(217,119,6,0.4)]`}>
                 天命錄
-              </h1>
-              <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-8"></div>
+            </h1>
+              {/* 슬로건을 브랜드명 바로 아래로 이동 */}
+              <div className="inline-block mt-2">
+                <p className="text-stone-400/80 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
+                  당신의 운명이 기록된 단 하나의 기록
+                </p>
+                <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-8"></div>
+              </div>
             </div>
 
             {/* 메인 카피: 궁서체 계열 Serif 폰트로 전통적 권위감 부여 - 텍스트 밝기 개선 */}
@@ -536,23 +542,36 @@ const SajuApp = () => {
                 천기(天機)를 읽어<br />
                 삶의 지혜를 마주하십시오
               </h2>
-              <p className="text-stone-400/80 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
-                당신의 운명이 기록된 단 하나의 기록
-              </p>
-            </div>
-
-            {/* Scroll 아이콘 - 밝기 개선 */}
-            <div className="mt-12 opacity-40 animate-pulse">
-              <Scroll className="w-8 h-8 text-amber-400/60 mx-auto" strokeWidth={1} />
-            </div>
+      </div>
+      
+            {/* 인터랙티브 Scroll 아이콘 - 옵션 2: 회전 + 펄스 효과 */}
+            <div className="mt-12 animate-fade-in-up" style={{ animationDelay: '1.2s', animationFillMode: 'forwards' }}>
+              <div className="group cursor-pointer relative inline-block">
+                {/* 호버 시 황금빛 발광 효과 */}
+                <div className="absolute inset-0 bg-amber-500/30 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10 scale-150"></div>
+                
+                {/* Scroll 아이콘 - 기본: 천천히 회전, 호버: 빠르게 회전 + 펄스 */}
+                <Scroll 
+                  className="w-20 h-20 text-amber-400/60 mx-auto 
+                             transition-all duration-500
+                             group-hover:text-amber-400/90 
+                             group-hover:drop-shadow-[0_0_30px_rgba(217,119,6,0.8)]
+                             group-active:scale-95
+                             animate-rotate-slow
+                             group-hover:animate-rotate-fast
+                             group-hover:animate-pulse-glow" 
+                  strokeWidth={1.5} 
+                />
+             </div>
+        </div>
           </div>
         </div>
 
         {/* 하단 CTA 영역: 모바일 최적화 인장 스타일 버튼 - 밝기 개선 */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-10 pb-20">
           <div className="max-w-[400px] mx-auto">
-            <button
-              onClick={() => setStep('input')}
+            <button 
+                onClick={() => setStep('input')}
               className="group relative w-full overflow-hidden border border-amber-700/40 bg-stone-900/30 backdrop-blur-sm py-6 rounded-sm transition-all duration-500 active:scale-[0.97] active:bg-stone-800/40 active:border-amber-500/60 shadow-[0_0_30px_rgba(217,119,6,0.15)]"
             >
               <div className="relative flex items-center justify-center gap-6">
@@ -567,12 +586,12 @@ const SajuApp = () => {
             <p className="text-stone-500/70 text-[8px] tracking-[0.4em] text-center mt-10 uppercase font-light">
               Restricted Access
             </p>
-          </div>
         </div>
       </div>
-    );
+    </div>
+  );
   };
-
+  
   /**
    * 전화번호 입력 화면 렌더링
    * 이미지 설명에 맞춘 전용 입력 화면 (천명록 브랜딩 적용)
