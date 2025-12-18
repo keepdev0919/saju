@@ -488,76 +488,83 @@ const SajuApp = () => {
 
     return (
       <div 
-        className="flex flex-col h-full relative overflow-hidden bg-[#050505] text-stone-200"
+        className="flex flex-col h-full relative overflow-hidden bg-gradient-to-b from-[#1a1a1c] via-[#0f0f10] to-[#050505] text-stone-200"
         onMouseMove={handleInteraction}
         onTouchMove={handleInteraction}
         onMouseLeave={() => setIsInteracting(false)}
         onTouchEnd={() => setIsInteracting(false)}
       >
-        {/* 1. 자가 호흡 광원 (Ambient Breathing Light) */}
-        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden text-[#0a0a0b]">
+        {/* 상단 황금빛 조명 강화 */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-amber-900/15 blur-[150px] rounded-full z-0"></div>
+        
+        {/* 중앙 부드러운 조명 레이어 추가 */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-amber-900/8 blur-[200px] rounded-full z-0"></div>
+
+        {/* 1. 자가 호흡 광원 (Ambient Breathing Light) - 투명도 상향 */}
+        <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
           <div 
-            className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,rgba(217,119,6,0.12),transparent_70%)] animate-ambient-breathing" 
+            className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,rgba(217,119,6,0.25),transparent_70%)] animate-ambient-breathing" 
           />
         </div>
 
-        {/* 2. 터치/마우스 추적 광원 (Interaction Glow) */}
+        {/* 2. 터치/마우스 추적 광원 (Interaction Glow) - 투명도 상향 */}
         <div 
           className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${isInteracting ? 'opacity-100' : 'opacity-0'}`}
           style={{
-            background: `radial-gradient(circle 300px at ${interactionPos.x}% ${interactionPos.y}%, rgba(217,119,6,0.08), transparent 80%)`
+            background: `radial-gradient(circle 300px at ${interactionPos.x}% ${interactionPos.y}%, rgba(217,119,6,0.15), transparent 80%)`
           }}
         />
         
-        {/* 배경 텍스처 (한지 느낌) */}
-        <div className="absolute inset-0 opacity-[0.02] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper.png')]" />
+        {/* 배경 텍스처 (한지 느낌) - 투명도 상향 */}
+        <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper.png')]" />
 
         {/* 메인 콘텐츠 */}
         <div className="z-10 flex flex-col items-center justify-center h-full p-8 text-center relative pb-40">
           <div className="space-y-16">
-            {/* 로고 영역: 은은한 발광 */}
+            {/* 로고 영역: 은은한 발광 - 밝기 개선 */}
             <div className="space-y-4 animate-fade-in" style={{ animationDuration: '2.5s' }}>
-              <p className={`text-amber-600/40 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
-              <h1 className={`text-6xl font-bold text-amber-500/90 tracking-[0.3em] font-serif drop-shadow-[0_0_20px_rgba(217,119,6,0.2)]`}>
+              <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
+              <h1 className={`text-6xl font-bold text-amber-400/95 tracking-[0.3em] font-serif drop-shadow-[0_0_30px_rgba(217,119,6,0.4)]`}>
                 天命錄
               </h1>
-              <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mt-8"></div>
+              <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-8"></div>
             </div>
 
-            {/* 메인 카피: 궁서체 계열 Serif 폰트로 전통적 권위감 부여 */}
+            {/* 메인 카피: 궁서체 계열 Serif 폰트로 전통적 권위감 부여 - 텍스트 밝기 개선 */}
             <div className="space-y-8 animate-fade-in-up" style={{ animationDelay: '0.8s', animationFillMode: 'forwards' }}>
-              <h2 className={`text-xl font-medium leading-relaxed text-stone-100 tracking-[0.2em] break-keep ${titleFont}`}>
+              <h2 className={`text-xl font-medium leading-relaxed text-stone-50/95 tracking-[0.2em] break-keep ${titleFont}`}>
                 천기(天機)를 읽어<br />
                 삶의 지혜를 마주하십시오
               </h2>
-              <p className="text-stone-600 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
+              <p className="text-stone-400/80 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
                 당신의 운명이 기록된 단 하나의 기록
               </p>
             </div>
 
-            <div className="mt-12 opacity-20 animate-pulse text-[#0a0a0b]">
-              <Scroll className="w-8 h-8 text-amber-500/50 mx-auto" strokeWidth={1} />
+            {/* Scroll 아이콘 - 밝기 개선 */}
+            <div className="mt-12 opacity-40 animate-pulse">
+              <Scroll className="w-8 h-8 text-amber-400/60 mx-auto" strokeWidth={1} />
             </div>
           </div>
         </div>
 
-        {/* 하단 CTA 영역: 모바일 최적화 인장 스타일 버튼 */}
+        {/* 하단 CTA 영역: 모바일 최적화 인장 스타일 버튼 - 밝기 개선 */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-10 pb-20">
           <div className="max-w-[400px] mx-auto">
             <button
               onClick={() => setStep('input')}
-              className="group relative w-full overflow-hidden border border-amber-900/30 bg-stone-900/10 py-6 rounded-sm transition-all duration-500 active:scale-[0.97] active:bg-stone-900/20 active:border-amber-500/40 shadow-[0_0_20px_rgba(0,0,0,0.5)]"
+              className="group relative w-full overflow-hidden border border-amber-700/40 bg-stone-900/30 backdrop-blur-sm py-6 rounded-sm transition-all duration-500 active:scale-[0.97] active:bg-stone-800/40 active:border-amber-500/60 shadow-[0_0_30px_rgba(217,119,6,0.15)]"
             >
               <div className="relative flex items-center justify-center gap-6">
-                <div className="w-6 h-px bg-amber-900/30 group-active:w-10 group-active:bg-amber-500/40 transition-all duration-500" />
-                <span className="text-amber-600/70 font-light tracking-[0.6em] text-[11px] group-active:text-amber-400 transition-colors">
+                <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
+                <span className="text-amber-500/85 font-light tracking-[0.6em] text-[11px] group-active:text-amber-400 transition-colors">
                   기록 시작하기
                 </span>
-                <div className="w-6 h-px bg-amber-900/30 group-active:w-10 group-active:bg-amber-500/40 transition-all duration-500" />
+                <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
               </div>
             </button>
             
-            <p className="text-stone-800 text-[8px] tracking-[0.4em] text-center mt-10 uppercase font-light">
+            <p className="text-stone-500/70 text-[8px] tracking-[0.4em] text-center mt-10 uppercase font-light">
               Restricted Access
             </p>
           </div>
