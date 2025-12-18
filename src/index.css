@@ -33,7 +33,6 @@
   }
 }
 
-/* 그래프 바 애니메이션 */
 @keyframes grow-width {
   from {
     width: 0;
@@ -62,6 +61,106 @@
   }
 }
 
+@keyframes float-slow {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  25% {
+    transform: translate(10px, -20px) scale(1.05);
+  }
+
+  50% {
+    transform: translate(-5px, 10px) scale(0.95);
+  }
+
+  75% {
+    transform: translate(-15px, -10px) scale(1.02);
+  }
+}
+
+@keyframes float-medium {
+
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  33% {
+    transform: translate(-20px, 15px) scale(1.1);
+  }
+
+  66% {
+    transform: translate(15px, -25px) scale(0.9);
+  }
+}
+
+@keyframes float-fast {
+
+  0%,
+  100% {
+    transform: translate(0, 0);
+  }
+
+  50% {
+    transform: translate(25px, -15px);
+  }
+}
+
+@keyframes twinkle {
+
+  0%,
+  100% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+}
+
+@keyframes pulse-glow {
+
+  0%,
+  100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+@keyframes mist-breathing {
+
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1) translate(0, 0);
+  }
+
+  50% {
+    opacity: 0.25;
+    transform: scale(1.1) translate(5%, 2%);
+  }
+}
+
+@keyframes ink-bleeding {
+  0% {
+    filter: blur(60px) opacity(0);
+    transform: scale(0.8) rotate(-5deg);
+  }
+
+  100% {
+    filter: blur(100px) opacity(0.25);
+    transform: scale(1.2) rotate(5deg);
+  }
+}
+
 /* 애니메이션 클래스 */
 .animate-fade-in-up {
   animation: fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
@@ -71,7 +170,6 @@
   animation: fade-in 0.4s ease-out forwards;
 }
 
-/* 랜딩 페이지 전용 느린 페이드인 */
 .animate-fade-in-landing {
   animation: fade-in 4s ease-out forwards;
 }
@@ -149,11 +247,6 @@
   animation-delay: 800ms;
 }
 
-/* 초기 상태 (애니메이션 전) */
-.opacity-0-init {
-  opacity: 0;
-}
-
 /* 쉬머 효과 */
 .shimmer {
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
@@ -161,252 +254,39 @@
   animation: shimmer 2s infinite;
 }
 
-/* 몽환적인 배경 애니메이션 */
-@keyframes float-slow {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  25% {
-    transform: translate(10px, -20px) scale(1.05);
-  }
-
-  50% {
-    transform: translate(-5px, 10px) scale(0.95);
-  }
-
-  75% {
-    transform: translate(-15px, -10px) scale(1.02);
-  }
+/* 프리미엄 배경 유틸리티: 보이는 심연 (Visible Abyss) */
+.bg-ink-abyss {
+  background: radial-gradient(circle at 50% 10%, #121216 0%, #0c0c0e 100%);
 }
 
-@keyframes float-medium {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(-20px, 15px) scale(1.1);
-  }
-
-  66% {
-    transform: translate(15px, -25px) scale(0.9);
-  }
+.bg-grain-premium {
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  filter: contrast(180%) brightness(1000%);
+  mix-blend-mode: overlay;
+  opacity: 0.1;
+  pointer-events: none;
 }
 
-@keyframes float-fast {
-
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-
-  50% {
-    transform: translate(25px, -15px);
-  }
+.ink-bleed-layer {
+  background: radial-gradient(ellipse at center, rgba(40, 40, 45, 0.9) 0%, transparent 70%);
+  animation: ink-bleeding 25s ease-in-out infinite alternate;
 }
 
-@keyframes twinkle {
-
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
+.bg-hanji-refined {
+  background-image: url('https://www.transparenttextures.com/patterns/rice-paper-2.png');
+  background-repeat: repeat;
+  mix-blend-mode: soft-light;
+  opacity: 0.12;
 }
 
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.7;
-    transform: scale(1.2);
-  }
-}
-
-/* 몽환적 배경 컨테이너 */
-.mystical-bg {
+.celestial-particle {
   position: absolute;
-  inset: 0;
-  overflow: hidden;
-  background: linear-gradient(180deg, #0a0a0f 0%, #0d0d1a 50%, #0a0a0f 100%);
-}
-
-/* 떠다니는 빛 오브 */
-.mystical-bg .orb {
-  position: absolute;
+  width: 1.5px;
+  height: 1.5px;
+  background: rgba(245, 158, 11, 0.45);
   border-radius: 50%;
-  filter: blur(60px);
-  opacity: 0.5;
-}
-
-.mystical-bg .orb-1 {
-  width: 300px;
-  height: 300px;
-  background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
-  top: 10%;
-  left: -10%;
-  animation: float-slow 15s ease-in-out infinite;
-}
-
-.mystical-bg .orb-2 {
-  width: 250px;
-  height: 250px;
-  background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
-  top: 40%;
-  right: -5%;
-  animation: float-medium 12s ease-in-out infinite;
-}
-
-.mystical-bg .orb-3 {
-  width: 200px;
-  height: 200px;
-  background: radial-gradient(circle, rgba(236, 72, 153, 0.3) 0%, transparent 70%);
-  bottom: 20%;
-  left: 20%;
-  animation: float-slow 18s ease-in-out infinite reverse;
-}
-
-.mystical-bg .orb-4 {
-  width: 150px;
-  height: 150px;
-  background: radial-gradient(circle, rgba(168, 85, 247, 0.4) 0%, transparent 70%);
-  top: 60%;
-  left: 50%;
-  animation: float-fast 10s ease-in-out infinite;
-}
-
-/* 반짝이는 별 */
-.mystical-bg .stars {
-  position: absolute;
-  inset: 0;
-}
-
-.mystical-bg .star {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  background: white;
-  border-radius: 50%;
-  animation: twinkle 3s ease-in-out infinite;
-}
-
-.mystical-bg .star:nth-child(1) {
-  top: 10%;
-  left: 20%;
-  animation-delay: 0s;
-}
-
-.mystical-bg .star:nth-child(2) {
-  top: 20%;
-  left: 80%;
-  animation-delay: 0.5s;
-}
-
-.mystical-bg .star:nth-child(3) {
-  top: 30%;
-  left: 40%;
-  animation-delay: 1s;
-}
-
-.mystical-bg .star:nth-child(4) {
-  top: 50%;
-  left: 70%;
-  animation-delay: 1.5s;
-}
-
-.mystical-bg .star:nth-child(5) {
-  top: 60%;
-  left: 10%;
-  animation-delay: 2s;
-}
-
-.mystical-bg .star:nth-child(6) {
-  top: 70%;
-  left: 50%;
-  animation-delay: 0.3s;
-}
-
-.mystical-bg .star:nth-child(7) {
-  top: 80%;
-  left: 30%;
-  animation-delay: 0.8s;
-}
-
-.mystical-bg .star:nth-child(8) {
-  top: 15%;
-  left: 60%;
-  animation-delay: 1.2s;
-}
-
-.mystical-bg .star:nth-child(9) {
-  top: 45%;
-  left: 25%;
-  animation-delay: 1.8s;
-}
-
-.mystical-bg .star:nth-child(10) {
-  top: 85%;
-  left: 75%;
-  animation-delay: 2.2s;
-}
-
-.mystical-bg .star:nth-child(11) {
-  top: 25%;
-  left: 15%;
-  animation-delay: 0.7s;
-}
-
-.mystical-bg .star:nth-child(12) {
-  top: 55%;
-  left: 85%;
-  animation-delay: 1.4s;
-}
-
-/* 앰비언트 브리딩 애니메이션 (천명록 랜딩용) */
-@keyframes ambient-breathing {
-  0%, 100% {
-    transform: translate(-10%, -10%) scale(1);
-    opacity: 0.15;
-  }
-  33% {
-    transform: translate(5%, -5%) scale(1.1);
-    opacity: 0.2;
-  }
-  66% {
-    transform: translate(-5%, 5%) scale(0.95);
-    opacity: 0.18;
-  }
-}
-
-.animate-ambient-breathing {
-  animation: ambient-breathing 15s ease-in-out infinite;
-}
-
-/* Scroll 아이콘 절제된 애니메이션 (하이엔드 브랜드용) */
-@keyframes pulse-subtle {
-  0%, 100% {
-    opacity: 0.5;
-  }
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 3s ease-in-out infinite;
+  filter: blur(0.3px);
+  pointer-events: none;
 }
 
 /* 프리미엄 타이포그래피 */

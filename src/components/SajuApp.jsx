@@ -29,10 +29,10 @@ const SAJU_TIMES = [
  */
 const SajuApp = () => {
   const navigate = useNavigate();
-  
+
   // 현재 화면 단계 상태 (landing, input, payment, analyzing, result)
   const [step, setStep] = useState('landing');
-  
+
   // 사용자 정보 상태
   const [userInfo, setUserInfo] = useState({
     name: '',
@@ -47,34 +47,34 @@ const SajuApp = () => {
     userId: null, // 백엔드에서 받은 사용자 ID
     accessToken: null // 결과 페이지 접근용 토큰
   });
-  
+
   // 사주 결과 상태
   const [sajuResult, setSajuResult] = useState(null);
-  
+
   // 로딩 상태
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  
+
   // 분석 진행률 상태
   const [progress, setProgress] = useState(0);
 
   // 터치/마우스 위치 추적을 위한 상태 (모바일 인터랙티브용)
   const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
   const [isInteracting, setIsInteracting] = useState(false);
-  
+
   // 시간 선택 모달 표시 여부
   const [showTimeModal, setShowTimeModal] = useState(false);
-  
+
   // 현재 수정 중인 필드 ('phone' | 'birthDate' | null)
   const [editingField, setEditingField] = useState(null);
-  
+
   // 결제 수단 선택 상태 (기본값: 카드/간편결제)
   const [paymentMethod, setPaymentMethod] = useState('card');
-  
+
   // 타이머 상태 관리 (1/100초 단위: 59분 59초 99)
   const INITIAL_TIME_CS = (59 * 60 + 59) * 100 + 99;
   const [timeLeft, setTimeLeft] = useState(INITIAL_TIME_CS);
-  
+
   /**
    * 모바일 뷰포트 높이 처리를 위한 효과
    * CSS 변수 --vh를 설정하여 모바일에서 100vh 문제 해결
@@ -87,7 +87,7 @@ const SajuApp = () => {
     handleResize();
     return () => window.removeEventListener('resize', handleResize);
   }, []);
-  
+
   /**
    * 타이머 카운트다운 효과 (10ms 단위)
    * 긴박감을 주기 위한 마케팅용 타이머
@@ -100,7 +100,7 @@ const SajuApp = () => {
         }
         return prev - 1; // 10ms마다 1씩 감소
       });
-    }, 10); 
+    }, 10);
     return () => clearInterval(timer);
   }, []);
 
@@ -158,7 +158,7 @@ const SajuApp = () => {
     }
     return null;
   };
-  
+
   /**
    * 시간 포맷팅 함수
    * @param {number} centiseconds - 1/100초 단위의 시간
@@ -189,7 +189,7 @@ const SajuApp = () => {
     // 010-XXXX-XXXX (총 11자리)
     return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
   };
-  
+
   /**
    * 입력 필드 변경 핸들러
    */
@@ -201,10 +201,10 @@ const SajuApp = () => {
       const formattedValue = formatPhoneNumber(value);
       setUserInfo(prev => ({ ...prev, [name]: formattedValue }));
     } else {
-    setUserInfo(prev => ({ ...prev, [name]: value }));
+      setUserInfo(prev => ({ ...prev, [name]: value }));
     }
   };
-  
+
   /**
    * 시간 선택 핸들러 (모달에서 호출)
    * @param {object|null} timeSlot - 선택된 시간대 객체 또는 null(모름)
@@ -229,7 +229,7 @@ const SajuApp = () => {
     }
     setShowTimeModal(false);
   };
-  
+
   /**
    * 날짜 포맷팅 함수
    * @param {string} dateString - YYYY-MM-DD 형식의 날짜
@@ -240,7 +240,7 @@ const SajuApp = () => {
     const [year, month, day] = dateString.split('-');
     return `${year}년 ${parseInt(month)}월 ${parseInt(day)}일`;
   };
-  
+
   /**
    * 포트원 결제 처리 함수
    * 포트원 결제 위젯을 호출하고 결제 완료 후 사주 계산을 진행
@@ -273,20 +273,20 @@ const SajuApp = () => {
       // 2. 포트원 초기화
       const IMP = window.IMP;
       const IMP_KEY = import.meta.env.VITE_PORTONE_IMP_KEY || 'imp12345678'; // 테스트용 기본값
-      
+
       IMP.init(IMP_KEY);
 
       // 3. 결제 요청
       // V1 API 사용 시 store_id는 필요 없음 (포트원 SDK가 자동으로 추가하지만 무시됨)
       IMP.request_pay({
-        pg: paymentMethod === 'kakaopay' ? 'kakaopay' : 
-            paymentMethod === 'naverpay' ? 'naverpay' : 
-            paymentMethod === 'card' ? 'html5_inicis' : 
-            'html5_inicis', // 기본값: 카드결제
-        pay_method: paymentMethod === 'kakaopay' ? 'kakaopay' : 
-                    paymentMethod === 'naverpay' ? 'naverpay' : 
-                    paymentMethod === 'trans' ? 'trans' : 
-                    'card',
+        pg: paymentMethod === 'kakaopay' ? 'kakaopay' :
+          paymentMethod === 'naverpay' ? 'naverpay' :
+            paymentMethod === 'card' ? 'html5_inicis' :
+              'html5_inicis', // 기본값: 카드결제
+        pay_method: paymentMethod === 'kakaopay' ? 'kakaopay' :
+          paymentMethod === 'naverpay' ? 'naverpay' :
+            paymentMethod === 'trans' ? 'trans' :
+              'card',
         merchant_uid: merchantUid,
         name: '2026 프리미엄 운세 리포트',
         amount: paymentAmount,
@@ -296,7 +296,7 @@ const SajuApp = () => {
       }, async (rsp) => {
         // 결제 완료 콜백
         console.log('💳 포트원 결제 응답:', rsp);
-        
+
         if (rsp.success) {
           console.log('✅ 결제 성공, 처리 시작');
           // 결제 성공 시 분석 시작
@@ -433,7 +433,7 @@ const SajuApp = () => {
       setError(errorMessage);
       setLoading(false);
       setProgress(0);
-      
+
       // 에러 메시지를 5초간 표시한 후 결제 페이지로 이동
       setTimeout(() => {
         setStep('payment');
@@ -452,22 +452,22 @@ const SajuApp = () => {
       setError('해당 결제 수단은 준비 중입니다. 카드/간편결제를 이용해주세요.');
       return;
     }
-    
+
     // 카드/간편결제만 실제 결제 진행
     await handlePortonePayment(paymentMethod);
   };
-  
+
   /**
    * PDF 다운로드 핸들러 (브라우저 프린트 기능 사용)
    */
   const handleDownloadPDF = () => {
     window.print();
   };
-  
+
   // 바이럴 마케팅 스타일 폰트 클래스 (천명록 브랜딩 적용)
   const titleFont = "font-serif tracking-[0.2em]";
   const bodyFont = "font-sans tracking-normal";
-  
+
   /**
    * 랜딩 페이지 렌더링
    * 첫 화면으로 마케팅 문구와 CTA 버튼 표시 (모바일 최적화 인터랙티브 버전)
@@ -478,47 +478,64 @@ const SajuApp = () => {
       const rect = e.currentTarget.getBoundingClientRect();
       const clientX = e.touches ? e.touches[0].clientX : e.clientX;
       const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-      
+
       const x = ((clientX - rect.left) / rect.width) * 100;
       const y = ((clientY - rect.top) / rect.height) * 100;
-      
+
       setInteractionPos({ x, y });
       setIsInteracting(true);
     };
 
     return (
-      <div 
-        className="flex flex-col h-full relative overflow-hidden bg-gradient-to-b from-[#1a1a1c] via-[#0f0f10] to-[#050505] text-stone-200"
+      <div
+        className="flex flex-col h-full relative overflow-hidden bg-ink-abyss text-stone-200"
         onMouseMove={handleInteraction}
         onTouchMove={handleInteraction}
         onMouseLeave={() => setIsInteracting(false)}
         onTouchEnd={() => setIsInteracting(false)}
       >
-        {/* 상단 황금빛 조명 강화 */}
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-amber-900/15 blur-[150px] rounded-full z-0"></div>
-        
-        {/* 중앙 부드러운 조명 레이어 추가 */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] bg-amber-900/8 blur-[200px] rounded-full z-0"></div>
+        {/* --- [NEW] Invisible Grandeur Background Layers --- */}
 
-        {/* 1. 자가 호흡 광원 (Ambient Breathing Light) - 투명도 상향 */}
+        {/* 1. Microscopic Grain Layer (Tactile Immersion) */}
+        <div className="absolute inset-0 bg-grain-premium z-0 pointer-events-none" />
+
+        {/* 2. Procedural Ink Bleeding (Fluid Atmosphere) */}
         <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
-          <div 
-            className="absolute top-[-20%] left-[-20%] w-[140%] h-[140%] bg-[radial-gradient(circle_at_50%_50%,rgba(217,119,6,0.25),transparent_70%)] animate-ambient-breathing" 
-          />
+          <div className="ink-bleed-layer absolute top-0 left-0 w-full h-full" />
+          <div className="ink-bleed-layer absolute top-[20%] right-[-10%] w-[80%] h-[80%] opacity-40 delay-1000" />
         </div>
 
-        {/* 2. 터치/마우스 추적 광원 (Interaction Glow) - 투명도 상향 */}
-        <div 
+        {/* 3. Refined Hanji Texture Overlay */}
+        <div className="absolute inset-0 bg-hanji-refined z-0 pointer-events-none" />
+
+        {/* 4. Interaction Aura (Liquid Glow) */}
+        <div
           className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${isInteracting ? 'opacity-100' : 'opacity-0'}`}
           style={{
-            background: `radial-gradient(circle 300px at ${interactionPos.x}% ${interactionPos.y}%, rgba(217,119,6,0.15), transparent 80%)`
+            background: `radial-gradient(circle 500px at ${interactionPos.x}% ${interactionPos.y}%, rgba(217,119,6,0.1), transparent 80%)`
           }}
         />
-        
-        {/* 배경 텍스처 (한지 느낌) - 투명도 상향 */}
-        <div className="absolute inset-0 opacity-[0.06] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper.png')]" />
-      
-      {/* 메인 콘텐츠 */}
+
+        {/* 5. Celestial Particles (Subtle Wisdom) */}
+        <div className="absolute inset-0 z-0 pointer-events-none">
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="celestial-particle animate-pulse"
+              style={{
+                top: `${10 + Math.random() * 80}%`,
+                left: `${5 + Math.random() * 90}%`,
+                animationDelay: `${i * 1.2}s`,
+                opacity: 0.05 + Math.random() * 0.15
+              }}
+            />
+          ))}
+        </div>
+
+        {/* 6. Subtle Depth Lighting */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-amber-900/5 blur-[150px] rounded-full z-0 pointer-events-none"></div>
+
+        {/* 메인 콘텐츠 */}
         <div className="z-10 flex flex-col items-center justify-center h-full p-8 text-center relative pb-40">
           <div className="space-y-16">
             {/* 로고 영역: 브랜드 정체성 강화 - 슬로건을 브랜드명 바로 아래로 이동 */}
@@ -526,15 +543,15 @@ const SajuApp = () => {
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
               <h1 className={`text-6xl font-bold text-amber-400/80 tracking-[0.3em] font-serif drop-shadow-[0_0_30px_rgba(217,119,6,0.4)]`}>
                 天命錄
-            </h1>
+              </h1>
               {/* 슬로건을 브랜드명 바로 아래로 이동 */}
               <div className="inline-block mt-2">
                 <p className="text-stone-400/80 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
                   당신의 운명이 기록된 단 하나의 기록
                 </p>
                 <div className="w-full h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-8"></div>
+              </div>
             </div>
-        </div>
 
             {/* 메인 카피: 궁서체 계열 Serif 폰트로 전통적 권위감 부여 - 텍스트 밝기 개선 */}
             <div className="space-y-8 animate-fade-in-landing">
@@ -542,34 +559,34 @@ const SajuApp = () => {
                 천기(天機)를 읽어<br />
                 삶의 지혜를 마주하십시오
               </h2>
-      </div>
-      
+            </div>
+
             {/* 인터랙티브 Scroll 아이콘 - 하이엔드 브랜드: 작은 크기 + 절제된 애니메이션 */}
             <div className="mt-12 animate-fade-in-landing">
               <div className="group cursor-pointer relative inline-block">
                 {/* 호버 시 미세한 황금빛 발광 효과 */}
                 <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 scale-125"></div>
-                
+
                 {/* Scroll 아이콘 - 작은 크기, 부드러운 펄스 효과만, 약간 기울임 */}
-                <Scroll 
+                <Scroll
                   className="w-8 h-8 text-amber-400/30 mx-auto 
                              transition-all duration-700
                              group-hover:text-amber-400/50 
                              group-hover:drop-shadow-[0_0_15px_rgba(217,119,6,0.3)]
                              animate-pulse-subtle
-                             rotate-[-8deg]" 
-                  strokeWidth={1} 
+                             rotate-[-8deg]"
+                  strokeWidth={1}
                 />
-             </div>
-        </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* 하단 CTA 영역: 모바일 최적화 인장 스타일 버튼 - 밝기 개선 */}
         <div className="absolute bottom-0 left-0 w-full z-20 p-10 pb-20">
           <div className="max-w-[400px] mx-auto">
-            <button 
-                onClick={() => setStep('input')}
+            <button
+              onClick={() => setStep('input')}
               className="group relative w-full overflow-hidden border border-amber-700/40 bg-stone-900/30 backdrop-blur-sm py-6 rounded-sm transition-all duration-500 active:scale-[0.97] active:bg-stone-800/40 active:border-amber-500/60 shadow-[0_0_30px_rgba(217,119,6,0.15)]"
             >
               <div className="relative flex items-center justify-center gap-6">
@@ -580,16 +597,16 @@ const SajuApp = () => {
                 <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
               </div>
             </button>
-            
+
             <p className="text-stone-500/70 text-[8px] tracking-[0.4em] text-center mt-10 uppercase font-light">
               Restricted Access
             </p>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
   };
-  
+
   /**
    * 전화번호 입력 화면 렌더링
    * 이미지 설명에 맞춘 전용 입력 화면 (천명록 브랜딩 적용)
@@ -597,19 +614,19 @@ const SajuApp = () => {
   const renderPhoneInputPage = () => (
     <div className="flex flex-col h-full bg-[#0f0f10] text-stone-200 font-sans relative">
       <div className="absolute top-0 left-0 w-full h-[300px] bg-amber-900/5 blur-[80px] rounded-full z-0"></div>
-      
+
       {/* 상단 타이틀 */}
       <div className="p-8 pt-12 z-10">
         <h1 className={`text-2xl font-bold text-stone-100 mb-3 ${titleFont}`}>연락처 기록</h1>
         <p className="text-stone-500 text-sm font-light">결과지 전달 및 본인 확인을 위해 사용됩니다.</p>
       </div>
-      
+
       {/* 입력 카드 */}
       <div className="flex-1 flex items-center justify-center px-6 pb-32 z-10">
         <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm w-full border border-amber-900/20 shadow-2xl overflow-hidden">
           {/* 헤더 */}
           <div className="p-5 border-b border-amber-900/10 flex items-center justify-between bg-stone-900/60">
-            <button 
+            <button
               onClick={() => setEditingField(null)}
               className="text-amber-700 hover:text-amber-500 transition-colors"
             >
@@ -618,17 +635,17 @@ const SajuApp = () => {
             <span className={`text-stone-300 text-sm tracking-[0.2em] ${titleFont}`}>휴대전화</span>
             <div className="w-6"></div>
           </div>
-          
+
           {/* 입력 필드 */}
           <div className="p-10">
-            <input 
-              type="tel" 
+            <input
+              type="tel"
               name="phone"
               value={userInfo.phone}
               onChange={handleInputChange}
               placeholder="010-0000-0000"
               className="w-full bg-transparent text-amber-500 text-center text-2xl font-light placeholder:text-stone-800 outline-none py-4 border-b border-amber-900/30 focus:border-amber-500/50 transition-all tracking-[0.1em]"
-              autoFocus 
+              autoFocus
             />
             {userInfo.phone && !isPhoneValid(userInfo.phone) && (
               <p className="text-amber-900/80 text-[10px] mt-4 text-center tracking-tighter uppercase font-medium">
@@ -636,15 +653,15 @@ const SajuApp = () => {
               </p>
             )}
           </div>
-          
+
           {/* 완료 버튼 */}
           <div className="p-6 pt-0">
-            <button 
+            <button
               onClick={() => setEditingField(null)}
               disabled={!isPhoneValid(userInfo.phone)}
               className={`w-full font-medium py-4 rounded-sm transition-all tracking-[0.2em] ${!isPhoneValid(userInfo.phone)
-                  ? 'bg-stone-800 text-stone-600 cursor-not-allowed'
-                  : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700'
+                ? 'bg-stone-800 text-stone-600 cursor-not-allowed'
+                : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700'
                 }`}
             >
               기록 완료
@@ -668,13 +685,13 @@ const SajuApp = () => {
         <h1 className={`text-2xl font-bold text-stone-100 mb-3 ${titleFont}`}>생년월일(生年月日時)</h1>
         <p className="text-stone-500 text-sm font-light">당신의 명(命)이 시작된 시각을 기록해 주세요.</p>
       </div>
-      
+
       {/* 입력 카드 */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-32 gap-6 z-10">
         <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm w-full border border-amber-900/20 shadow-2xl overflow-hidden">
           {/* 헤더 */}
           <div className="p-5 border-b border-amber-900/10 flex items-center justify-between bg-stone-900/60">
-            <button 
+            <button
               onClick={() => setEditingField(null)}
               className="text-amber-700 hover:text-amber-500 transition-colors"
             >
@@ -683,7 +700,7 @@ const SajuApp = () => {
             <span className={`text-stone-300 text-sm tracking-[0.2em] ${titleFont}`}>생년월일 기록</span>
             <div className="w-6"></div>
           </div>
-          
+
           {/* 입력 필드 */}
           <div className="p-8 space-y-10">
             {/* 양력/음력 선택 버튼 */}
@@ -704,14 +721,14 @@ const SajuApp = () => {
 
             {/* 날짜 입력 */}
             <div className="relative">
-            <input 
-              type="date" 
-              name="birthDate"
-              value={userInfo.birthDate}
-              onChange={handleInputChange}
+              <input
+                type="date"
+                name="birthDate"
+                value={userInfo.birthDate}
+                onChange={handleInputChange}
                 className={`w-full bg-transparent text-stone-100 text-center text-2xl font-light outline-none py-3 border-b transition-all [color-scheme:dark] tracking-[0.1em] ${getBirthDateError(userInfo.birthDate) ? 'border-red-900/50' : 'border-amber-900/30 focus:border-amber-500/50'}`}
-              autoFocus 
-            />
+                autoFocus
+              />
               {getBirthDateError(userInfo.birthDate) && (
                 <p className="text-red-900/80 text-[10px] mt-4 text-center tracking-tighter uppercase font-medium">
                   {getBirthDateError(userInfo.birthDate)}
@@ -736,10 +753,10 @@ const SajuApp = () => {
               </div>
             )}
           </div>
-          
+
           {/* 완료 버튼 */}
           <div className="p-6 pt-0">
-            <button 
+            <button
               onClick={() => setEditingField(null)}
               disabled={!isBirthDateValid(userInfo.birthDate)}
               className={`w-full font-medium py-4 rounded-sm transition-all tracking-[0.2em] ${!isBirthDateValid(userInfo.birthDate) ? 'bg-stone-800 text-stone-600 cursor-not-allowed' : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700 shadow-lg shadow-amber-900/20'}`}
@@ -768,54 +785,54 @@ const SajuApp = () => {
     if (editingField === 'phone') {
       return renderPhoneInputPage();
     }
-    
+
     // 생년월일 수정 화면
     if (editingField === 'birthDate') {
       return renderBirthDateInputPage();
     }
-    
+
     // 기본 정보 입력 화면
     return (
       <div className="flex flex-col h-full bg-[#0f0f10] text-stone-200 font-sans relative">
         <div className="absolute top-0 left-0 w-full h-[400px] bg-amber-900/5 blur-[100px] rounded-full z-0"></div>
-        
-      {/* 상단 타이틀 */}
+
+        {/* 상단 타이틀 */}
         <div className="p-8 pt-12 z-10">
           <h1 className={`text-2xl font-bold text-stone-100 mb-3 ${titleFont}`}>성함(姓名) 기록</h1>
           <p className="text-stone-500 text-sm font-light leading-relaxed">
             당신의 명운이 담긴 이름을 기록해 주십시오.<br />
             애칭이나 별칭도 가능합니다.
           </p>
-      </div>
-      
+        </div>
+
         {/* 입력 폼 영역 - 플라크 스타일 카드 */}
         <div className="flex-1 overflow-y-auto px-6 pb-40 z-10">
           <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm p-8 border border-amber-900/20 shadow-2xl space-y-8">
-          {/* 이름 입력 */}
+            {/* 이름 입력 */}
             <div className="border-b border-amber-900/30 pb-6">
-            <input 
-              type="text" 
-              name="name"
-              value={userInfo.name}
-              onChange={handleInputChange}
+              <input
+                type="text"
+                name="name"
+                value={userInfo.name}
+                onChange={handleInputChange}
                 placeholder="성함 입력"
                 className="w-full bg-transparent text-amber-500 text-center text-2xl font-light placeholder:text-stone-800 outline-none tracking-[0.2em]"
-              autoFocus 
-            />
-          </div>
-          
-          {/* 정보 리스트 */}
+                autoFocus
+              />
+            </div>
+
+            {/* 정보 리스트 */}
             <div className="space-y-6">
-            {/* 전화번호 */}
+              {/* 전화번호 */}
               <div className="flex justify-between items-center group cursor-pointer" onClick={() => setEditingField('phone')}>
                 <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Contact</span>
                 <div className="flex items-center gap-3">
                   <span className="text-stone-300 text-sm font-light tracking-widest">{userInfo.phone || '010-0000-0000'}</span>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
-            </div>
-            </div>
-            
-            {/* 생년월일 */}
+                </div>
+              </div>
+
+              {/* 생년월일 */}
               <div className="flex justify-between items-center group cursor-pointer" onClick={() => setEditingField('birthDate')}>
                 <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Birth Date</span>
                 <div className="flex items-center gap-3 text-right">
@@ -827,12 +844,12 @@ const SajuApp = () => {
                   </div>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
                 </div>
-            </div>
-            
+              </div>
+
               {/* 생시 */}
               <div className="flex justify-between items-center group cursor-pointer" onClick={() => setShowTimeModal(true)}>
                 <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Birth Time</span>
-              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3">
                   <span className="text-stone-300 text-sm font-light tracking-widest">{userInfo.birthTimeLabel || 'Unknown'}</span>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
                 </div>
@@ -842,129 +859,129 @@ const SajuApp = () => {
               <div className="flex justify-between items-center">
                 <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Gender</span>
                 <div className="flex bg-stone-950/40 p-1 rounded-sm border border-amber-900/10">
-                <button 
+                  <button
                     onClick={() => setUserInfo({ ...userInfo, gender: 'male' })}
                     className={`px-4 py-1.5 rounded-sm text-[10px] tracking-[0.2em] transition-all ${userInfo.gender === 'male' ? 'bg-amber-900/30 text-amber-500' : 'text-stone-700'}`}
-                >
+                  >
                     乾命 (남)
-                </button>
-                <button 
+                  </button>
+                  <button
                     onClick={() => setUserInfo({ ...userInfo, gender: 'female' })}
                     className={`px-4 py-1.5 rounded-sm text-[10px] tracking-[0.2em] transition-all ${userInfo.gender === 'female' ? 'bg-amber-900/30 text-amber-500' : 'text-stone-700'}`}
-                >
+                  >
                     坤命 (여)
-                </button>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
-      
-      {/* 하단 버튼 */}
+
+        {/* 하단 버튼 */}
         <div className="fixed bottom-0 left-0 w-full p-8 bg-gradient-to-t from-[#0f0f10] via-[#0f0f10]/90 to-transparent pt-16 z-20">
           <div className="max-w-[400px] mx-auto space-y-4">
-          <button 
-            onClick={async () => {
-              // 사용자 정보 검증
+            <button
+              onClick={async () => {
+                // 사용자 정보 검증
                 if (!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone)) {
-                return;
-              }
+                  return;
+                }
 
-              setLoading(true);
-              setError(null);
+                setLoading(true);
+                setError(null);
 
-              try {
+                try {
                   const cleanPhone = userInfo.phone.replace(/-/g, '');
-                const userData = {
-                  name: userInfo.name,
+                  const userData = {
+                    name: userInfo.name,
                     phone: cleanPhone,
-                  birthDate: userInfo.birthDate,
-                  birthTime: userInfo.timeUnknown ? null : userInfo.birthTime,
-                  gender: userInfo.gender,
+                    birthDate: userInfo.birthDate,
+                    birthTime: userInfo.timeUnknown ? null : userInfo.birthTime,
+                    gender: userInfo.gender,
                     calendarType: userInfo.calendarType,
                     isLeap: userInfo.isLeap
-                };
+                  };
 
-                const response = await createUser(userData);
-                
-                setUserInfo(prev => ({
-                  ...prev,
-                  userId: response.userId,
-                  accessToken: response.accessToken
-                }));
+                  const response = await createUser(userData);
 
-                setStep('payment');
-              } catch (err) {
+                  setUserInfo(prev => ({
+                    ...prev,
+                    userId: response.userId,
+                    accessToken: response.accessToken
+                  }));
+
+                  setStep('payment');
+                } catch (err) {
                   setError(err.message || '정보 저장에 실패했습니다.');
-                console.error('사용자 생성 오류:', err);
-              } finally {
-                setLoading(false);
-              }
-            }}
+                  console.error('사용자 생성 오류:', err);
+                } finally {
+                  setLoading(false);
+                }
+              }}
               disabled={!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading}
               className={`w-full py-5 rounded-sm text-lg font-medium transition-all tracking-[0.3em] ${!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading
-                  ? 'bg-stone-900 text-stone-700 cursor-not-allowed border border-stone-800'
-                  : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700 border border-amber-600/30 shadow-[0_0_20px_rgba(180,83,9,0.2)]'
+                ? 'bg-stone-900 text-stone-700 cursor-not-allowed border border-stone-800'
+                : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700 border border-amber-600/30 shadow-[0_0_20px_rgba(180,83,9,0.2)]'
                 }`}
             >
               {loading ? '검증 중...' : '다음으로'}
-          </button>
-            
-          {error && (
+            </button>
+
+            {error && (
               <p className="text-red-900/80 text-[10px] mt-2 text-center uppercase tracking-tighter font-medium">{error}</p>
-          )}
+            )}
+          </div>
         </div>
-      </div>
-      
+
         {/* 시간 선택 모달 - 브랜딩 적용 */}
-      {showTimeModal && (
+        {showTimeModal && (
           <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center animate-fade-in">
             <div className="bg-[#0f0f10] w-full max-w-md h-[70%] sm:h-auto sm:max-h-[80vh] sm:rounded-sm flex flex-col overflow-hidden animate-slide-up shadow-2xl border-t sm:border border-amber-900/20">
-            {/* 모달 헤더 */}
+              {/* 모달 헤더 */}
               <div className="p-6 border-b border-amber-900/10 flex justify-between items-center sticky top-0 bg-[#0f0f10] z-10 shrink-0">
-      <div>
+                <div>
                   <h3 className={`text-stone-100 text-lg font-bold ${titleFont}`}>生時 (태어난 시각)</h3>
                   <p className="text-stone-500 text-xs mt-1 font-light">정확한 시각을 모를 경우 '모름'을 선택하십시오.</p>
-              </div>
+                </div>
                 <button onClick={() => setShowTimeModal(false)} className="text-amber-900 hover:text-amber-500 p-2 transition-colors">
-                <X size={24} />
-              </button>
-            </div>
-            
-            {/* 시간대 선택 그리드 */}
+                  <X size={24} />
+                </button>
+              </div>
+
+              {/* 시간대 선택 그리드 */}
               <div className="p-6 overflow-y-auto grid grid-cols-3 gap-3 pb-24 flex-1">
-              {SAJU_TIMES.map((time) => (
-                <button
-                  key={time.id}
-                  onClick={() => handleTimeSelect(time)}
+                {SAJU_TIMES.map((time) => (
+                  <button
+                    key={time.id}
+                    onClick={() => handleTimeSelect(time)}
                     className={`flex flex-col items-center justify-center p-4 rounded-sm transition-all aspect-[4/3] gap-2 border ${userInfo.birthTimeLabel.includes(time.label)
-                        ? 'bg-amber-900/30 text-amber-500 border-amber-500/50 shadow-inner'
-                        : 'bg-stone-950/40 text-stone-600 border-amber-900/10 hover:border-amber-500/30 hover:text-stone-400'
+                      ? 'bg-amber-900/30 text-amber-500 border-amber-500/50 shadow-inner'
+                      : 'bg-stone-950/40 text-stone-600 border-amber-900/10 hover:border-amber-500/30 hover:text-stone-400'
                       }`}
                   >
                     <span className="text-[10px] font-bold tracking-[0.1em]">{time.label}</span>
                     <span className="text-[9px] opacity-60 font-mono tracking-tighter">{time.range}</span>
-                </button>
-              ))}
-              
-              {/* 모름 버튼 */}
-               <button
+                  </button>
+                ))}
+
+                {/* 모름 버튼 */}
+                <button
                   onClick={() => handleTimeSelect(null)}
                   className={`col-span-3 p-5 rounded-sm font-medium text-xs tracking-[0.2em] transition-all mt-4 border ${userInfo.timeUnknown
-                      ? 'bg-amber-900/30 text-amber-500 border-amber-500/50'
-                      : 'bg-stone-950/40 text-stone-600 border-amber-900/10 hover:border-amber-500/30 hover:text-stone-400'
+                    ? 'bg-amber-900/30 text-amber-500 border-amber-500/50'
+                    : 'bg-stone-950/40 text-stone-600 border-amber-900/10 hover:border-amber-500/30 hover:text-stone-400'
                     }`}
                 >
                   시간을 모름
                 </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        )}
+      </div>
     );
   };
-  
+
   /**
    * 결제 페이지 렌더링
    * 천명록 브랜딩 적용: 프리미엄 리포트 발간 컨셉
@@ -993,7 +1010,7 @@ const SajuApp = () => {
 
         {/* 메인 컨텐츠 */}
         <div className="flex-1 overflow-y-auto px-6 pb-40 space-y-6 z-10">
-          
+
           {/* 사용자 정보 섹션 */}
           <div className="text-center py-4">
             <h2 className={`text-2xl font-bold text-stone-100 ${titleFont}`}>
@@ -1009,14 +1026,14 @@ const SajuApp = () => {
             <div className="space-y-4">
               <h3 className={`text-amber-500/80 text-sm font-medium tracking-[0.2em] ${titleFont}`}>REPORT SPECIFICATION</h3>
               <div className="space-y-4">
-              {includedItems.map((item, idx) => (
+                {includedItems.map((item, idx) => (
                   <div key={idx} className="flex items-start gap-3 text-stone-300 text-sm font-light">
                     <Sparkles size={14} className="text-amber-700 shrink-0 mt-0.5" />
                     <span className="flex-1 leading-relaxed tracking-tight">{item}</span>
-                </div>
-              ))}
-            </div>
+                  </div>
+                ))}
               </div>
+            </div>
 
             {/* 가격 정보 */}
             <div className="pt-8 border-t border-amber-900/10 space-y-4">
@@ -1024,7 +1041,7 @@ const SajuApp = () => {
                 <span className="text-stone-500 text-xs tracking-widest">VALUATION</span>
                 <span className="text-stone-500 text-sm line-through decoration-amber-900/50">₩29,000</span>
               </div>
-                <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center">
                 <span className="text-amber-700 text-xs tracking-widest font-bold uppercase">Limited Offer</span>
                 <div className="text-right">
                   <span className="text-amber-500 text-3xl font-light tracking-tighter">9,900</span>
@@ -1038,41 +1055,41 @@ const SajuApp = () => {
           <div className="space-y-4 pt-4">
             <h3 className={`text-stone-500 text-xs tracking-[0.2em] text-center ${titleFont}`}>PAYMENT METHOD</h3>
             <div className="grid grid-cols-2 gap-3">
-              <button 
-                    onClick={() => setPaymentMethod('card')}
-                className={`p-4 rounded-sm border transition-all text-[10px] tracking-[0.2em] font-medium ${paymentMethod === 'card' 
-                  ? 'bg-amber-900/20 border-amber-500/50 text-amber-500 shadow-inner' 
+              <button
+                onClick={() => setPaymentMethod('card')}
+                className={`p-4 rounded-sm border transition-all text-[10px] tracking-[0.2em] font-medium ${paymentMethod === 'card'
+                  ? 'bg-amber-900/20 border-amber-500/50 text-amber-500 shadow-inner'
                   : 'bg-stone-950/40 border-amber-900/10 text-stone-600 hover:border-amber-900/30'}`}
               >
                 신용/체크카드
               </button>
               <button
                 onClick={() => setPaymentMethod('trans')}
-                className={`p-4 rounded-sm border transition-all text-[10px] tracking-[0.2em] font-medium ${paymentMethod === 'trans' 
-                  ? 'bg-amber-900/20 border-amber-500/50 text-amber-500 shadow-inner' 
+                className={`p-4 rounded-sm border transition-all text-[10px] tracking-[0.2em] font-medium ${paymentMethod === 'trans'
+                  ? 'bg-amber-900/20 border-amber-500/50 text-amber-500 shadow-inner'
                   : 'bg-stone-950/40 border-amber-900/10 text-stone-600 hover:border-amber-900/30'}`}
               >
                 1초 계좌이체
-                </button>
-                    </div>
-                  </div>
-                  
+              </button>
+            </div>
+          </div>
+
           {/* 안심 안내 */}
           <div className="flex items-center justify-center gap-6 py-4 text-stone-700 text-[9px] tracking-widest uppercase font-medium">
             <span className="flex items-center gap-2"><Lock size={10} /> Secure SSL</span>
             <span className="flex items-center gap-2"><CreditCard size={10} /> Safe Payment</span>
-                  </div>
-                  </div>
-                  
+          </div>
+        </div>
+
         {/* 하단 고정 버튼 */}
         <div className="fixed bottom-0 left-0 w-full p-8 bg-gradient-to-t from-[#0f0f10] via-[#0f0f10]/90 to-transparent pt-16 z-20">
           <div className="max-w-[400px] mx-auto space-y-4">
-                <button 
-                onClick={() => startAnalysis(paymentMethod)}
+            <button
+              onClick={() => startAnalysis(paymentMethod)}
               className="w-full bg-amber-800/80 hover:bg-amber-700 text-amber-100 font-medium py-5 rounded-sm text-lg tracking-[0.3em] transition-all border border-amber-600/30 shadow-[0_0_20px_rgba(180,83,9,0.2)]"
-                >
+            >
               리포트 발간하기
-                </button>
+            </button>
             <p className="text-stone-700 text-[9px] text-center leading-relaxed tracking-wider uppercase">
               By proceeding, you agree to our Terms and Privacy Policy.
             </p>
@@ -1081,7 +1098,7 @@ const SajuApp = () => {
       </div>
     );
   };
-  
+
   /**
    * 분석 중 페이지 렌더링
    * 천명록 브랜딩 적용: 신비롭고 묵직한 분석 연출
@@ -1090,7 +1107,7 @@ const SajuApp = () => {
     <div className="flex flex-col h-full bg-[#0f0f10] text-stone-200 items-center justify-center p-8 text-center relative overflow-hidden">
       {/* 상단 금빛 조명 */}
       <div className="absolute top-0 left-0 w-full h-[500px] bg-amber-900/10 blur-[120px] rounded-full z-0"></div>
-      
+
       {/* 한지 텍스처 */}
       <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper.png')]"></div>
 
@@ -1101,17 +1118,17 @@ const SajuApp = () => {
           <div className="absolute inset-0 border-t-2 border-amber-500 rounded-full animate-spin"></div>
           <div className="text-amber-500/50 animate-pulse">
             <Sparkles size={32} strokeWidth={1} />
-            </div>
+          </div>
         </div>
 
         <div className="space-y-6">
           <h2 className={`text-3xl font-bold leading-relaxed text-stone-100 ${titleFont}`}>
             천기(天機)를<br />읽고 있습니다.
-            </h2>
+          </h2>
           <p className="text-stone-500 text-sm font-light tracking-widest uppercase">
             Consulting the celestial archive...
           </p>
-            </div>
+        </div>
 
         {/* 프로그레스 바 (엠버 컬러 적용) */}
         <div className="w-full max-w-[240px] space-y-4">
@@ -1120,10 +1137,10 @@ const SajuApp = () => {
           </div>
           <p className="text-[10px] text-amber-900 font-mono tracking-[0.2em]">{Math.floor(progress)}% ANALYZED</p>
         </div>
-        </div>
+      </div>
     </div>
   );
-  
+
   /**
    * 결과 페이지 렌더링
    * 사주 분석 결과 및 PDF 다운로드 기능 (애니메이션 강화)
@@ -1155,30 +1172,30 @@ const SajuApp = () => {
 
     // 운세 카드 데이터
     const fortuneCards = [
-      { 
-        emoji: '💰', 
-        title: '재물운', 
+      {
+        emoji: '💰',
+        title: '재물운',
         score: result.scores?.wealth || result.wealthScore || 78,
         content: result.wealthFortune || '재물운 정보를 불러오는 중...',
         delay: 'delay-300'
       },
-      { 
-        emoji: '❤️', 
-        title: '애정운', 
+      {
+        emoji: '❤️',
+        title: '애정운',
         score: result.scores?.love || result.loveScore || 85,
         content: result.loveFortune || '애정운 정보를 불러오는 중...',
         delay: 'delay-400'
       },
-      { 
-        emoji: '💼', 
-        title: '직장운', 
+      {
+        emoji: '💼',
+        title: '직장운',
         score: result.scores?.career || result.careerScore || 72,
         content: result.careerFortune || '직장운 정보를 불러오는 중...',
         delay: 'delay-500'
       },
-      { 
-        emoji: '🏥', 
-        title: '건강운', 
+      {
+        emoji: '🏥',
+        title: '건강운',
         score: result.scores?.health || result.healthScore || 65,
         content: result.healthFortune || '건강운 정보를 불러오는 중...',
         delay: 'delay-600'
@@ -1192,9 +1209,9 @@ const SajuApp = () => {
           <div className="font-bold text-lg">사주결과</div>
           <button onClick={() => setStep('landing')} className="text-sm bg-white/10 px-3 py-1.5 rounded-full border border-white/20 hover:bg-white/20 transition-colors">
             처음으로
-        </button>
+          </button>
         </div>
-        
+
         <div className="p-6 pb-48 space-y-8">
           {/* 기본 정보 요약 - 애니메이션 */}
           <div className="text-center space-y-3 pb-6 border-b border-white/10 animate-fade-in-up">
@@ -1204,7 +1221,7 @@ const SajuApp = () => {
               ✨ 총평: {result.overallFortune || '대기만성형 (大器晩成)'}
             </div>
           </div>
-          
+
           {/* 2026년 종합 점수 */}
           <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 animate-fade-in-up delay-100 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
             <h3 className="text-center text-slate-400 text-sm mb-3">2026년 종합운세</h3>
@@ -1216,7 +1233,7 @@ const SajuApp = () => {
             </div>
             <p className="text-center text-slate-400 text-sm mt-2">상위 18%의 좋은 운세입니다</p>
           </div>
-          
+
           {/* 오행 그래프 - 애니메이션 바 */}
           <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 animate-fade-in-up delay-200 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
             <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
@@ -1227,8 +1244,8 @@ const SajuApp = () => {
                 <div key={el.label} className="flex items-center gap-3">
                   <span className="w-12 text-sm font-bold text-slate-300">{el.label}</span>
                   <div className="flex-1 bg-white/10 rounded-full h-4 overflow-hidden">
-                    <div 
-                      className={`h-full ${el.color} animate-grow-width ${el.delay} rounded-full`} 
+                    <div
+                      className={`h-full ${el.color} animate-grow-width ${el.delay} rounded-full`}
                       style={{ width: `${el.val}%`, animationFillMode: 'forwards' }}
                     ></div>
                   </div>
@@ -1242,12 +1259,12 @@ const SajuApp = () => {
               </p>
             </div>
           </div>
-          
+
           {/* 상세 운세 카드들 */}
           <div className="space-y-4">
             {fortuneCards.map((card, idx) => (
-              <div 
-                key={card.title} 
+              <div
+                key={card.title}
                 className={`bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10 animate-fade-in-up ${card.delay} opacity-0-init`}
                 style={{ animationFillMode: 'forwards' }}
               >
@@ -1262,7 +1279,7 @@ const SajuApp = () => {
                 </div>
                 {/* 점수 바 */}
                 <div className="w-full bg-white/10 rounded-full h-2 mb-3 overflow-hidden">
-                  <div 
+                  <div
                     className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-grow-width"
                     style={{ width: `${card.score}%`, animationDelay: `${(idx + 3) * 100}ms`, animationFillMode: 'forwards' }}
                   ></div>
@@ -1281,7 +1298,7 @@ const SajuApp = () => {
             </p>
           </div>
         </div>
-        
+
         {/* 하단 PDF 다운로드 영역 */}
         <div className="fixed bottom-0 left-0 w-full print:hidden">
           {/* 그라데이션 오버레이 */}
@@ -1296,17 +1313,17 @@ const SajuApp = () => {
                 </p>
                 <span className="text-pink-400 font-bold">+3,900원</span>
               </div>
-              
+
               {/* PDF 다운로드 버튼 */}
-              <button 
+              <button
                 onClick={handleDownloadPDF}
                 className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
               >
                 <Download size={20} /> PDF 다운로드 (3,900원)
               </button>
-              
+
               {/* 이미 결제한 것처럼 보이는 무료 버튼 */}
-              <button 
+              <button
                 onClick={handleDownloadPDF}
                 className="w-full bg-white/10 text-slate-400 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors text-sm"
               >

@@ -37,10 +37,64 @@ const getJiAnimal = (ji) => {
   return animals[ji] || '동물';
 };
 
+// 천간(Gan) 한자 맵
+const ganHanjaMap = {
+  '갑': '甲', '을': '乙', '병': '丙', '정': '丁', '무': '戊',
+  '기': '己', '경': '庚', '신': '辛', '임': '壬', '계': '癸'
+};
+
+// 지지(Ji) 한자 맵
+const jiHanjaMap = {
+  '자': '子', '축': '丑', '인': '寅', '묘': '卯', '진': '辰', '사': '巳',
+  '오': '午', '미': '未', '신': '申', '유': '酉', '술': '戌', '해': '亥'
+};
+
+// 전통 오방색 피그먼트 맵 (Premium Pigments)
+const elementColorMap = {
+  목: '#3F6212', // Faded Pine
+  화: '#991B1B', // Cinnabar (Jusa)
+  토: '#B45309', // Yellow Earth
+  금: '#D1D5DB', // Aged Silver
+  수: '#1E3A8A'  // Indigo Ink
+};
+
+// 오행별 광휘(Aura) 맵
+const elementAuraMap = {
+  목: 'rgba(63, 98, 18, 0.4)',
+  화: 'rgba(153, 27, 27, 0.4)',
+  토: 'rgba(180, 83, 9, 0.4)',
+  금: 'rgba(209, 213, 219, 0.3)',
+  수: 'rgba(30, 58, 138, 0.4)'
+};
+
+// 천간 → 오행
+const getElementFromGan = (gan) => {
+  if (!gan) return null;
+  if (['갑', '을'].includes(gan)) return '목';
+  if (['병', '정'].includes(gan)) return '화';
+  if (['무', '기'].includes(gan)) return '토';
+  if (['경', '신'].includes(gan)) return '금';
+  if (['임', '계'].includes(gan)) return '수';
+  return null;
+};
+
+// 지지 → 오행
+const getElementFromJi = (ji) => {
+  if (!ji) return null;
+  const map = {
+    '자': '수', '축': '토', '인': '목', '묘': '목', '진': '토', '사': '화',
+    '오': '화', '미': '토', '신': '금', '유': '금', '술': '토', '해': '수'
+  };
+  return map[ji] || null;
+};
+
+const getElementColor = (element) => elementColorMap[element] || '#78716c';
+const getElementAura = (element) => elementAuraMap[element] || 'transparent';
+
 const ResultPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
-  
+
   // 상태 관리
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -126,7 +180,7 @@ const ResultPage = () => {
       } catch (err) {
         if (err.status === 404) setShowAuth(true);
         else setError(err.message || '결과 로드 실패');
-          setLoading(false);
+        setLoading(false);
       }
     };
     fetchResult();
@@ -237,51 +291,51 @@ const ResultPage = () => {
       <div className="flex flex-col items-center gap-6">
         <div className="w-16 h-16 border-t-2 border-amber-600 rounded-full animate-spin"></div>
         <p className={`text-sm tracking-[0.3em] uppercase ${titleFont}`}>天命錄 로딩 중...</p>
-        </div>
       </div>
-    );
+    </div>
+  );
 
   if (showAuth) return (
     <div className="min-h-screen bg-[#050505] flex items-center justify-center p-6 relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
-      
+
       <div className="bg-stone-900/40 backdrop-blur-xl p-10 rounded-sm w-full max-w-md text-stone-200 border border-amber-900/20 shadow-2xl relative z-10">
         <div className="text-center mb-10">
           <h2 className={`text-2xl font-bold text-amber-500/90 mb-2 ${titleFont}`}>本人確認</h2>
           <p className="text-stone-500 text-xs font-light tracking-widest uppercase">Identity Verification</p>
         </div>
-        
+
         <form onSubmit={handleAuth} className="space-y-8">
           <div className="space-y-2">
             <label className="text-[10px] text-stone-600 uppercase tracking-widest ml-1">Phone Number</label>
-                <input
-                  type="tel"
-              placeholder="010-0000-0000" 
-              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all tracking-widest" 
-                  value={authData.phone}
-              onChange={e => setAuthData({ ...authData, phone: e.target.value })} 
-                />
-              </div>
+            <input
+              type="tel"
+              placeholder="010-0000-0000"
+              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all tracking-widest"
+              value={authData.phone}
+              onChange={e => setAuthData({ ...authData, phone: e.target.value })}
+            />
+          </div>
 
           <div className="space-y-2">
             <label className="text-[10px] text-stone-600 uppercase tracking-widest ml-1">Birth Date</label>
-                <input
-                  type="date"
-              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all [color-scheme:dark]" 
-                  value={authData.birthDate}
-              onChange={e => setAuthData({ ...authData, birthDate: e.target.value })} 
-                />
-              </div>
+            <input
+              type="date"
+              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all [color-scheme:dark]"
+              value={authData.birthDate}
+              onChange={e => setAuthData({ ...authData, birthDate: e.target.value })}
+            />
+          </div>
 
           {authError && <p className="text-red-900/80 text-[10px] text-center uppercase tracking-tighter">{authError}</p>}
-          
+
           <button className="w-full bg-amber-800/80 hover:bg-amber-700 text-amber-100 py-4 rounded-sm font-medium tracking-[0.3em] transition-all border border-amber-600/30">
             確認 (확인)
-              </button>
-            </form>
-        </div>
+          </button>
+        </form>
       </div>
-    );
+    </div>
+  );
   if (error) return <div className="text-white p-10 text-center">{error}</div>;
   if (!sajuResult) return null;
   // 이름 생성 (Day Gan-Ji) - 데이터 누락 시 안전장치
@@ -341,12 +395,12 @@ const ResultPage = () => {
 
           {/* [Fixed] Top Navigation Bar */}
           <div className="flex justify-between items-center mb-12 px-2">
-        <button 
+            <button
               onClick={() => navigate(-1)}
               className="text-stone-500 hover:text-amber-600 transition-colors p-2"
-        >
+            >
               <ChevronLeft size={24} />
-        </button>
+            </button>
 
             <div className="flex flex-col items-center">
               <div className="border-t border-amber-800/30 w-12 mb-1"></div>
@@ -384,8 +438,8 @@ const ResultPage = () => {
               <div className="flex justify-center items-end gap-2 mb-4 relative">
                 <span className="text-7xl font-bold text-[#e8dac0] drop-shadow-md font-serif tracking-tighter">{sajuResult?.scores?.overall || 0}</span>
                 <span className="text-xl text-amber-800/60 font-serif mb-4">점</span>
-      </div>
-      
+              </div>
+
               <p className="text-stone-400 text-sm font-light leading-relaxed break-keep px-2">
                 오행의 조화가 {sajuResult?.scores?.overall >= 80 ? '매우 훌륭합니다' : sajuResult?.scores?.overall >= 60 ? '무난한 편입니다' : '조금 불안정합니다'}.<br />
                 당신에게 필요한 것은 <span className="text-amber-600 font-bold">{sajuResult?.oheng_deficiency?.most_deficient || '균형'}</span>의 기운입니다.
@@ -408,6 +462,90 @@ const ResultPage = () => {
             </div>
           </section>
 
+          {/* 2-1. 사주팔자 8글자 테이블 (Heavenly Seal Grid - RTL Traditional) */}
+          <section className="mt-8 px-1">
+            <div className="bg-[#0f0f12] border border-amber-900/15 rounded-lg p-6 shadow-2xl relative overflow-hidden">
+              <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
+
+              <div className="flex items-center justify-between mb-1 relative z-10">
+                <h4 className="text-[10px] font-bold text-amber-600/30 tracking-[0.4em] uppercase" style={{ fontFamily: '"Gungsuh", serif' }}>
+                  天機一覽
+                </h4>
+                <span className="text-[9px] text-amber-900/40 tracking-widest font-serif opacity-0">Hidden</span>
+              </div>
+
+              <div className="text-center mb-6 relative z-10">
+                <h3 className="text-xl font-medium text-[#e8dac0] tracking-[0.2em] font-serif">八字 一覽</h3>
+                <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mt-2"></div>
+              </div>
+
+              {/* Grid: 4 Pillars, 2 Rows each, Right-to-Left Ordering */}
+              <div className="grid grid-cols-4 gap-2 mb-6 relative z-10 dir-rtl">
+                {[
+                  { label: '時', gan: sajuResult?.sajuData?.hour?.gan, ji: sajuResult?.sajuData?.hour?.ji, key: 'hour' },
+                  { label: '本人', gan: sajuResult?.sajuData?.day?.gan, ji: sajuResult?.sajuData?.day?.ji, key: 'day', isSelf: true },
+                  { label: '月', gan: sajuResult?.sajuData?.month?.gan, ji: sajuResult?.sajuData?.month?.ji, key: 'month' },
+                  { label: '年', gan: sajuResult?.sajuData?.year?.gan, ji: sajuResult?.sajuData?.year?.ji, key: 'year' }
+                ].map(({ label, gan, ji, isSelf }, idx) => {
+                  const ganElem = getElementFromGan(gan);
+                  const jiElem = getElementFromJi(ji);
+
+                  return (
+                    <div key={idx} className="flex flex-col gap-2">
+                      <div className={`text-[9px] text-center tracking-[0.3em] font-serif mb-1 
+                                      ${isSelf ? 'text-amber-500/40 font-bold' : 'text-stone-700/30'}`}>
+                        {label}
+                      </div>
+
+                      {/* 천간 (Gan) - Stem Row */}
+                      <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-700
+                                      ${isSelf ? 'bg-[#1a1a20] border border-amber-600/40 ring-1 ring-amber-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.9)]'
+                          : 'bg-[#111113] border border-stone-800/40 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]'}`}>
+                        {/* Elemental Aura */}
+                        <div className={`absolute inset-0 blur-xl opacity-40 rounded-full z-0 ${isSelf ? 'animate-pulse-subtle' : ''}`}
+                          style={{ background: `radial-gradient(circle, ${getElementAura(ganElem)} 0%, transparent 70%)` }} />
+
+                        <div className={`relative z-10 text-[28px] font-serif leading-none
+                                        ${isSelf ? 'text-stone-50 drop-shadow-[0_0_8px_rgba(255,255,255,0.3)] scale-110' : 'text-stone-300'}`}
+                          style={{ color: isSelf ? '#fff' : getElementColor(ganElem) }}>
+                          {ganHanjaMap[gan] || (gan === '?' ? '?' : gan)}
+                        </div>
+                      </div>
+
+                      {/* 지지 (Ji) - Branch Row */}
+                      <div className="relative aspect-square flex items-center justify-center rounded-sm bg-[#111113] border border-stone-800/40 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]">
+                        {/* Elemental Aura */}
+                        <div className="absolute inset-0 blur-xl opacity-30 rounded-full z-0"
+                          style={{ background: `radial-gradient(circle, ${getElementAura(jiElem)} 0%, transparent 70%)` }} />
+
+                        <div className="relative z-10 text-[26px] font-serif leading-none"
+                          style={{ color: getElementColor(jiElem) }}>
+                          {jiHanjaMap[ji] || (ji === '?' ? '?' : ji)}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* 오행 범례 (Legend) */}
+              <div className="flex justify-center flex-wrap items-center gap-4 text-[9px] text-stone-600 font-serif tracking-widest opacity-60 hover:opacity-100 transition-opacity relative z-10">
+                {[
+                  { label: '木', element: '목' },
+                  { label: '火', element: '화' },
+                  { label: '土', element: '토' },
+                  { label: '金', element: '금' },
+                  { label: '水', element: '수' }
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-1.5 grayscale-[0.5] hover:grayscale-0 transition-all">
+                    <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: getElementColor(item.element) }} />
+                    <span>{item.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+
           {/* 개발자 모드 토글 (숨겨진 기능처럼 배치) */}
           <div className="fixed bottom-4 right-4 z-50 opacity-20 hover:opacity-100 transition-opacity">
             <button
@@ -423,7 +561,7 @@ const ResultPage = () => {
             <div className="fixed inset-0 z-50 bg-black/95 overflow-y-auto p-4 text-left font-mono text-xs text-green-500">
               <button onClick={() => setShowTechData(false)} className="absolute top-4 right-4 text-white p-2 border">Close</button>
               <pre>{JSON.stringify(sajuResult.sajuData.techData, null, 2)}</pre>
-      </div>
+            </div>
           )}
 
           {/* Section 1: Visual Dashboard (Radar) - 톤다운 및 한글화 */}
@@ -442,8 +580,8 @@ const ResultPage = () => {
                     <Radar name="My Saju" dataKey="A" stroke="#d97706" strokeWidth={1} fill="#d97706" fillOpacity={0.3} />
                   </RadarChart>
                 </ResponsiveContainer>
-          </div>
-        </div>
+              </div>
+            </div>
           </div>
 
           {/* Section 2: Card Navigation (Horizontal Scroll) - 인장/패 스타일 */}
@@ -452,8 +590,8 @@ const ResultPage = () => {
               <h3 className="text-lg font-bold text-[#e8dac0] flex items-center gap-2" style={{ fontFamily: '"Gungsuh", serif' }}>
                 상세 운세
               </h3>
-        </div>
-        
+            </div>
+
             <div className="flex overflow-x-auto px-6 pb-8 gap-3 snap-x no-scrollbar mt-4">
               {cards.map((card) => {
                 const isActive = activeTab === card.id;
@@ -474,107 +612,12 @@ const ResultPage = () => {
                     </div>
                     <div className="text-center">
                       <div className="text-lg font-bold mb-1 font-serif" style={{ writingMode: 'horizontal-tb' }}>{card.label}</div>
-                </div>
+                    </div>
                     <div className="w-full h-0.5 bg-current opacity-20"></div>
                   </button>
                 );
               })}
-              </div>
-          </div>
-
-          {/* Section 2.5: Premium Talisman */}
-          {/* Talisman Card Section (Premium) */}
-          <div className="mt-12 mb-8 relative">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
-
-            <div className="text-center mb-10 relative z-10">
-              <h3 className="text-2xl font-bold text-[#e8dac0] mb-2 tracking-[0.2em]" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
-                수호 부적
-              </h3>
-              <p className="text-xs text-stone-500 font-serif">당신의 부족한 기운을 채워줄 수호신</p>
-        </div>
-        
-            <div className="flex justify-center items-center gap-4 mb-8 relative">
-              {/* Left Arrow (Ghost Navigation) */}
-              {sajuResult.talisman?.reason && isTalismanFlipped && (
-                <button
-                  onClick={() => setTalismanViewMode('image')}
-                  className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'reason' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
-                >
-                  <ChevronLeft size={32} />
-                </button>
-              )}
-
-              <div className="perspective-1000">
-                <TalismanCard
-                  ref={talismanCardRef}
-                  type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
-                  userName={userInfo?.name || '사용자'}
-                  reason={sajuResult.talisman?.reason}
-                  activeTab={talismanViewMode}
-                  onFlip={(flipped) => setIsTalismanFlipped(flipped)}
-                  isPurchased={isTalismanPurchased}
-                  setIsPurchased={setIsTalismanPurchased}
-                  // Use selected test talisman data if available, otherwise fallback to result or default
-                  talismanData={
-                    testTalismanKey
-                      ? talismanNames[testTalismanKey]
-                      : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
-                        ? talismanNames[sajuResult.talisman.name]
-                        : talismanNames['갑자'])
-                  }
-                />
-              </div>
-
-              {/* Right Arrow (Ghost Navigation) */}
-              {sajuResult.talisman?.reason && isTalismanFlipped && (
-                <button
-                  onClick={() => setTalismanViewMode('reason')}
-                  className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'image' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
-                >
-                  <ChevronRight size={32} />
-                </button>
-              )}
-      </div>
-      
-            {/* Page Indicators */}
-            {sajuResult.talisman?.reason && isTalismanFlipped && (
-              <div className="flex justify-center gap-2 mb-10 -mt-4">
-                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'image' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
-                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'reason' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
-              </div>
-            )}
-            
-            {/* Premium Download/Purchase Button */}
-            {isTalismanFlipped && (
-              <div className="flex justify-center px-8 mb-8">
-              <button 
-                  onClick={() => talismanCardRef.current?.handleDownload()}
-                  className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
-                >
-                  {/* Button Background: Deep Traditional Ink */}
-                  <div className="absolute inset-0 bg-[#0d0d0f] border border-amber-900/30 group-hover:border-amber-600/50 transition-colors" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent opacity-50" />
-
-                  {/* Subtle Texture Hook */}
-                  <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
-
-                  {/* Button Content */}
-                  <div className="relative flex items-center justify-center gap-3">
-                    <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
-                    <Download size={18} className="text-amber-600 group-hover:scale-110 transition-transform" />
-                    <span className="text-amber-500 font-serif font-bold tracking-[0.2em] text-sm">
-                      {isTalismanPurchased ? '護符 貯藏 (저장하기)' : '名銘 貯藏 (이름 새겨 소장하기)'}
-                    </span>
-                    <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
-                  </div>
-
-                  {/* Glossy Overlay */}
-                  <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
-                </button>
-              </div>
-            )}
-
+            </div>
           </div>
 
           {/* Section 3: Detailed Content */}
@@ -675,9 +718,9 @@ const ResultPage = () => {
                   </div>
                   <Sparkles className="text-amber-700 opacity-30" size={24} />
                 </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
 
           {/* Floating Action Button (PDF) - 전통 목판 스타일 */}
           <div className="fixed bottom-6 left-0 w-full flex justify-center z-50 pointer-events-none">
@@ -716,14 +759,14 @@ const ResultPage = () => {
 
           {/* Talisman Selector Modal (Collection Mode) */}
           {showTalismanSelector && (
-            <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-4 backdrop-blur-sm animate-fade-in">
-              <div className="bg-[#1a1a1c] w-full max-w-2xl rounded-2xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[85vh] relative overflow-hidden">
+            <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2 backdrop-blur-sm animate-fade-in">
+              <div className="bg-[#1a1a1c] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[95vh] relative overflow-hidden">
                 {/* Decorative Background */}
                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
                 <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
-                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2">
                     <span className="text-2xl">📜</span>
                     <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
                   </div>
@@ -735,18 +778,15 @@ const ResultPage = () => {
                   </button>
                 </div>
 
-                <div className="flex-1 overflow-y-auto p-5 relative z-10 custom-scrollbar">
-                  <p className="text-stone-500 text-sm mb-4 text-center font-serif">
-                    원하는 수호신을 선택하여 미리 확인해볼 수 있습니다.
-                  </p>
-                  <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-3">
+                <div className="flex-1 overflow-y-auto p-2 relative z-10 custom-scrollbar">
+                  <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-1 mt-2">
                     {Object.keys(talismanNames).map((key) => {
                       const gan = key[0];
                       const { bg } = getGanColor(gan) || { bg: 'from-slate-700 to-slate-800' };
                       const isSelected = testTalismanKey === key;
 
                       return (
-                  <button
+                        <button
                           key={key}
                           onClick={() => {
                             setTestTalismanKey(key);
@@ -755,31 +795,28 @@ const ResultPage = () => {
                             if (talismanSection) talismanSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
                           }}
                           className={`
-                                relative p-3 rounded-xl border transition-all duration-300 group overflow-hidden
+                                relative p-1 rounded-md border transition-all duration-300 group overflow-hidden
                                 ${isSelected
-                              ? 'border-amber-400 bg-amber-900/40 shadow-[0_0_15px_rgba(251,191,36,0.2)] scale-105'
-                              : 'border-white/5 bg-[#252528] hover:border-white/20 hover:bg-[#2a2a2d] hover:-translate-y-0.5'
+                              ? 'border-amber-400 bg-amber-900/40 shadow-[0_0_10px_rgba(251,191,36,0.2)] scale-105'
+                              : 'border-white/5 bg-[#252528] hover:border-white/20 hover:bg-[#2a2a2d]'
                             }
-                              `}
+                                `}
+                          title={talismanNames[key].name}
                         >
                           <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br ${bg}`} />
-                          <div className={`absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r ${bg} opacity-50`} />
 
-                          <div className="relative z-10 flex flex-col items-center gap-1">
-                            <span className={`font-serif font-bold text-lg ${isSelected ? 'text-amber-200' : 'text-stone-300 group-hover:text-stone-100'}`}>
+                          <div className="relative z-10 flex flex-col items-center">
+                            <span className={`font-serif font-bold text-xs ${isSelected ? 'text-amber-200' : 'text-stone-300 group-hover:text-stone-100'}`}>
                               {key}
                             </span>
-                            <span className="text-[10px] text-stone-500 group-hover:text-stone-400">
-                              {talismanNames[key].name.split(' ')[0]}
-                  </span>
                           </div>
-                  </button>
+                        </button>
                       );
                     })}
                   </div>
                 </div>
               </div>
-                  </div>
+            </div>
           )}
 
           {/* PDF Preview Modal */}
@@ -789,22 +826,117 @@ const ResultPage = () => {
                 <div className="p-4 border-b border-amber-900/30 flex justify-between items-center bg-[#252528]">
                   <h3 className="font-bold text-[#e8dac0] font-serif">미리보기</h3>
                   <button onClick={handleClosePdfPreview} className="text-stone-500 hover:text-[#e8dac0]"><X /></button>
-                      </div>
+                </div>
                 <div className="flex-1 overflow-auto bg-[#101012] p-4 flex justify-center relative">
                   {/* 배경 질감 */}
                   <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
                   <Document file={pdfPreviewUrl} loading={<div className="text-amber-700 font-serif blink">문서를 불러오는 중...</div>}>
                     <Page pageNumber={1} width={300} />
                   </Document>
-              </div>
+                </div>
                 <div className="p-4 bg-[#1a1a1c] border-t border-amber-900/30">
                   <button onClick={handlePdfPayment} className="w-full bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-3 rounded font-bold font-serif border border-amber-700/50 flex items-center justify-center gap-2">
                     <span className="text-lg">🧧</span> 전체 결과 소장하기
-              </button>
+                  </button>
+                </div>
+              </div>
             </div>
+          )}
+
+          {/* Section 2.5: Premium Talisman - 페이지 맨 아래 배치 */}
+          {/* Talisman Card Section (Premium) */}
+          <div className="mt-12 mb-8 relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/20 pointer-events-none" />
+
+            <div className="text-center mb-10 relative z-10">
+              <h3 className="text-2xl font-bold text-[#e8dac0] mb-2 tracking-[0.2em]" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
+                수호 부적
+              </h3>
+              <p className="text-xs text-stone-500 font-serif">당신의 부족한 기운을 채워줄 수호신</p>
+            </div>
+
+            <div className="flex justify-center items-center gap-4 mb-8 relative">
+              {/* Left Arrow (Ghost Navigation) */}
+              {sajuResult.talisman?.reason && isTalismanFlipped && (
+                <button
+                  onClick={() => setTalismanViewMode('image')}
+                  className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'reason' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
+                >
+                  <ChevronLeft size={32} />
+                </button>
+              )}
+
+              <div className="perspective-1000">
+                <TalismanCard
+                  ref={talismanCardRef}
+                  type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
+                  userName={userInfo?.name || '사용자'}
+                  reason={sajuResult.talisman?.reason}
+                  activeTab={talismanViewMode}
+                  onFlip={(flipped) => setIsTalismanFlipped(flipped)}
+                  isPurchased={isTalismanPurchased}
+                  setIsPurchased={setIsTalismanPurchased}
+                  // Use selected test talisman data if available, otherwise fallback to result or default
+                  talismanData={
+                    testTalismanKey
+                      ? talismanNames[testTalismanKey]
+                      : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
+                        ? talismanNames[sajuResult.talisman.name]
+                        : talismanNames['갑자'])
+                  }
+                />
+              </div>
+
+              {/* Right Arrow (Ghost Navigation) */}
+              {sajuResult.talisman?.reason && isTalismanFlipped && (
+                <button
+                  onClick={() => setTalismanViewMode('reason')}
+                  className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'image' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
+                >
+                  <ChevronRight size={32} />
+                </button>
+              )}
+            </div>
+
+            {/* Page Indicators */}
+            {sajuResult.talisman?.reason && isTalismanFlipped && (
+              <div className="flex justify-center gap-2 mb-10 -mt-4">
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'image' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+                <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'reason' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+              </div>
+            )}
+
+            {/* Premium Download/Purchase Button */}
+            {isTalismanFlipped && (
+              <div className="flex justify-center px-8 mb-8">
+                <button
+                  onClick={() => talismanCardRef.current?.handleDownload()}
+                  className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
+                >
+                  {/* Button Background: Deep Traditional Ink */}
+                  <div className="absolute inset-0 bg-[#0d0d0f] border border-amber-900/30 group-hover:border-amber-600/50 transition-colors" />
+                  <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent opacity-50" />
+
+                  {/* Subtle Texture Hook */}
+                  <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
+
+                  {/* Button Content */}
+                  <div className="relative flex items-center justify-center gap-3">
+                    <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
+                    <Download size={18} className="text-amber-600 group-hover:scale-110 transition-transform" />
+                    <span className="text-amber-500 font-serif font-bold tracking-[0.2em] text-sm">
+                      {isTalismanPurchased ? '護符 貯藏 (저장하기)' : '名銘 貯藏 (이름 새겨 소장하기)'}
+                    </span>
+                    <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
+                  </div>
+
+                  {/* Glossy Overlay */}
+                  <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
+                </button>
+              </div>
+            )}
+
           </div>
-        </div>
-      )}
 
         </main>
       </div >
