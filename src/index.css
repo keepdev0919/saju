@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Hahmlet:wght@100..900&family=Song+Myung&display=swap');
 @import "tailwindcss";
 
 /* 커스텀 애니메이션 정의 */
@@ -360,7 +361,6 @@
 .bg-hanji-refined {
   background-image: url('https://www.transparenttextures.com/patterns/rice-paper-2.png');
   background-repeat: repeat;
-  mix-blend-mode: soft-light;
   opacity: 0.12;
 }
 
@@ -376,7 +376,11 @@
 
 /* 프리미엄 타이포그래피 */
 .font-serif {
-  font-family: 'Gungsuh', 'Batang', serif;
+  font-family: 'Song Myung', 'Gungsuh', 'Batang', serif;
+}
+
+.font-brand {
+  font-family: 'Hahmlet', serif;
 }
 
 /* 기본 body 스타일 */
@@ -506,6 +510,8 @@ body {
 /* 큰 도장 오버레이 (도감 미리보기 전용) */
 .sacred-seal-large {
   font-family: 'Gungsuh', 'Batang', serif;
+  font-weight: normal;
+  letter-spacing: 0.3em;
   color: rgba(185, 28, 28, 0.8);
   border: 8px double rgba(185, 28, 28, 0.8);
   padding: 32px 64px;

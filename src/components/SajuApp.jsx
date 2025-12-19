@@ -657,8 +657,8 @@ const SajuApp = () => {
             {/* 로고 영역: 브랜드 정체성 강화 - 슬로건을 브랜드명 바로 아래로 이동 */}
             <div className="space-y-4 animate-fade-in-landing">
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
-              <h1 className={`text-6xl font-bold text-amber-400/80 tracking-[0.3em] font-serif drop-shadow-[0_0_30px_rgba(217,119,6,0.4)]`}>
-                天命錄
+              <h1 className={`text-6xl font-black text-amber-400/90 tracking-[0.1em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)]`}>
+                천명록
               </h1>
               {/* 슬로건을 브랜드명 바로 아래로 이동 */}
               <div className="inline-block mt-2">
@@ -752,9 +752,9 @@ const SajuApp = () => {
 
                 <div
                   ref={libraryScrollRef}
-                  className="flex-1 overflow-x-auto overflow-y-hidden px-6 pt-3 pb-6 no-scrollbar relative z-20 overscroll-x-contain"
+                  className="flex-1 overflow-x-auto overflow-y-auto px-6 pt-3 pb-6 no-scrollbar relative z-20 overscroll-x-contain"
                 >
-                  <div className="grid grid-flow-col grid-rows-5 gap-3 h-full px-2">
+                  <div className="grid grid-flow-col grid-rows-5 gap-3 h-fit min-h-full px-2">
                     {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
                       Object.keys(talismanNames).filter(k => k.endsWith(animal))
                     ).map((key) => {
@@ -784,7 +784,7 @@ const SajuApp = () => {
                           <div className="absolute inset-0 bg-hanji-refined opacity-[0.05] pointer-events-none z-10"></div>
 
                           {/* 1. 이미지 프리뷰 (배경으로 더 깊이있게 깔림) */}
-                          <div className="absolute inset-0 z-0 opacity-[0.05] group-hover:opacity-20 transition-all duration-1000 grayscale">
+                          <div className="absolute inset-0 z-0 opacity-[0.05] group-hover:opacity-20 transition-all duration-1000">
                             <img
                               src="/images/talisman/placeholder.png"
                               alt=""
@@ -800,14 +800,12 @@ const SajuApp = () => {
                           <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 mt-1">
                             <div className="flex flex-col items-center leading-[1.2] select-none">
                               <span
-                                className={`font-serif font-black ${color} opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 text-[22px]`}
-                                style={{ filter: `drop-shadow(0 0 0.8px ${halo})` }}
+                                className={`font-serif font-black ${color} group-hover:scale-110 transition-all duration-700 text-[22px]`}
                               >
                                 {ganHanjaMap[key[0]]}
                               </span>
                               <span
-                                className={`font-serif font-black ${color} opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 text-[22px]`}
-                                style={{ filter: `drop-shadow(0 0 0.8px ${halo})` }}
+                                className={`font-serif font-black ${color} group-hover:scale-110 transition-all duration-700 text-[22px]`}
                               >
                                 {jiHanjaMap[key[1]]}
                               </span>
@@ -816,8 +814,7 @@ const SajuApp = () => {
                             {/* 하단 한글 명칭 - 보조적 배치 */}
                             <div className="mt-2 flex flex-col items-center gap-0.5">
                               <span
-                                className={`text-[7px] font-sans font-black tracking-[0.2em] ${color} transition-colors opacity-60 group-hover:opacity-100`}
-                                style={{ filter: `drop-shadow(0 0 0.5px ${halo})` }}
+                                className={`text-[7px] font-sans font-black tracking-[0.2em] ${color} transition-colors`}
                               >
                                 {key}
                               </span>
