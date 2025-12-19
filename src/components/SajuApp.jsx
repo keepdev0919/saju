@@ -758,6 +758,15 @@ const SajuApp = () => {
                     ).map((key) => {
                       const gan = key[0];
                       const { color } = getGanColor(gan);
+                      const getHaloColor = (gan) => {
+                        if (['갑', '을'].includes(gan)) return 'rgba(74, 222, 128, 0.5)'; // Wood - Green
+                        if (['병', '정'].includes(gan)) return 'rgba(248, 113, 113, 0.5)'; // Fire - Red
+                        if (['무', '기'].includes(gan)) return 'rgba(251, 191, 36, 0.5)';  // Earth - Yellow
+                        if (['경', '신'].includes(gan)) return 'rgba(255, 255, 255, 0.4)'; // Metal - White
+                        if (['임', '계'].includes(gan)) return 'rgba(255, 255, 255, 0.8)'; // Water - Silver
+                        return 'rgba(255, 255, 255, 0.3)';
+                      };
+                      const halo = getHaloColor(gan);
 
                       return (
                         <div
@@ -783,19 +792,28 @@ const SajuApp = () => {
 
 
                           {/* 3. 중앙 대형 한자 (Calligraphy Center - 밀도 확보의 핵심) */}
-                          <div className="relative z-10 flex flex-col items-center justify-center gap-0.5 mt-1">
-                            <div className="flex flex-col items-center leading-[0.9] select-none">
-                              <span className={`text-xl font-serif font-black ${color} opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ${['임', '계'].includes(key[0]) ? 'drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]' : 'drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]'}`}>
+                          <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 mt-1">
+                            <div className="flex flex-col items-center leading-[1.2] select-none">
+                              <span
+                                className={`font-serif font-black ${color} opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 text-[22px]`}
+                                style={{ filter: `drop-shadow(0 0 0.8px ${halo})` }}
+                              >
                                 {ganHanjaMap[key[0]]}
                               </span>
-                              <span className={`text-xl font-serif font-black ${color} opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ${['임', '계'].includes(key[0]) ? 'drop-shadow-[0_0_12px_rgba(255,255,255,0.25)]' : 'drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]'}`}>
+                              <span
+                                className={`font-serif font-black ${color} opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 text-[22px]`}
+                                style={{ filter: `drop-shadow(0 0 0.8px ${halo})` }}
+                              >
                                 {jiHanjaMap[key[1]]}
                               </span>
                             </div>
 
                             {/* 하단 한글 명칭 - 보조적 배치 */}
                             <div className="mt-2 flex flex-col items-center gap-0.5">
-                              <span className={`text-[7px] font-sans font-bold tracking-[0.2em] ${color} transition-colors`}>
+                              <span
+                                className={`text-[7px] font-sans font-black tracking-[0.2em] ${color} transition-colors`}
+                                style={{ filter: `drop-shadow(0 0 0.5px ${halo})` }}
+                              >
                                 {key}
                               </span>
                               {/* 하단 장식 도트 */}
@@ -819,32 +837,26 @@ const SajuApp = () => {
                     })}
                   </div>
 
-                  {/* 하단 스크롤 인디케이터 (Celestial Navigator) */}
-                  <div className="px-10 pb-6 pt-2 z-20 relative">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="flex items-center gap-4 w-full max-w-[280px]">
-                        <span className="text-[8px] text-amber-900/60 font-serif tracking-widest uppercase">Start</span>
-                        <div className="flex-1 h-[2px] bg-white/5 rounded-full relative overflow-hidden">
-                          {/* 베이스 흐름선 */}
-                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-900/10 to-transparent"></div>
-                          {/* 진행되는 빛의 선 */}
-                          <div
-                            ref={indicatorRef}
-                            className="absolute h-full bg-gradient-to-r from-amber-700/40 via-amber-500/80 to-amber-700/40 shadow-[0_0_10px_rgba(217,119,6,0.3)] will-change-transform"
-                            style={{
-                              width: '30%',
-                              transform: 'translate3d(0%, 0, 0)',
-                              transition: 'none'
-                            }}
-                          ></div>
-                        </div>
-                        <span className="text-[8px] text-amber-900/60 font-serif tracking-widest uppercase">End</span>
-                      </div>
-                      {/* 안내 텍스트 */}
-                      <div className="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                        <div className="w-1 h-1 rounded-full bg-amber-700 animate-pulse"></div>
-                        <span className="text-[7px] text-stone-500 tracking-[0.4em] font-light uppercase">Swipe to Navigate Destiny</span>
-                        <div className="w-1 h-1 rounded-full bg-amber-700 animate-pulse"></div>
+                </div>
+
+
+                {/* 하단 스크롤 인디케이터 (Celestial Navigator) - 카드 그리드와 푸터 사이 중앙 배치 */}
+                <div className="px-10 py-3 z-20 relative bg-[#1a1a1e]">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-4 w-full max-w-[200px]">
+                      <div className="flex-1 h-[2px] bg-white/5 rounded-full relative overflow-hidden">
+                        {/* 베이스 흐름선 */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-900/10 to-transparent"></div>
+                        {/* 진행되는 빛의 선 */}
+                        <div
+                          ref={indicatorRef}
+                          className={`absolute h-full bg-gradient-to-r from-amber-700/40 via-amber-500/80 to-amber-700/40 shadow-[0_0_10px_rgba(217,119,6,0.3)] will-change-transform`}
+                          style={{
+                            width: '30%',
+                            transform: 'translate3d(0%, 0, 0)',
+                            transition: 'none'
+                          }}
+                        ></div>
                       </div>
                     </div>
                   </div>
