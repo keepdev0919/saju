@@ -62,6 +62,8 @@ const SajuApp = () => {
   const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
   const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
   const talismanCardRef = useRef(null);
+  const libraryScrollRef = useRef(null);
+  const indicatorRef = useRef(null);
 
   // 사주 결과 상태
   const [sajuResult, setSajuResult] = useState(null);
@@ -76,6 +78,41 @@ const SajuApp = () => {
   // 터치/마우스 위치 추적을 위한 상태 (모바일 인터랙티브용)
   const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
   const [isInteracting, setIsInteracting] = useState(false);
+
+  // 도감 스크롤 추적 (Direct DOM Manipulation for Performance)
+  useEffect(() => {
+    const scrollContainer = libraryScrollRef.current;
+    const indicator = indicatorRef.current;
+    if (!scrollContainer || !indicator || !showLibrary) return;
+
+    let ticking = false;
+
+    const updateIndicator = () => {
+      const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
+      const maxScroll = scrollWidth - clientWidth;
+      if (maxScroll > 0) {
+        const ratio = scrollLeft / maxScroll;
+        const translatePercent = ratio * (100 / 0.3 - 100);
+        // translate3d와 will-change를 활용해 GPU 가속 강제
+        indicator.style.transform = `translate3d(${translatePercent}%, 0, 0)`;
+        indicator.style.transition = 'none';
+      }
+      ticking = false;
+    };
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(updateIndicator);
+        ticking = true;
+      }
+    };
+
+    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+    // 초기 값 설정
+    updateIndicator();
+
+    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+  }, [showLibrary]);
 
   // 시간 선택 모달 표시 여부
   const [showTimeModal, setShowTimeModal] = useState(false);
@@ -613,22 +650,6 @@ const SajuApp = () => {
           }}
         />
 
-        {/* 5. Celestial Particles (Subtle Wisdom) */}
-        <div className="absolute inset-0 z-0 pointer-events-none">
-          {[...Array(8)].map((_, i) => (
-            <div
-              key={i}
-              className="celestial-particle animate-pulse"
-              style={{
-                top: `${10 + Math.random() * 80}%`,
-                left: `${5 + Math.random() * 90}%`,
-                animationDelay: `${i * 1.2}s`,
-                opacity: 0.05 + Math.random() * 0.15
-              }}
-            />
-          ))}
-        </div>
-
         {/* 6. Subtle Depth Lighting */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-amber-900/5 blur-[150px] rounded-full z-0 pointer-events-none"></div>
 
@@ -697,7 +718,7 @@ const SajuApp = () => {
         {/* --- 천상의 아카이브 (Talisman Library) 모달 --- */}
         {showLibrary && (
           <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-2 backdrop-blur-md animate-fade-in">
-            <div className="bg-[#0f0f11] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-[0_0_50px_rgba(0,0,0,1)] flex flex-col max-h-[95vh] relative overflow-hidden">
+            <div className="bg-[#151518] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-[0_0_50px_rgba(0,0,0,1)] flex flex-col max-h-[95vh] relative overflow-hidden">
               {/* 장식적 배경 */}
               <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }}></div>
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-600/50 to-transparent"></div>
@@ -721,82 +742,112 @@ const SajuApp = () => {
                 </button>
               </div>
 
-              {/* 도감 그리드 영역 */}
-              <div className="flex-1 overflow-y-auto p-4 relative z-10 custom-scrollbar bg-[#0a0a0c]">
-                <div className="grid grid-flow-col grid-rows-5 gap-2 mt-2 overflow-x-auto custom-scrollbar pb-6 px-2">
-                  {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
-                    Object.keys(talismanNames).filter(k => k.endsWith(animal))
-                  ).map((key) => {
-                    const gan = key[0];
-                    const { color } = getGanColor(gan);
+              {/* 도감 그리드 영역 (배경 조도 개선) */}
+              <div className="flex-1 flex flex-col min-h-0 relative z-10 bg-[#1a1a1e]">
+                {/* 상단 조명 효과 (God Rays - 밝기 상향) */}
+                <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-transparent pointer-events-none z-10"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-amber-400/10 blur-[60px] pointer-events-none z-10"></div>
 
-                    return (
-                      <div
-                        key={key}
-                        onClick={() => {
-                          setSelectedTalismanKey(key);
-                          setShowTalismanDetail(true);
-                        }}
-                        className="relative p-2 rounded-lg border border-white/5 bg-[#121214] flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-900/40 hover:scale-105 hover:shadow-[0_0_25px_rgba(0,0,0,0.8)] transition-all duration-700 cursor-pointer overflow-hidden"
-                        title={talismanNames[key].name}
-                      >
-                        {/* 1. 이미지 프리뷰 (배경으로 은은하게 깔림 - Spectral Background) */}
-                        <div className="absolute inset-0 z-0 opacity-10 grayscale blur-[2px] group-hover:opacity-30 group-hover:grayscale-0 group-hover:blur-none transition-all duration-1000">
-                          <img
-                            src="/images/talisman/placeholder.png"
-                            alt=""
-                            className="w-full h-full object-cover scale-150 group-hover:scale-100 transition-transform duration-1000"
-                            onError={(e) => { e.target.src = 'https://via.placeholder.com/100/101012/101012'; }}
-                          />
-                          <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-80" />
-                        </div>
+                <div
+                  ref={libraryScrollRef}
+                  className="flex-1 overflow-x-auto overflow-y-hidden p-6 custom-scrollbar relative z-20"
+                >
+                  <div className="grid grid-flow-col grid-rows-5 gap-3 h-full px-2">
+                    {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
+                      Object.keys(talismanNames).filter(k => k.endsWith(animal))
+                    ).map((key) => {
+                      const gan = key[0];
+                      const { color } = getGanColor(gan);
 
-                        {/* 2. 신성한 인장 (Artifact Lock Seal) - 상단 우측에 배치 */}
-                        <div className="absolute top-2 right-2 z-20 opacity-40 group-hover:opacity-100 transition-all duration-500 group-hover:rotate-0 -rotate-12">
-                          <div className="p-1 border border-amber-700/30 bg-amber-900/10 backdrop-blur-sm rounded-sm shadow-sm flex items-center justify-center">
-                            <Lock size={8} className="text-amber-600/60 group-hover:text-amber-500" />
-                          </div>
-                        </div>
-
-                        {/* 3. 중앙 대형 한자 (Calligraphy Center - 밀도 확보의 핵심) */}
-                        <div className="relative z-10 flex flex-col items-center justify-center gap-0.5 mt-1">
-                          <div className="flex flex-col items-center leading-[0.9] select-none">
-                            <span className={`text-xl font-serif font-black ${color} opacity-50 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]`}>
-                              {ganHanjaMap[key[0]]}
-                            </span>
-                            <span className={`text-xl font-serif font-black ${color} opacity-40 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]`}>
-                              {jiHanjaMap[key[1]]}
-                            </span>
+                      return (
+                        <div
+                          key={key}
+                          onClick={() => {
+                            setSelectedTalismanKey(key);
+                            setShowTalismanDetail(true);
+                          }}
+                          className="relative p-2 rounded-lg border border-white/5 bg-[#202024] flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-500/40 hover:scale-105 hover:shadow-[0_0_25px_rgba(0,0,0,0.8)] transition-all duration-700 cursor-pointer overflow-hidden"
+                          title={talismanNames[key].name}
+                        >
+                          {/* 1. 이미지 프리뷰 (배경으로 은은하게 깔림 - Spectral Background) */}
+                          <div className="absolute inset-0 z-0 opacity-25 group-hover:opacity-50 transition-all duration-1000">
+                            <img
+                              src="/images/talisman/placeholder.png"
+                              alt=""
+                              className="w-full h-full object-cover scale-150 group-hover:scale-100 transition-transform duration-1000"
+                              onError={(e) => { e.target.src = 'https://via.placeholder.com/100/101012/101012'; }}
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-80" />
                           </div>
 
-                          {/* 하단 한글 명칭 - 보조적 배치 */}
-                          <div className="mt-2 flex flex-col items-center gap-0.5">
-                            <span className={`text-[8px] font-sans font-medium tracking-[0.2em] text-stone-600 group-hover:text-amber-500/80 transition-colors`}>
-                              {key}
-                            </span>
-                            {/* 하단 장식 도트 */}
-                            <div className={`w-[2px] h-[2px] rounded-full ${color.replace('text-', 'bg-')}/30 group-hover:bg-amber-500 group-hover:animate-pulse transition-all`} />
+
+
+                          {/* 3. 중앙 대형 한자 (Calligraphy Center - 밀도 확보의 핵심) */}
+                          <div className="relative z-10 flex flex-col items-center justify-center gap-0.5 mt-1">
+                            <div className="flex flex-col items-center leading-[0.9] select-none">
+                              <span className={`text-xl font-serif font-black ${color} opacity-90 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ${['임', '계'].includes(key[0]) ? 'drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]' : 'drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]'}`}>
+                                {ganHanjaMap[key[0]]}
+                              </span>
+                              <span className={`text-xl font-serif font-black ${color} opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700 ${['임', '계'].includes(key[0]) ? 'drop-shadow-[0_0_12px_rgba(255,255,255,0.25)]' : 'drop-shadow-[0_0_15px_rgba(0,0,0,0.9)]'}`}>
+                                {jiHanjaMap[key[1]]}
+                              </span>
+                            </div>
+
+                            {/* 하단 한글 명칭 - 보조적 배치 */}
+                            <div className="mt-2 flex flex-col items-center gap-0.5">
+                              <span className={`text-[7px] font-sans font-bold tracking-[0.2em] ${color} transition-colors`}>
+                                {key}
+                              </span>
+                              {/* 하단 장식 도트 */}
+                              <div className={`w-[2px] h-[2px] rounded-full ${color.replace('text-', 'bg-')}/30 group-hover:bg-amber-500 transition-all`} />
+                            </div>
+                          </div>
+
+                          {/* 4. 카드 장식선 (Premium Frame) */}
+                          <div className="absolute inset-1 border border-white/[0.03] rounded-md pointer-events-none group-hover:border-amber-900/30 transition-all duration-500" />
+
+                          {/* 5. 호버 툴팁 (상세 정보) */}
+                          <div className="absolute inset-0 bg-[#0f0f11]/95 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
+                            <div className="w-8 h-px bg-amber-700/40 mb-2"></div>
+                            <p className="text-amber-500/90 text-[9px] font-serif leading-tight mb-1 tracking-widest">
+                              {talismanNames[key].name}
+                            </p>
+                            <div className="w-6 h-px bg-amber-700/20 mt-2"></div>
                           </div>
                         </div>
+                      );
+                    })}
+                  </div>
 
-                        {/* 4. 카드 장식선 (Premium Frame) */}
-                        <div className="absolute inset-1 border border-white/[0.03] rounded-md pointer-events-none group-hover:border-amber-900/30 transition-all duration-500" />
-
-                        {/* 5. 호버 툴팁 (상세 정보) */}
-                        <div className="absolute inset-0 bg-[#0f0f11]/90 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 backdrop-blur-sm scale-110 group-hover:scale-100">
-                          <div className="w-8 h-px bg-amber-700/40 mb-2"></div>
-                          <p className="text-amber-500/90 text-[9px] font-serif leading-tight mb-2 tracking-widest">
-                            {talismanNames[key].name}
-                          </p>
-                          <div className="flex items-center gap-1.5 text-stone-400 text-[6px] tracking-widest uppercase">
-                            <Eye size={8} className="text-amber-900" />
-                            <span>View Record</span>
-                          </div>
-                          <div className="w-6 h-px bg-amber-700/20 mt-3"></div>
+                  {/* 하단 스크롤 인디케이터 (Celestial Navigator) */}
+                  <div className="px-10 pb-6 pt-2 z-20 relative">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="flex items-center gap-4 w-full max-w-[280px]">
+                        <span className="text-[8px] text-amber-900/60 font-serif tracking-widest uppercase">Start</span>
+                        <div className="flex-1 h-[2px] bg-white/5 rounded-full relative overflow-hidden">
+                          {/* 베이스 흐름선 */}
+                          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-900/10 to-transparent"></div>
+                          {/* 진행되는 빛의 선 */}
+                          <div
+                            ref={indicatorRef}
+                            className="absolute h-full bg-gradient-to-r from-amber-700/40 via-amber-500/80 to-amber-700/40 shadow-[0_0_10px_rgba(217,119,6,0.3)] will-change-transform"
+                            style={{
+                              width: '30%',
+                              transform: 'translate3d(0%, 0, 0)',
+                              transition: 'none'
+                            }}
+                          ></div>
                         </div>
+                        <span className="text-[8px] text-amber-900/60 font-serif tracking-widest uppercase">End</span>
                       </div>
-                    );
-                  })}
+                      {/* 안내 텍스트 */}
+                      <div className="flex items-center gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
+                        <div className="w-1 h-1 rounded-full bg-amber-700 animate-pulse"></div>
+                        <span className="text-[7px] text-stone-500 tracking-[0.4em] font-light uppercase">Swipe to Navigate Destiny</span>
+                        <div className="w-1 h-1 rounded-full bg-amber-700 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
