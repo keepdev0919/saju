@@ -454,6 +454,10 @@ body {
   animation: pulse-subtle 3s ease-in-out infinite;
 }
 
+.animate-pulse-slow {
+  animation: pulse-subtle 4s ease-in-out infinite;
+}
+
 /* 큰 도장 오버레이 (도감 미리보기 전용) */
 .sacred-seal-large {
   font-family: 'Gungsuh', 'Batang', serif;

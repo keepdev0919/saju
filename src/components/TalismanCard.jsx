@@ -277,9 +277,9 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                             <div className={`absolute inset-0 z-10 ${getBlurEffectClass()}`} />
 
                             {/* 안내 문구 레이어 (위에 배치하여 선명도 유지) */}
-                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 animate-pulse pointer-events-none">
-                                <Lock size={12} className="text-slate-400/80" />
-                                <span className="text-[10px] text-slate-200/90 font-serif tracking-tighter whitespace-nowrap">
+                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 animate-pulse-slow pointer-events-none">
+                                <Lock size={12} className="text-amber-600/80" />
+                                <span className="text-[10px] text-amber-500/90 font-serif tracking-tighter whitespace-nowrap">
                                     수호신의 신묘한 효험(效驗)은 인연 확인 시 열람 가능합니다
                                 </span>
                             </div>

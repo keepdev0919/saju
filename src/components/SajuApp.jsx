@@ -560,12 +560,6 @@ const SajuApp = () => {
             </div>
           </div>
 
-          {/* 하단: 설명 문구만 */}
-          <div className="text-center">
-            <p className="text-stone-700/80 text-[10px] font-serif italic tracking-widest leading-relaxed">
-              " 인연의 주인을 기다리고 있습니다 "
-            </p>
-          </div>
         </div>
       </div>
     );
@@ -788,7 +782,7 @@ const SajuApp = () => {
               <div className="p-8 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
                 <div className="absolute inset-0 bg-amber-500/5 opacity-20 blur-2xl"></div>
                 <p className="relative text-amber-500/80 text-[12px] tracking-[0.3em] font-serif italic drop-shadow-[0_0_10px_rgba(217,119,6,0.3)]">
-                  "형상은 모두에게 열려 있으나, 당신이 타고난 운명과의 연결은 오직 천기(天機) 속에 기록되어 있습니다."
+                  "나열된 만상(萬象) 중, 당신을 기다리는 단 하나의 인연을 찾으십시오."
                 </p>
                 <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-4"></div>
               </div>
