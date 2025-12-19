@@ -718,16 +718,16 @@ const SajuApp = () => {
         {/* --- 천상의 아카이브 (Talisman Library) 모달 --- */}
         {showLibrary && (
           <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-2 backdrop-blur-md animate-fade-in">
-            <div className="bg-[#151518] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-[0_0_50px_rgba(0,0,0,1)] flex flex-col max-h-[95vh] relative overflow-hidden">
-              {/* 장식적 배경 */}
-              <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/natural-paper.png")' }}></div>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-amber-600/50 to-transparent"></div>
+            <div className="bg-[#0c0c0e] w-full max-w-4xl rounded-xl border border-amber-900/30 shadow-[0_0_80px_rgba(0,0,0,1)] flex flex-col max-h-[95vh] relative overflow-hidden">
+              {/* 장식적 배경 - 정교한 한지 질감 */}
+              <div className="absolute inset-0 bg-hanji-refined opacity-15 pointer-events-none z-0"></div>
+              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-700/30 to-transparent"></div>
 
               {/* 헤더 */}
-              <div className="p-6 border-b border-amber-900/20 flex justify-between items-center bg-[#151518] relative z-10">
+              <div className="p-6 border-b border-amber-900/10 flex justify-between items-center bg-[#0c0c0e]/80 backdrop-blur-sm relative z-10">
                 <div className="flex flex-col">
-                  <h3 className="text-amber-500 font-serif text-lg tracking-widest flex items-center gap-3">
-                    <Sparkles size={16} className="text-amber-600" />
+                  <h3 className="text-amber-600/90 font-serif text-lg tracking-[0.3em] flex items-center gap-3">
+                    <Sparkles size={16} className="text-amber-700/60" />
                     천상의 기록 보관소 (Celestial Archive)
                   </h3>
                   <p className="text-stone-500 text-[10px] tracking-wider mt-1">
@@ -742,11 +742,15 @@ const SajuApp = () => {
                 </button>
               </div>
 
-              {/* 도감 그리드 영역 (배경 조도 개선) */}
-              <div className="flex-1 flex flex-col min-h-0 relative z-10 bg-[#1a1a1e]">
-                {/* 상단 조명 효과 (God Rays - 밝기 상향) */}
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-500/10 via-transparent to-transparent pointer-events-none z-10"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-amber-400/10 blur-[60px] pointer-events-none z-10"></div>
+              {/* 도감 그리드 영역 (먹색 한지 스테이지) */}
+              <div className="flex-1 flex flex-col min-h-0 relative z-10 bg-[#0c0c0e]">
+                {/* 배경 텍스처 레이어 (먹의 번짐과 종이의 결) */}
+                <div className="absolute inset-0 bg-hanji-refined opacity-10 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none"></div>
+
+                {/* 상단 온화한 조명 (Warm Amber Rays) */}
+                <div className="absolute inset-0 bg-gradient-to-b from-amber-900/5 via-transparent to-transparent pointer-events-none z-10"></div>
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-amber-800/10 blur-[80px] pointer-events-none z-10"></div>
 
                 <div
                   ref={libraryScrollRef}
@@ -775,11 +779,15 @@ const SajuApp = () => {
                             setSelectedTalismanKey(key);
                             setShowTalismanDetail(true);
                           }}
-                          className="relative p-2 rounded-lg border border-white/5 bg-[#202024] flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-500/40 hover:scale-105 hover:shadow-[0_0_25px_rgba(0,0,0,0.8)] transition-all duration-700 cursor-pointer overflow-hidden"
+                          className="relative p-2 rounded-sm border border-amber-900/10 bg-gradient-to-b from-[#161618] to-[#0c0c0e] flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-700/30 hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,1)] transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]"
                           title={talismanNames[key].name}
                         >
-                          {/* 1. 이미지 프리뷰 (배경으로 은은하게 깔림 - Spectral Background) */}
-                          <div className="absolute inset-0 z-0 opacity-25 group-hover:opacity-50 transition-all duration-1000">
+                          {/* 나무 결 질감 (Wood Grain Texture Simulation) */}
+                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.1)_50%,transparent_100%)] bg-[length:2px_100%]"></div>
+                          <div className="absolute inset-0 bg-hanji-refined opacity-[0.05] pointer-events-none"></div>
+
+                          {/* 1. 이미지 프리뷰 (배경으로 더 깊이있게 깔림) */}
+                          <div className="absolute inset-0 z-0 opacity-[0.15] group-hover:opacity-40 transition-all duration-1000 grayscale">
                             <img
                               src="/images/talisman/placeholder.png"
                               alt=""
@@ -821,16 +829,17 @@ const SajuApp = () => {
                             </div>
                           </div>
 
-                          {/* 4. 카드 장식선 (Premium Frame) */}
-                          <div className="absolute inset-1 border border-white/[0.03] rounded-md pointer-events-none group-hover:border-amber-900/30 transition-all duration-500" />
+                          {/* 4. 카드 장식선 (Antique Frame) */}
+                          <div className="absolute inset-1 border border-amber-900/5 rounded-sm pointer-events-none group-hover:border-amber-800/20 transition-all duration-700" />
+                          <div className="absolute inset-[1px] border border-black/40 rounded-sm pointer-events-none" />
 
-                          {/* 5. 호버 툴팁 (상세 정보) */}
-                          <div className="absolute inset-0 bg-[#0f0f11]/95 opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
-                            <div className="w-8 h-px bg-amber-700/40 mb-2"></div>
-                            <p className="text-amber-500/90 text-[9px] font-serif leading-tight mb-1 tracking-widest">
+                          {/* 5. 호버 툴팁 (상세 정보 - 먹빛 오버레이) */}
+                          <div className="absolute inset-0 bg-[#08080a]/98 opacity-0 group-hover:opacity-100 transition-all duration-700 flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
+                            <div className="w-8 h-px bg-amber-800/30 mb-2"></div>
+                            <p className="text-amber-700/80 text-[10px] font-serif leading-tight mb-1 tracking-[0.2em] font-medium">
                               {talismanNames[key].name}
                             </p>
-                            <div className="w-6 h-px bg-amber-700/20 mt-2"></div>
+                            <div className="w-6 h-px bg-amber-800/10 mt-2"></div>
                           </div>
                         </div>
                       );
@@ -840,36 +849,12 @@ const SajuApp = () => {
                 </div>
 
 
-                {/* 하단 스크롤 인디케이터 (Celestial Navigator) - 카드 그리드와 푸터 사이 중앙 배치 */}
-                <div className="px-10 py-3 z-20 relative bg-[#1a1a1e]">
-                  <div className="flex flex-col items-center">
-                    <div className="flex items-center gap-4 w-full max-w-[200px]">
-                      <div className="flex-1 h-[2px] bg-white/5 rounded-full relative overflow-hidden">
-                        {/* 베이스 흐름선 */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-900/10 to-transparent"></div>
-                        {/* 진행되는 빛의 선 */}
-                        <div
-                          ref={indicatorRef}
-                          className={`absolute h-full bg-gradient-to-r from-amber-700/40 via-amber-500/80 to-amber-700/40 shadow-[0_0_10px_rgba(217,119,6,0.3)] will-change-transform`}
-                          style={{
-                            width: '30%',
-                            transform: 'translate3d(0%, 0, 0)',
-                            transition: 'none'
-                          }}
-                        ></div>
-                      </div>
-                    </div>
-                  </div>
+                {/* 푸터 안내 - 통합된 배경 위 정갈한 배치 */}
+                <div className="p-6 pb-2 text-center relative z-10">
+                  <p className="relative text-amber-500/80 text-[15px] tracking-[0.2em] font-serif italic ">
+                    "나열된 만상(萬象) 중, 당신을 기다리는 단 하나의 인연을 찾으십시오."
+                  </p>
                 </div>
-              </div>
-
-              {/* 푸터 안내 - 여백 최적화 */}
-              <div className="p-5 pb-3 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
-                <div className="absolute inset-0 bg-amber-500/5 opacity-20 blur-2xl"></div>
-                <p className="relative text-amber-500/80 text-[11px] tracking-[0.25em] font-serif italic drop-shadow-[0_0_10px_rgba(217,119,6,0.3)]">
-                  "나열된 만상(萬象) 중, 당신을 기다리는 단 하나의 인연을 찾으십시오."
-                </p>
-                <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-700/40 to-transparent mx-auto mt-2"></div>
               </div>
             </div>
           </div>
