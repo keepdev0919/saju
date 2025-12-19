@@ -93,9 +93,8 @@ const SajuApp = () => {
       if (maxScroll > 0) {
         const ratio = scrollLeft / maxScroll;
         const translatePercent = ratio * (100 / 0.3 - 100);
-        // translate3d와 will-change를 활용해 GPU 가속 강제
         indicator.style.transform = `translate3d(${translatePercent}%, 0, 0)`;
-        indicator.style.transition = 'none';
+        indicator.style.transition = "none";
       }
       ticking = false;
     };
@@ -107,11 +106,10 @@ const SajuApp = () => {
       }
     };
 
-    scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
-    // 초기 값 설정
+    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
     updateIndicator();
 
-    return () => scrollContainer.removeEventListener('scroll', handleScroll);
+    return () => scrollContainer.removeEventListener("scroll", handleScroll);
   }, [showLibrary]);
 
   // 시간 선택 모달 표시 여부
@@ -724,7 +722,7 @@ const SajuApp = () => {
               <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-700/30 to-transparent"></div>
 
               {/* 헤더 */}
-              <div className="p-6 border-b border-amber-900/10 flex justify-between items-center bg-[#0c0c0e]/80 backdrop-blur-sm relative z-10">
+              <div className="px-6 pt-6 pb-3 flex justify-between items-center bg-[#0c0c0e]/80 backdrop-blur-sm relative z-10">
                 <div className="flex flex-col">
                   <h3 className="text-amber-600/90 font-serif text-lg tracking-[0.3em] flex items-center gap-3">
                     <Sparkles size={16} className="text-amber-700/60" />
@@ -754,7 +752,7 @@ const SajuApp = () => {
 
                 <div
                   ref={libraryScrollRef}
-                  className="flex-1 overflow-x-auto overflow-y-hidden p-6 no-scrollbar relative z-20 overscroll-x-contain"
+                  className="flex-1 overflow-x-auto overflow-y-hidden px-6 pt-3 pb-6 no-scrollbar relative z-20 overscroll-x-contain"
                 >
                   <div className="grid grid-flow-col grid-rows-5 gap-3 h-full px-2">
                     {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
@@ -779,15 +777,14 @@ const SajuApp = () => {
                             setSelectedTalismanKey(key);
                             setShowTalismanDetail(true);
                           }}
-                          className="relative p-2 rounded-sm border border-amber-900/10 bg-gradient-to-b from-[#161618] to-[#0c0c0e] flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-700/30 hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,1)] transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_0_15px_rgba(0,0,0,0.5)]"
+                          className="relative p-2 rounded-sm border border-orange-950/40 bg-wood-refined flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-600/40 hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,1)] transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),inset_0_0_30px_rgba(0,0,0,0.7),0_10px_20px_rgba(0,0,0,0.6)]"
                           title={talismanNames[key].name}
                         >
-                          {/* 나무 결 질감 (Wood Grain Texture Simulation) */}
-                          <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[linear-gradient(90deg,transparent_0%,rgba(255,255,255,0.1)_50%,transparent_100%)] bg-[length:2px_100%]"></div>
-                          <div className="absolute inset-0 bg-hanji-refined opacity-[0.05] pointer-events-none"></div>
+                          {/* 한지 질감 Overlay */}
+                          <div className="absolute inset-0 bg-hanji-refined opacity-[0.05] pointer-events-none z-10"></div>
 
                           {/* 1. 이미지 프리뷰 (배경으로 더 깊이있게 깔림) */}
-                          <div className="absolute inset-0 z-0 opacity-[0.15] group-hover:opacity-40 transition-all duration-1000 grayscale">
+                          <div className="absolute inset-0 z-0 opacity-[0.05] group-hover:opacity-20 transition-all duration-1000 grayscale">
                             <img
                               src="/images/talisman/placeholder.png"
                               alt=""
@@ -819,19 +816,19 @@ const SajuApp = () => {
                             {/* 하단 한글 명칭 - 보조적 배치 */}
                             <div className="mt-2 flex flex-col items-center gap-0.5">
                               <span
-                                className={`text-[7px] font-sans font-black tracking-[0.2em] ${color} transition-colors`}
+                                className={`text-[7px] font-sans font-black tracking-[0.2em] ${color} transition-colors opacity-60 group-hover:opacity-100`}
                                 style={{ filter: `drop-shadow(0 0 0.5px ${halo})` }}
                               >
                                 {key}
                               </span>
-                              {/* 하단 장식 도트 */}
-                              <div className={`w-[2px] h-[2px] rounded-full ${color.replace('text-', 'bg-')}/30 group-hover:bg-amber-500 transition-all`} />
+                              {/* 하단 장식 도트 (각인된 보석 느낌) */}
+                              <div className={`w-[2.5px] h-[2.5px] rounded-full ${color.replace('text-', 'bg-')}/40 group-hover:bg-amber-500 shadow-[0_0_5px_rgba(0,0,0,0.5)] transition-all`} />
                             </div>
                           </div>
 
-                          {/* 4. 카드 장식선 (Antique Frame) */}
-                          <div className="absolute inset-1 border border-amber-900/5 rounded-sm pointer-events-none group-hover:border-amber-800/20 transition-all duration-700" />
-                          <div className="absolute inset-[1px] border border-black/40 rounded-sm pointer-events-none" />
+                          {/* 4. 카드 장식선 (Antique Frame - 각인된 경계라인) */}
+                          <div className="absolute inset-[2px] border border-orange-950/40 rounded-sm pointer-events-none group-hover:border-amber-700/30 transition-all duration-700 shadow-[inset_0_0_5px_rgba(0,0,0,0.6)]" />
+                          <div className="absolute inset-[3px] border border-black/60 rounded-sm pointer-events-none" />
 
                           {/* 5. 호버 툴팁 (상세 정보 - 먹빛 오버레이) */}
                           <div className="absolute inset-0 bg-[#08080a]/98 opacity-0 group-hover:opacity-100 transition-all duration-700 flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
@@ -845,13 +842,23 @@ const SajuApp = () => {
                       );
                     })}
                   </div>
-
                 </div>
 
+                {/* 하단 스크롤 인디케이터 */}
+                <div className="px-10 py-4 z-20 relative">
+                  <div className="max-w-md mx-auto">
+                    <div className="h-[1.5px] w-full bg-stone-900/60 rounded-full relative overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
+                      <div
+                        ref={indicatorRef}
+                        className="absolute h-full w-[30%] bg-gradient-to-r from-amber-900/40 via-amber-600/60 to-amber-900/40 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 {/* 푸터 안내 - 통합된 배경 위 정갈한 배치 */}
                 <div className="p-6 pb-2 text-center relative z-10">
-                  <p className="relative text-amber-500/80 text-[15px] tracking-[0.2em] font-serif italic ">
+                  <p className="relative text-amber-500/80 text-[15px] tracking-[0.2em] font-serif italic">
                     "나열된 만상(萬象) 중, 당신을 기다리는 단 하나의 인연을 찾으십시오."
                   </p>
                 </div>
@@ -904,7 +911,7 @@ const SajuApp = () => {
 
       {/* 입력 카드 */}
       <div className="flex-1 flex items-center justify-center px-6 pb-32 z-10">
-        <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm w-full border border-amber-900/20 shadow-2xl overflow-hidden">
+        <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm w-full border border-orange-950/40 shadow-2xl overflow-hidden">
           {/* 헤더 */}
           <div className="p-5 border-b border-amber-900/10 flex items-center justify-between bg-stone-900/60">
             <button
@@ -969,7 +976,7 @@ const SajuApp = () => {
 
       {/* 입력 카드 */}
       <div className="flex-1 flex flex-col items-center justify-center px-6 pb-32 gap-6 z-10">
-        <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm w-full border border-amber-900/20 shadow-2xl overflow-hidden">
+        <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm w-full border border-orange-950/40 shadow-2xl overflow-hidden">
           {/* 헤더 */}
           <div className="p-5 border-b border-amber-900/10 flex items-center justify-between bg-stone-900/60">
             <button
@@ -985,7 +992,7 @@ const SajuApp = () => {
           {/* 입력 필드 */}
           <div className="p-8 space-y-10">
             {/* 양력/음력 선택 버튼 */}
-            <div className="flex bg-stone-950/60 p-1 rounded-sm border border-amber-900/20">
+            <div className="flex bg-stone-950/60 p-1 rounded-sm border border-orange-950/40">
               <button
                 onClick={() => setUserInfo({ ...userInfo, calendarType: 'solar', isLeap: false })}
                 className={`flex-1 py-3 rounded-sm text-xs tracking-[0.2em] transition-all ${userInfo.calendarType === 'solar' ? 'bg-amber-900/30 text-amber-500 shadow-lg' : 'text-stone-600'}`}
@@ -1088,7 +1095,7 @@ const SajuApp = () => {
 
         {/* 입력 폼 영역 - 플라크 스타일 카드 */}
         <div className="flex-1 overflow-y-auto px-6 pb-40 z-10">
-          <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm p-8 border border-amber-900/20 shadow-2xl space-y-8">
+          <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm p-8 border border-orange-950/40 shadow-2xl space-y-8">
             {/* 이름 입력 */}
             <div className="border-b border-amber-900/30 pb-6">
               <input
@@ -1217,7 +1224,7 @@ const SajuApp = () => {
         {/* 시간 선택 모달 - 브랜딩 적용 */}
         {showTimeModal && (
           <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex items-end sm:items-center justify-center animate-fade-in">
-            <div className="bg-[#0f0f10] w-full max-w-md h-[70%] sm:h-auto sm:max-h-[80vh] sm:rounded-sm flex flex-col overflow-hidden animate-slide-up shadow-2xl border-t sm:border border-amber-900/20">
+            <div className="bg-[#0f0f10] w-full max-w-md h-[70%] sm:h-auto sm:max-h-[80vh] sm:rounded-sm flex flex-col overflow-hidden animate-slide-up shadow-2xl border-t sm:border border-orange-950/40">
               {/* 모달 헤더 */}
               <div className="p-6 border-b border-amber-900/10 flex justify-between items-center sticky top-0 bg-[#0f0f10] z-10 shrink-0">
                 <div>
@@ -1303,7 +1310,7 @@ const SajuApp = () => {
           </div>
 
           {/* 리포트 사양 카드 */}
-          <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm p-8 border border-amber-900/20 shadow-2xl space-y-8">
+          <div className="bg-stone-900/40 backdrop-blur-xl rounded-sm p-8 border border-orange-950/40 shadow-2xl space-y-8">
             <div className="space-y-4">
               <h3 className={`text-amber-500/80 text-sm font-medium tracking-[0.2em] ${titleFont}`}>REPORT SPECIFICATION</h3>
               <div className="space-y-4">
@@ -1395,7 +1402,7 @@ const SajuApp = () => {
       <div className="z-10 w-full flex flex-col items-center space-y-12">
         {/* 고풍스러운 로딩 애니메이션 */}
         <div className="relative w-32 h-32 flex items-center justify-center">
-          <div className="absolute inset-0 border border-amber-900/20 rounded-full"></div>
+          <div className="absolute inset-0 border border-orange-950/40 rounded-full"></div>
           <div className="absolute inset-0 border-t-2 border-amber-500 rounded-full animate-spin"></div>
           <div className="text-amber-500/50 animate-pulse">
             <Sparkles size={32} strokeWidth={1} />
