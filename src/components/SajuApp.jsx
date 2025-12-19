@@ -552,7 +552,7 @@ const SajuApp = () => {
 
               {/* 큰 도장 오버레이 (도감 모드에서는 항상 표시) */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                <div className="sacred-seal-large animate-seal-arrival-premium flex flex-col items-center justify-center gap-2">
+                <div className="sacred-seal-large flex flex-col items-center justify-center gap-2">
                   <span className="text-6xl font-bold tracking-tighter leading-none">天命錄</span>
                   <span className="text-xs tracking-[0.3em] opacity-80 uppercase">Sacred Archive</span>
                 </div>
