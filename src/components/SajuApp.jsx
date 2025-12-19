@@ -778,24 +778,24 @@ const SajuApp = () => {
                 </div>
               </div>
 
-              {/* 푸터 안내 */}
-              <div className="p-8 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
+              {/* 푸터 안내 - 여백 최적화 */}
+              <div className="p-5 pb-8 border-t border-amber-900/20 bg-[#151518] text-center relative z-10">
                 <div className="absolute inset-0 bg-amber-500/5 opacity-20 blur-2xl"></div>
-                <p className="relative text-amber-500/80 text-[12px] tracking-[0.3em] font-serif italic drop-shadow-[0_0_10px_rgba(217,119,6,0.3)]">
+                <p className="relative text-amber-500/80 text-[11px] tracking-[0.25em] font-serif italic drop-shadow-[0_0_10px_rgba(217,119,6,0.3)]">
                   "나열된 만상(萬象) 중, 당신을 기다리는 단 하나의 인연을 찾으십시오."
                 </p>
-                <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-700/50 to-transparent mx-auto mt-4"></div>
+                <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-700/40 to-transparent mx-auto mt-2"></div>
               </div>
             </div>
           </div>
         )}
 
-        {/* 하단 CTA 영역: 모바일 최적화 인장 스타일 버튼 - 밝기 개선 */}
-        <div className="absolute bottom-0 left-0 w-full z-20 p-10 pb-20">
+        {/* 하단 CTA 영역: 여백을 컴팩트하게 조정 */}
+        <div className="absolute bottom-0 left-0 w-full z-20 px-10 pb-12">
           <div className="max-w-[400px] mx-auto">
             <button
               onClick={() => setStep('input')}
-              className="group relative w-full overflow-hidden border border-amber-700/40 bg-stone-900/30 backdrop-blur-sm py-6 rounded-sm transition-all duration-500 active:scale-[0.97] active:bg-stone-800/40 active:border-amber-500/60 shadow-[0_0_30px_rgba(217,119,6,0.15)]"
+              className="group relative w-full overflow-hidden border border-amber-700/40 bg-stone-900/30 backdrop-blur-sm py-5 rounded-sm transition-all duration-500 active:scale-[0.97] active:bg-stone-800/40 active:border-amber-500/60 shadow-[0_0_30px_rgba(217,119,6,0.15)]"
             >
               <div className="relative flex items-center justify-center gap-6">
                 <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
@@ -806,7 +806,7 @@ const SajuApp = () => {
               </div>
             </button>
 
-            <p className="text-stone-500/70 text-[8px] tracking-[0.4em] text-center mt-10 uppercase font-light">
+            <p className="text-stone-500/60 text-[8px] tracking-[0.4em] text-center mt-6 uppercase font-light">
               Restricted Access
             </p>
           </div>
