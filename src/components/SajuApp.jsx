@@ -750,7 +750,7 @@ const SajuApp = () => {
 
                 <div
                   ref={libraryScrollRef}
-                  className="flex-1 overflow-x-auto overflow-y-hidden p-6 no-scrollbar relative z-20"
+                  className="flex-1 overflow-x-auto overflow-y-hidden p-6 no-scrollbar relative z-20 overscroll-x-contain"
                 >
                   <div className="grid grid-flow-col grid-rows-5 gap-3 h-full px-2">
                     {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
