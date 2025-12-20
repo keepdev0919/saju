@@ -17,8 +17,15 @@ const ArchivePage = () => {
     const [talismanViewMode, setTalismanViewMode] = useState('image');
     const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
     const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
+    const touchStartY = useRef(null);
 
     const talismanCardRef = useRef(null);
+
+    const closeModal = () => {
+        setShowTalismanDetail(false);
+        setIsTalismanFlipped(false);
+        setTalismanViewMode('image');
+    };
 
     // 오행별 챕터 정보 (고증 컬러 명시 및 테두리/라인 컬러 고정)
     // 테일윈드 JIT 컴파일러 이슈 해결을 위해 클래스 풀네임 사용
@@ -91,6 +98,27 @@ const ArchivePage = () => {
     };
 
     // ESC 키로 상세 모달 닫기
+    // Intersection Observer for scroll animations
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('reveal-item-active');
+                    }
+                });
+            },
+            { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
+        );
+
+        const items = document.querySelectorAll('.reveal-item');
+        items.forEach((item) => observer.observe(item));
+
+        return () => {
+            items.forEach((item) => observer.unobserve(item));
+        };
+    }, []);
+
     useEffect(() => {
         if (showTalismanDetail) {
             const handleEsc = (e) => {
@@ -108,32 +136,40 @@ const ArchivePage = () => {
     const renderTalismanPreviewModal = () => {
         if (!selectedTalismanKey) return null;
 
+        const handleTouchStart = (e) => {
+            touchStartY.current = e.touches[0].clientY;
+        };
+
+        const handleTouchEnd = (e) => {
+            if (touchStartY.current === null) return;
+            const touchEndY = e.changedTouches[0].clientY;
+            const diff = touchEndY - touchStartY.current;
+
+            // 50px 이상 아래로 스와이프하면 닫기
+            if (diff > 50) {
+                closeModal();
+            }
+            touchStartY.current = null;
+        };
+
         return (
-            <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-                <div className="relative w-full max-w-[480px] flex flex-col items-center animate-modal-entrance">
-                    <div className="w-full flex justify-between items-center mb-8 px-6">
-                        <div className="flex flex-col">
-                            <h3 className="text-amber-500 font-serif text-lg tracking-widest">
-                                열람용 사본 (閱覽用 寫本)
-                            </h3>
-                            <p className="text-stone-600 text-[10px] tracking-tight mt-1 leading-relaxed">
-                                인연 확인 시 중앙 인장이 해제되며, 우측 하단에 천명록의 공식 낙인이 깃듭니다.<br />
-                                <span className="text-amber-700/80 font-medium">(추가 각인 시 개인 성함 포함 소장 가능)</span>
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => {
-                                setShowTalismanDetail(false);
-                                setIsTalismanFlipped(false);
-                                setTalismanViewMode('image');
-                            }}
-                            className="p-2 text-stone-500 hover:text-amber-500 transition-colors"
-                        >
-                            <X size={24} />
-                        </button>
+            <div
+                className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in cursor-pointer"
+                onClick={closeModal}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+            >
+                <div className="relative w-full max-w-[480px] flex flex-col items-center animate-modal-entrance pointer-events-none">
+                    <div className="w-full flex flex-col items-center mb-10 px-6 text-center">
+                        <h3 className="text-amber-500 font-serif text-lg tracking-widest mb-2">
+                            열람용 사본 (閱覽用 寫本)
+                        </h3>
+                        <p className="text-stone-500 text-[10px] tracking-tight leading-relaxed opacity-60">
+                            화면 어디든 터치하거나 아래로 밀어서 닫으십시오.
+                        </p>
                     </div>
 
-                    <div className="flex items-center justify-center mb-4">
+                    <div className="flex items-center justify-center mb-4 pointer-events-auto">
                         <div className="relative">
                             <TalismanCard
                                 ref={talismanCardRef}
@@ -148,10 +184,7 @@ const ArchivePage = () => {
                                 isArchiveMode={true}
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                                <div className="sacred-seal-large flex flex-col items-center justify-center gap-2">
-                                    <span className="text-6xl font-bold tracking-tighter leading-none">天命錄</span>
-                                    <span className="text-xs tracking-[0.3em] opacity-80 uppercase">Sacred Archive</span>
-                                </div>
+                                <div className="sacred-seal-large opacity-20 scale-75 border-amber-900/40 text-amber-900/40">閱覽用</div>
                             </div>
                         </div>
                     </div>
@@ -215,7 +248,7 @@ const ArchivePage = () => {
                         <div className="max-w-md mx-auto grid grid-cols-3 gap-3 md:gap-4 px-2">
                             {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
                                 Object.keys(talismanNames).filter(k => k.endsWith(animal) && elementGans[chapter.id].includes(k[0]))
-                            ).map((key) => {
+                            ).map((key, idx) => {
                                 // 카드 내부 컬러 결정: 챕터의 대표 컬러를 상속받아 통일성 강화
                                 const cardFontColor = chapter.isDarkElement ? 'text-slate-400' : chapter.color;
                                 const cardBgColor = chapter.isDarkElement ? 'bg-stone-800/30' : 'bg-stone-900/40';
@@ -228,7 +261,8 @@ const ArchivePage = () => {
                                             setSelectedTalismanKey(key);
                                             setShowTalismanDetail(true);
                                         }}
-                                        className={`relative p-2 rounded-sm border ${cardBorderColor} ${cardBgColor} flex flex-col items-center justify-center group aspect-[3/4] active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.02),0_10px_20px_rgba(0,0,0,0.4)]`}
+                                        className={`reveal-item relative p-2 rounded-sm border ${cardBorderColor} ${cardBgColor} flex flex-col items-center justify-center group aspect-[3/4] active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.02),0_10px_20px_rgba(0,0,0,0.4)]`}
+                                        style={{ transitionDelay: `${idx * 50}ms` }}
                                     >
                                         <div className="absolute inset-0 bg-hanji-refined opacity-[0.02] pointer-events-none z-10"></div>
 
