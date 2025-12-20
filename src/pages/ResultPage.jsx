@@ -95,8 +95,6 @@ const ResultPage = () => {
   const [pageNumber, setPageNumber] = useState(1);
   const [scale, setScale] = useState(1.0);
 
-  // [Talisman Collection Mode]
-  const [showTalismanSelector, setShowTalismanSelector] = useState(false);
   const [testTalismanKey, setTestTalismanKey] = useState(null);
 
   // [Talisman View Interaction]
@@ -719,9 +717,9 @@ const ResultPage = () => {
                 </button>
                 {/* [Tech Demo] Talisman Collection / Test Button */}
                 <button
-                  onClick={() => setShowTalismanSelector(true)}
+                  onClick={() => navigate('/archive')}
                   className="w-14 bg-[#1a1a1c] hover:bg-[#252528] text-amber-500/70 hover:text-amber-400 rounded font-bold border border-amber-900/30 flex items-center justify-center transition-transform active:scale-95 shadow-lg group relative"
-                  title="수호부적 도감 (테스트)"
+                  title="수호부적 도감"
                 >
                   <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
                   <span className="absolute -top-1 -right-1 flex h-3 w-3">
@@ -733,69 +731,7 @@ const ResultPage = () => {
             </div>
           </div>
 
-          {/* Talisman Selector Modal (Collection Mode) */}
-          {showTalismanSelector && (
-            <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2 backdrop-blur-sm animate-fade-in">
-              <div className="bg-[#1a1a1c] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[95vh] relative overflow-hidden">
-                {/* Decorative Background */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
 
-                <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">📜</span>
-                    <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowTalismanSelector(false)}
-                    className="w-8 h-8 rounded-full bg-black/20 hover:bg-white/10 flex items-center justify-center text-stone-500 hover:text-[#e8dac0] transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-2 relative z-10 custom-scrollbar">
-                  <div className="grid grid-flow-col grid-rows-5 gap-1 mt-2 overflow-x-auto custom-scrollbar pb-2">
-                    {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
-                      Object.keys(talismanNames).filter(k => k.endsWith(animal))
-                    ).map((key) => {
-                      const gan = key[0];
-                      const { color, bg } = getGanColor(gan) || { color: 'text-stone-300', bg: 'from-slate-700 to-slate-800' };
-                      const isSelected = testTalismanKey === key;
-
-                      return (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            setTestTalismanKey(key);
-                            setShowTalismanSelector(false);
-                            const talismanSection = document.querySelector('.perspective-1000');
-                            if (talismanSection) talismanSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          }}
-                          className={`
-                                relative p-1 rounded-md border transition-all duration-300 group overflow-hidden min-w-[45px]
-                                ${isSelected
-                              ? 'border-amber-400 bg-amber-900/40 shadow-[0_0_10px_rgba(251,191,36,0.2)] scale-105'
-                              : 'border-white/5 bg-[#252528] hover:border-white/20 hover:bg-[#2a2a2d]'
-                            }
-                                `}
-                          title={talismanNames[key].name}
-                        >
-                          <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br ${bg}`} />
-
-                          <div className="relative z-10 flex flex-col items-center">
-                            <span className={`font-serif font-bold text-xs ${isSelected ? 'text-amber-200' : `${color} opacity-70 group-hover:opacity-100`}`}>
-                              {key}
-                            </span>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
 
           {/* PDF Preview Modal */}
           {showPdfPreview && pdfPreviewUrl && (

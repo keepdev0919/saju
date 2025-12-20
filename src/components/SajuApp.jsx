@@ -51,20 +51,6 @@ const SajuApp = () => {
     accessToken: null // 결과 페이지 접근용 토큰
   });
 
-  // 수호신 도감(Library) 모달 상태
-  const [showLibrary, setShowLibrary] = useState(false);
-  const [testTalismanKey, setTestTalismanKey] = useState(null);
-  const [selectedTalismanKey, setSelectedTalismanKey] = useState(null);
-  const [showTalismanDetail, setShowTalismanDetail] = useState(false);
-
-  // 수호신 카드 미리보기 상태 (신성한 인장 전략용)
-  const [talismanViewMode, setTalismanViewMode] = useState('image');
-  const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
-  const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
-  const talismanCardRef = useRef(null);
-  const libraryScrollRef = useRef(null);
-  const indicatorRef = useRef(null);
-
   // 사주 결과 상태
   const [sajuResult, setSajuResult] = useState(null);
 
@@ -78,39 +64,6 @@ const SajuApp = () => {
   // 터치/마우스 위치 추적을 위한 상태 (모바일 인터랙티브용)
   const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
   const [isInteracting, setIsInteracting] = useState(false);
-
-  // 도감 스크롤 추적 (Direct DOM Manipulation for Performance)
-  useEffect(() => {
-    const scrollContainer = libraryScrollRef.current;
-    const indicator = indicatorRef.current;
-    if (!scrollContainer || !indicator || !showLibrary) return;
-
-    let ticking = false;
-
-    const updateIndicator = () => {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainer;
-      const maxScroll = scrollWidth - clientWidth;
-      if (maxScroll > 0) {
-        const ratio = scrollLeft / maxScroll;
-        const translatePercent = ratio * (100 / 0.3 - 100);
-        indicator.style.transform = `translate3d(${translatePercent}%, 0, 0)`;
-        indicator.style.transition = "none";
-      }
-      ticking = false;
-    };
-
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(updateIndicator);
-        ticking = true;
-      }
-    };
-
-    scrollContainer.addEventListener("scroll", handleScroll, { passive: true });
-    updateIndicator();
-
-    return () => scrollContainer.removeEventListener("scroll", handleScroll);
-  }, [showLibrary]);
 
   // 시간 선택 모달 표시 여부
   const [showTimeModal, setShowTimeModal] = useState(false);
@@ -153,23 +106,6 @@ const SajuApp = () => {
     }, 10);
     return () => clearInterval(timer);
   }, []);
-
-  /**
-   * ESC 키로 수호신 상세 모달 닫기
-   */
-  useEffect(() => {
-    if (showTalismanDetail) {
-      const handleEsc = (e) => {
-        if (e.key === 'Escape') {
-          setShowTalismanDetail(false);
-          setIsTalismanFlipped(false);
-          setTalismanViewMode('image');
-        }
-      };
-      window.addEventListener('keydown', handleEsc);
-      return () => window.removeEventListener('keydown', handleEsc);
-    }
-  }, [showTalismanDetail]);
 
   /**
    * 전화번호 유효성 검사 (010-XXXX-XXXX 형식)
@@ -534,71 +470,7 @@ const SajuApp = () => {
   // 바이럴 마케팅 스타일 폰트 클래스 (천명록 브랜딩 적용)
   const titleFont = "font-serif tracking-[0.2em]";
   const bodyFont = "font-sans tracking-normal";
-
-  /**
-   * 수호신 카드 상세 미리보기 (신성한 인장 전략)
-   * ResultPage의 TalismanCard 컴포넌트를 직접 사용하여 일관성 확보
-   */
-  const renderTalismanPreviewModal = () => {
-    if (!selectedTalismanKey) return null;
-
-    return (
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl animate-fade-in">
-        <div className="relative w-full max-w-[480px] flex flex-col items-center animate-modal-entrance">
-
-          {/* 헤더: 제목과 닫기 */}
-          <div className="w-full flex justify-between items-center mb-8 px-6">
-            <div className="flex flex-col">
-              <h3 className="text-amber-500 font-serif text-lg tracking-widest">
-                열람용 사본 (閱覽用 寫本)
-              </h3>
-              <p className="text-stone-600 text-[10px] tracking-tight mt-1 leading-relaxed">
-                인연 확인 시 중앙 인장이 해제되며, 우측 하단에 천명록의 공식 낙인이 깃듭니다.<br />
-                <span className="text-amber-700/80 font-medium">(추가 각인 시 개인 성함 포함 소장 가능)</span>
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                setShowTalismanDetail(false);
-                setIsTalismanFlipped(false);
-                setTalismanViewMode('image');
-              }}
-              className="p-2 text-stone-500 hover:text-amber-500 transition-colors"
-            >
-              <X size={24} />
-            </button>
-          </div>
-
-          {/* 메인: TalismanCard 직접 렌더링 (도감 모드) */}
-          <div className="flex items-center justify-center mb-4">
-            <div className="relative">
-              <TalismanCard
-                ref={talismanCardRef}
-                type={selectedTalismanKey}
-                userName="[ 因緣之主人 ]"
-                talismanData={talismanNames[selectedTalismanKey]}
-                reason={null}
-                activeTab={talismanViewMode}
-                onFlip={(flipped) => setIsTalismanFlipped(flipped)}
-                isPurchased={false}
-                setIsPurchased={setIsTalismanPurchased}
-                isArchiveMode={true}
-              />
-
-              {/* 큰 도장 오버레이 (도감 모드에서는 항상 표시) */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                <div className="sacred-seal-large flex flex-col items-center justify-center gap-2">
-                  <span className="text-6xl font-bold tracking-tighter leading-none">天命錄</span>
-                  <span className="text-xs tracking-[0.3em] opacity-80 uppercase">Sacred Archive</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-    );
-  };
+  const viralFont = "font-brand tracking-widest";
 
   /**
    * 랜딩 페이지 렌더링
@@ -688,7 +560,7 @@ const SajuApp = () => {
             <div className="mt-12 animate-fade-in-landing">
               <div
                 className="group cursor-pointer relative inline-block"
-                onClick={() => setShowLibrary(true)}
+                onClick={() => navigate('/archive')}
               >
                 {/* 호버 시 황금빛 후광 효과 */}
                 <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 scale-150"></div>
@@ -723,158 +595,6 @@ const SajuApp = () => {
           </div>
         </div>
 
-        {/* --- 천상의 아카이브 (Talisman Library) 모달 --- */}
-        {showLibrary && (
-          <div className="fixed inset-0 bg-black/95 z-[100] flex items-center justify-center p-2 backdrop-blur-md animate-fade-in">
-            <div className="bg-[#0c0c0e] w-full max-w-4xl rounded-xl border border-amber-900/30 shadow-[0_0_80px_rgba(0,0,0,1)] flex flex-col max-h-[95vh] relative overflow-hidden">
-              {/* 장식적 배경 - 정교한 한지 질감 */}
-              <div className="absolute inset-0 bg-hanji-refined opacity-15 pointer-events-none z-0"></div>
-              <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-amber-700/30 to-transparent"></div>
-
-              {/* 헤더 */}
-              <div className="px-6 pt-6 pb-3 flex justify-between items-center bg-[#0c0c0e]/80 backdrop-blur-sm relative z-10">
-                <div className="flex flex-col">
-                  <h3 className="text-amber-600/90 font-serif text-lg tracking-[0.3em] flex items-center gap-3">
-                    <Sparkles size={16} className="text-amber-700/60" />
-                    천상의 기록 보관소 (Celestial Archive)
-                  </h3>
-                  <p className="text-stone-500 text-[10px] tracking-wider mt-1">
-                    천기(天機)의 흐름 속에 나열된 <span className="text-amber-600/80 font-bold">60甲子 수호신</span>들의 장엄한 자태를 관조하십시오.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowLibrary(false)}
-                  className="p-2 text-stone-500 hover:text-amber-500 transition-colors"
-                >
-                  <X size={24} strokeWidth={1} />
-                </button>
-              </div>
-
-              {/* 도감 그리드 영역 (먹색 한지 스테이지) */}
-              <div className="flex-1 flex flex-col min-h-0 relative z-10 bg-[#0c0c0e]">
-                {/* 배경 텍스처 레이어 (먹의 번짐과 종이의 결) */}
-                <div className="absolute inset-0 bg-hanji-refined opacity-10 pointer-events-none"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-black/60 pointer-events-none"></div>
-
-                {/* 상단 온화한 조명 (Warm Amber Rays) */}
-                <div className="absolute inset-0 bg-gradient-to-b from-amber-900/5 via-transparent to-transparent pointer-events-none z-10"></div>
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-40 bg-amber-800/10 blur-[80px] pointer-events-none z-10"></div>
-
-                <div
-                  ref={libraryScrollRef}
-                  className="flex-1 overflow-x-auto overflow-y-auto px-6 pt-3 pb-6 no-scrollbar relative z-20 overscroll-x-contain"
-                >
-                  <div className="grid grid-flow-col grid-rows-5 gap-3 h-fit min-h-full px-2">
-                    {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
-                      Object.keys(talismanNames).filter(k => k.endsWith(animal))
-                    ).map((key) => {
-                      const gan = key[0];
-                      const { color } = getGanColor(gan);
-                      const getHaloColor = (gan) => {
-                        if (['갑', '을'].includes(gan)) return 'rgba(74, 222, 128, 0.5)'; // Wood - Green
-                        if (['병', '정'].includes(gan)) return 'rgba(248, 113, 113, 0.5)'; // Fire - Red
-                        if (['무', '기'].includes(gan)) return 'rgba(251, 191, 36, 0.5)';  // Earth - Yellow
-                        if (['경', '신'].includes(gan)) return 'rgba(255, 255, 255, 0.4)'; // Metal - White
-                        if (['임', '계'].includes(gan)) return 'rgba(255, 255, 255, 0.8)'; // Water - Silver
-                        return 'rgba(255, 255, 255, 0.3)';
-                      };
-                      const halo = getHaloColor(gan);
-
-                      return (
-                        <div
-                          key={key}
-                          onClick={() => {
-                            setSelectedTalismanKey(key);
-                            setShowTalismanDetail(true);
-                          }}
-                          className="relative p-2 rounded-sm border border-orange-950/40 bg-wood-refined flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 
-                                     md:hover:border-amber-600/40 md:hover:scale-105 md:hover:shadow-[0_0_40px_rgba(0,0,0,1)] 
-                                     active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),inset_0_0_30px_rgba(0,0,0,0.7),0_10px_20px_rgba(0,0,0,0.6)]"
-                          title={talismanNames[key].name}
-                        >
-                          {/* 한지 질감 Overlay */}
-                          <div className="absolute inset-0 bg-hanji-refined opacity-[0.05] pointer-events-none z-10"></div>
-
-                          {/* 1. 이미지 프리뷰 (배경으로 더 깊이있게 깔림) */}
-                          <div className="absolute inset-0 z-0 opacity-[0.05] group-hover:opacity-20 transition-all duration-1000">
-                            <img
-                              src="/images/talisman/placeholder.png"
-                              alt=""
-                              className="w-full h-full object-cover scale-150 group-hover:scale-100 transition-transform duration-1000"
-                              onError={(e) => { e.target.src = 'https://via.placeholder.com/100/101012/101012'; }}
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0c] via-transparent to-transparent opacity-80" />
-                          </div>
-
-
-
-                          {/* 3. 중앙 대형 한자 (Calligraphy Center - 밀도 확보의 핵심) */}
-                          <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 mt-1">
-                            <div className="flex flex-col items-center leading-[1.2] select-none">
-                              <span
-                                className={`font-serif font-black ${color} md:group-hover:scale-110 transition-all duration-700 text-[22px]`}
-                              >
-                                {ganHanjaMap[key[0]]}
-                              </span>
-                              <span
-                                className={`font-serif font-black ${color} md:group-hover:scale-110 transition-all duration-700 text-[22px]`}
-                              >
-                                {jiHanjaMap[key[1]]}
-                              </span>
-                            </div>
-
-                            {/* 하단 한글 명칭 - 보조적 배치 */}
-                            <div className="mt-2 flex flex-col items-center gap-0.5">
-                              <span
-                                className={`text-[7px] font-sans font-black tracking-[0.2em] ${color} transition-colors`}
-                              >
-                                {key}
-                              </span>
-                              {/* 하단 장식 도트 (각인된 보석 느낌) */}
-                              <div className={`w-[2.5px] h-[2.5px] rounded-full ${color.replace('text-', 'bg-')}/40 md:group-hover:bg-amber-500 shadow-[0_0_5px_rgba(0,0,0,0.5)] transition-all`} />
-                            </div>
-                          </div>
-
-                          {/* 4. 카드 장식선 (Antique Frame - 각인된 경계라인) */}
-                          <div className="absolute inset-[2px] border border-orange-950/40 rounded-sm pointer-events-none md:group-hover:border-amber-700/30 transition-all duration-700 shadow-[inset_0_0_5px_rgba(0,0,0,0.6)]" />
-                          <div className="absolute inset-[3px] border border-black/60 rounded-sm pointer-events-none" />
-
-                          {/* 5. 호버 툴팁 (상세 정보 - 먹빛 오버레이 - 데스크탑 전용) */}
-                          <div className="absolute inset-0 bg-[#08080a]/98 opacity-0 md:group-hover:opacity-100 transition-all duration-700 md:flex hidden flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
-                            <div className="w-8 h-px bg-amber-800/30 mb-2"></div>
-                            <p className="text-amber-700/80 text-[10px] font-serif leading-tight mb-1 tracking-[0.2em] font-medium">
-                              {talismanNames[key].name}
-                            </p>
-                            <div className="w-6 h-px bg-amber-800/10 mt-2"></div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* 하단 스크롤 인디케이터 */}
-                <div className="px-10 py-4 z-20 relative">
-                  <div className="max-w-md mx-auto">
-                    <div className="h-[1.5px] w-full bg-stone-900/60 rounded-full relative overflow-hidden shadow-[inset_0_1px_2px_rgba(0,0,0,0.5)]">
-                      <div
-                        ref={indicatorRef}
-                        className="absolute h-full w-[30%] bg-gradient-to-r from-amber-900/40 via-amber-600/60 to-amber-900/40 shadow-[0_0_15px_rgba(217,119,6,0.3)]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* 푸터 안내 - 통합된 배경 위 정갈한 배치 */}
-                <div className="p-6 pb-2 text-center relative z-10">
-                  <p className="relative text-amber-500/80 text-[15px] tracking-[0.2em] font-serif italic">
-                    "나열된 만상(萬象) 중, 당신을 기다리는 단 하나의 인연을 찾으십시오."
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* 하단 CTA 영역: 여백을 컴팩트하게 조정 */}
         <div className="absolute bottom-0 left-0 w-full z-20 px-10 pb-12">
@@ -898,8 +618,7 @@ const SajuApp = () => {
           </div>
         </div>
 
-        {/* 수호신 카드 프리뷰 모달 (인장 포함) */}
-        {showTalismanDetail && renderTalismanPreviewModal()}
+
       </div>
     );
   };

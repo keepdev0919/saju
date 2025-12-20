@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import SajuApp from './components/SajuApp';
 import ResultPage from './pages/ResultPage';
+import ArchivePage from './pages/ArchivePage';
 
 // Admin Components
 import AdminLogin from './pages/AdminLogin';
@@ -21,6 +22,7 @@ function App() {
     <Routes>
       {/* 메인 플로우: 랜딩 → 입력 → 결제 → 분석 → 결과 */}
       <Route path="/" element={<SajuApp />} />
+      <Route path="/archive" element={<ArchivePage />} />
 
       {/* URL 파라미터로 결과 조회: /result/:token */}
       <Route path="/result" element={<ResultPage />} />
