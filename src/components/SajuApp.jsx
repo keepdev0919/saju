@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { CreditCard, Download, ChevronRight, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock, ChevronLeft } from 'lucide-react';
+import { CreditCard, Download, ChevronRight, ChevronDown, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock, ChevronLeft } from 'lucide-react';
 import { createUser, createPayment, verifyPayment, calculateSaju, getSajuResult } from '../utils/api';
 import { getGanColor, getJiAnimal, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
 import { talismanNames } from '../data/talismanData';
@@ -607,9 +607,12 @@ const SajuApp = () => {
   const renderLandingPage = () => {
     // 터치/마우스 핸들러
     const handleInteraction = (e) => {
+      // 모바일에선 위치 추적 기능을 끄고 정적 분위기만 유지 (사용자 피드백 반영)
+      if (e.touches) return;
+
       const rect = e.currentTarget.getBoundingClientRect();
-      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      const clientX = e.clientX;
+      const clientY = e.clientY;
 
       const x = ((clientX - rect.left) / rect.width) * 100;
       const y = ((clientY - rect.top) / rect.height) * 100;
@@ -640,13 +643,14 @@ const SajuApp = () => {
         {/* 3. Refined Hanji Texture Overlay */}
         <div className="absolute inset-0 bg-hanji-refined z-0 pointer-events-none" />
 
-        {/* 4. Interaction Aura (Liquid Glow) */}
+        {/* 4. Interaction Aura (Liquid Glow) - 모바일에선 상단 고정 조명으로 대체 */}
         <div
-          className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${isInteracting ? 'opacity-100' : 'opacity-0'}`}
+          className={`absolute inset-0 z-0 pointer-events-none transition-opacity duration-1000 ${isInteracting ? 'opacity-100' : 'opacity-0'} md:block hidden`}
           style={{
-            background: `radial-gradient(circle 500px at ${interactionPos.x}% ${interactionPos.y}%, rgba(217,119,6,0.1), transparent 80%)`
+            background: `radial-gradient(circle 500px at ${interactionPos.x}% ${interactionPos.y}%, rgba(217,119,6,0.12), transparent 80%)`
           }}
         />
+        <div className="absolute inset-0 z-0 pointer-events-none md:hidden bg-[radial-gradient(circle_600px_at_50%_30%,rgba(217,119,6,0.08),transparent_80%)]" />
 
         {/* 6. Subtle Depth Lighting */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px] bg-amber-900/5 blur-[150px] rounded-full z-0 pointer-events-none"></div>
@@ -690,19 +694,23 @@ const SajuApp = () => {
                 <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-700 -z-10 scale-150"></div>
 
                 {/* 안내 문구: 관조(觀照) 제안 */}
-                <div className="absolute -top-12 left-1/2 -translate-x-1/2 w-max opacity-0 group-hover:opacity-100 transition-all duration-700 pointer-events-none">
-                  <p className="text-amber-400/60 text-[10px] tracking-[0.4em] font-serif italic">
-                    관조를 통해 60甲子의 수호신들을 미리 조우(遭遇)하십시오
+                {/* 안내 문구: 모바일에선 상시 노출, 데스크탑에선 호버 시 노출 */}
+                <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-max 
+                                opacity-60 md:opacity-0 md:group-hover:opacity-100 
+                                transition-all duration-700 pointer-events-none flex flex-col items-center gap-0.5">
+                  <p className="text-amber-400/80 md:text-amber-400/60 text-[10px] tracking-[0.3em] font-serif italic">
+                    60甲子 수호신 조우하기
                   </p>
+                  <ChevronDown className="w-3 h-3 text-amber-500/50 animate-bounce" strokeWidth={1} />
                 </div>
 
 
-                {/* Scroll 아이콘 - 영혼의 호흡(Soul Breathing) 애니메이션 적용 */}
+                {/* Scroll 아이콘 - 통통 튀는(Bounce) 애니메이션 적용 */}
                 <Scroll
                   className="w-10 h-10 text-amber-500/40 mx-auto 
                              transition-all duration-700
-                             group-hover:text-amber-400 group-hover:scale-110
-                             animate-soul-breathing
+                             md:group-hover:text-amber-400 md:group-hover:scale-110
+                             animate-bounce-gentle
                              rotate-[-8deg] relative z-10"
                   strokeWidth={0.5}
                 />
@@ -780,7 +788,9 @@ const SajuApp = () => {
                             setSelectedTalismanKey(key);
                             setShowTalismanDetail(true);
                           }}
-                          className="relative p-2 rounded-sm border border-orange-950/40 bg-wood-refined flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 hover:border-amber-600/40 hover:scale-105 hover:shadow-[0_0_40px_rgba(0,0,0,1)] transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),inset_0_0_30px_rgba(0,0,0,0.7),0_10px_20px_rgba(0,0,0,0.6)]"
+                          className="relative p-2 rounded-sm border border-orange-950/40 bg-wood-refined flex flex-col items-center justify-center group min-w-[75px] aspect-[4/5] flex-shrink-0 
+                                     md:hover:border-amber-600/40 md:hover:scale-105 md:hover:shadow-[0_0_40px_rgba(0,0,0,1)] 
+                                     active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),inset_0_0_30px_rgba(0,0,0,0.7),0_10px_20px_rgba(0,0,0,0.6)]"
                           title={talismanNames[key].name}
                         >
                           {/* 한지 질감 Overlay */}
@@ -803,12 +813,12 @@ const SajuApp = () => {
                           <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 mt-1">
                             <div className="flex flex-col items-center leading-[1.2] select-none">
                               <span
-                                className={`font-serif font-black ${color} group-hover:scale-110 transition-all duration-700 text-[22px]`}
+                                className={`font-serif font-black ${color} md:group-hover:scale-110 transition-all duration-700 text-[22px]`}
                               >
                                 {ganHanjaMap[key[0]]}
                               </span>
                               <span
-                                className={`font-serif font-black ${color} group-hover:scale-110 transition-all duration-700 text-[22px]`}
+                                className={`font-serif font-black ${color} md:group-hover:scale-110 transition-all duration-700 text-[22px]`}
                               >
                                 {jiHanjaMap[key[1]]}
                               </span>
@@ -822,16 +832,16 @@ const SajuApp = () => {
                                 {key}
                               </span>
                               {/* 하단 장식 도트 (각인된 보석 느낌) */}
-                              <div className={`w-[2.5px] h-[2.5px] rounded-full ${color.replace('text-', 'bg-')}/40 group-hover:bg-amber-500 shadow-[0_0_5px_rgba(0,0,0,0.5)] transition-all`} />
+                              <div className={`w-[2.5px] h-[2.5px] rounded-full ${color.replace('text-', 'bg-')}/40 md:group-hover:bg-amber-500 shadow-[0_0_5px_rgba(0,0,0,0.5)] transition-all`} />
                             </div>
                           </div>
 
                           {/* 4. 카드 장식선 (Antique Frame - 각인된 경계라인) */}
-                          <div className="absolute inset-[2px] border border-orange-950/40 rounded-sm pointer-events-none group-hover:border-amber-700/30 transition-all duration-700 shadow-[inset_0_0_5px_rgba(0,0,0,0.6)]" />
+                          <div className="absolute inset-[2px] border border-orange-950/40 rounded-sm pointer-events-none md:group-hover:border-amber-700/30 transition-all duration-700 shadow-[inset_0_0_5px_rgba(0,0,0,0.6)]" />
                           <div className="absolute inset-[3px] border border-black/60 rounded-sm pointer-events-none" />
 
-                          {/* 5. 호버 툴팁 (상세 정보 - 먹빛 오버레이) */}
-                          <div className="absolute inset-0 bg-[#08080a]/98 opacity-0 group-hover:opacity-100 transition-all duration-700 flex flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
+                          {/* 5. 호버 툴팁 (상세 정보 - 먹빛 오버레이 - 데스크탑 전용) */}
+                          <div className="absolute inset-0 bg-[#08080a]/98 opacity-0 md:group-hover:opacity-100 transition-all duration-700 md:flex hidden flex-col items-center justify-center p-2 text-center pointer-events-none z-30 scale-110 group-hover:scale-100">
                             <div className="w-8 h-px bg-amber-800/30 mb-2"></div>
                             <p className="text-amber-700/80 text-[10px] font-serif leading-tight mb-1 tracking-[0.2em] font-medium">
                               {talismanNames[key].name}

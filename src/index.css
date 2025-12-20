@@ -182,12 +182,28 @@
   }
 }
 
+@keyframes bounce-gentle {
+
+  0%,
+  100% {
+    transform: translateY(0) rotate(-8deg);
+  }
+
+  50% {
+    transform: translateY(-12px) rotate(-8deg);
+  }
+}
+
 .animate-celestial-resonance {
   animation: celestial-resonance 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .animate-soul-breathing {
   animation: soul-breathing 5s ease-in-out infinite;
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
 }
 
 @keyframes ink-bleeding {
