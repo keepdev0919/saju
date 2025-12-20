@@ -696,8 +696,7 @@ const SajuApp = () => {
                 {/* 안내 문구: 관조(觀照) 제안 */}
                 {/* 안내 문구: 모바일에선 상시 노출, 데스크탑에선 호버 시 노출 */}
                 <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-max 
-                                opacity-60 md:opacity-0 md:group-hover:opacity-100 
-                                transition-all duration-700 pointer-events-none flex flex-col items-center gap-0.5">
+                                opacity-60 transition-all duration-700 pointer-events-none flex flex-col items-center gap-0.5">
                   <p className="text-amber-400/80 md:text-amber-400/60 text-[10px] tracking-[0.3em] font-serif italic">
                     60甲子 수호신 조우하기
                   </p>
