@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Hahmlet:wght@100..900&family=Song+Myung&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gowun+Batang:wght@400;700&family=Hahmlet:wght@100..900&family=Nanum+Myeongjo:wght@400;700;800&family=Song+Myung&display=swap');
 @import "tailwindcss";
 
 /* 커스텀 애니메이션 정의 */
@@ -380,7 +380,7 @@
 }
 
 .font-brand {
-  font-family: 'Hahmlet', serif;
+  font-family: 'Song Myung', serif;
 }
 
 /* 기본 body 스타일 */
