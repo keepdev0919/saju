@@ -1468,28 +1468,153 @@ const SajuApp = () => {
             <p className="text-center text-slate-400 text-sm mt-2">상위 18%의 좋은 운세입니다</p>
           </div>
 
-          {/* 오행 그래프 - 애니메이션 바 */}
-          <div className="bg-white/5 backdrop-blur-sm p-6 rounded-2xl border border-white/10 animate-fade-in-up delay-200 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
-            <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-white">
-              <RefreshCw size={18} className="text-slate-400" /> 오행 분석
-            </h3>
-            <div className="space-y-4">
-              {ohengData.map((el, idx) => (
-                <div key={el.label} className="flex items-center gap-3">
-                  <span className="w-12 text-sm font-bold text-slate-300">{el.label}</span>
-                  <div className="flex-1 bg-white/10 rounded-full h-4 overflow-hidden">
-                    <div
-                      className={`h-full ${el.color} animate-grow-width ${el.delay} rounded-full`}
-                      style={{ width: `${el.val}%`, animationFillMode: 'forwards' }}
-                    ></div>
-                  </div>
-                  <span className="text-sm text-slate-400 w-10 text-right font-mono">{el.val}%</span>
+          {/* 오행 그래프 2.0 - 프리미엄 SVG 시각화 (Relative Scaling 적용) */}
+          <div className="bg-stone-900/40 backdrop-blur-xl p-8 rounded-sm border border-amber-900/20 animate-fade-in-up delay-200 opacity-0-init relative overflow-hidden" style={{ animationFillMode: 'forwards' }}>
+            <div className="flex justify-between items-center mb-8">
+              <h3 className={`font-bold text-lg flex items-center gap-2 text-stone-100 ${titleFont}`}>
+                <Scroll size={18} className="text-amber-700" /> 오행 분포(五行分布)
+              </h3>
+              {/* 중화도(Harmony) 배지 */}
+              <div className="flex flex-col items-end">
+                <span className="text-[10px] text-stone-500 uppercase tracking-widest mb-1">Harmony</span>
+                <div className="px-3 py-1 bg-amber-900/20 border border-amber-500/30 rounded-full">
+                  <span className="text-amber-500 text-xs font-bold font-serif">
+                    {(() => {
+                      const vals = Object.values(result.oheng || { 목: 20, 화: 20, 토: 20, 금: 20, 수: 20 });
+                      const mean = 20;
+                      const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / 5;
+                      const stdDev = Math.sqrt(variance);
+                      if (stdDev < 5) return '천상중화 (極美)';
+                      if (stdDev < 15) return '안정적 조화 (良)';
+                      return '강렬한 개성 (氣)';
+                    })()}
+                  </span>
                 </div>
-              ))}
+              </div>
             </div>
-            <div className="mt-5 p-4 bg-gradient-to-r from-red-500/20 to-orange-500/20 rounded-xl border border-red-500/30">
-              <p className="text-sm text-slate-200 leading-relaxed">
-                🔥 당신은 <strong className="text-red-400">불(火)</strong>의 기운이 강렬합니다. 열정과 추진력이 뛰어나지만, 때로는 성급함으로 인해 실수를 할 수 있습니다.
+
+            <div className="relative flex justify-center py-4">
+              {/* SVG 레이더 차트 (Dynamic Scaling) */}
+              <svg width="280" height="280" viewBox="0 0 100 100" className="overflow-visible">
+                <defs>
+                  {/* 오행별 프리미엄 그라데이션 정의 */}
+                  <radialGradient id="grad-wood" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#064e3b" stopOpacity="0.2" />
+                  </radialGradient>
+                  <radialGradient id="grad-fire" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0.2" />
+                  </radialGradient>
+                  <radialGradient id="grad-earth" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#eab308" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#713f12" stopOpacity="0.2" />
+                  </radialGradient>
+                  <radialGradient id="grad-metal" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#1e293b" stopOpacity="0.2" />
+                  </radialGradient>
+                  <radialGradient id="grad-water" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+                    <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.2" />
+                  </radialGradient>
+                </defs>
+
+                {/* 배경 가이드 원 (4단계) */}
+                {[20, 40, 60, 80].map((r, i) => (
+                  <circle key={i} cx="50" cy="50" r={r / 2} fill="none" stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.5" strokeDasharray="1,1" />
+                ))}
+
+                {/* 방사형 가이드 라인 */}
+                {[0, 72, 144, 216, 288].map((angle, i) => {
+                  const rad = (angle - 90) * (Math.PI / 180);
+                  return <line key={i} x1="50" y1="50" x2={50 + 40 * Math.cos(rad)} y2={50 + 40 * Math.sin(rad)} stroke="rgba(217, 119, 6, 0.15)" strokeWidth="0.5" />;
+                })}
+
+                {/* 오행 폴리곤 (Dynamic Scaling) */}
+                {(() => {
+                  const elements = [
+                    { key: '목', label: '木', angle: 0 },
+                    { key: '화', label: '火', angle: 72 },
+                    { key: '토', label: '土', angle: 144 },
+                    { key: '금', label: '金', angle: 216 },
+                    { key: '수', label: '水', angle: 288 }
+                  ];
+                  const rawVals = elements.map(el => result.oheng?.[el.key] || 0);
+                  const maxVal = Math.max(...rawVals, 20); // 최소 20기준으로 스케일링
+
+                  // 스케일링 계수: 최대값이 80% 지점에 오도록 설정 (여백 확보)
+                  const scaleFactor = 40 / maxVal;
+
+                  const points = elements.map(el => {
+                    const r = (result.oheng?.[el.key] || 0) * scaleFactor;
+                    const rad = (el.angle - 90) * (Math.PI / 180);
+                    return `${50 + r * Math.cos(rad)},${50 + r * Math.sin(rad)}`;
+                  }).join(' ');
+
+                  return (
+                    <g>
+                      <polygon
+                        points={points}
+                        fill="rgba(180, 83, 9, 0.2)"
+                        stroke="#d97706"
+                        strokeWidth="1.5"
+                        strokeLinejoin="round"
+                        className="animate-pulse-subtle"
+                      />
+                      {/* 꼭짓점 글로우 및 레이블 */}
+                      {elements.map((el, i) => {
+                        const r = (result.oheng?.[el.key] || 0) * scaleFactor;
+                        const rad = (el.angle - 90) * (Math.PI / 180);
+                        const x = 50 + r * Math.cos(rad);
+                        const y = 50 + r * Math.sin(rad);
+
+                        // 텍스트 위치 (꼭짓점보다 약간 바깥쪽)
+                        const tx = 50 + 48 * Math.cos(rad);
+                        const ty = 50 + 48 * Math.sin(rad);
+
+                        return (
+                          <g key={i}>
+                            <circle cx={x} cy={y} r="1" fill="#fbbf24" className="filter blur-[1px]" />
+                            <text
+                              x={tx} y={ty}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              className={`text-[5px] font-bold ${titleFont}`}
+                              fill={r > 5 ? "#d97706" : "#444"}
+                            >
+                              {el.label}
+                            </text>
+                            <text
+                              x={tx} y={ty + 5}
+                              textAnchor="middle"
+                              className="text-[4px] font-mono"
+                              fill="#666"
+                            >
+                              {result.oheng?.[el.key] || 0}%
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })()}
+              </svg>
+            </div>
+
+            <div className="mt-8 p-5 bg-amber-900/10 rounded-sm border border-amber-900/20">
+              <p className="text-[13px] text-stone-300 leading-relaxed font-light italic">
+                {(() => {
+                  const oheng = result.oheng || {};
+                  const sorted = Object.entries(oheng).sort((a, b) => b[1] - a[1]);
+                  const strongest = sorted[0][0];
+                  const weakest = sorted[sorted.length - 1][0];
+
+                  if (sorted[0][1] >= 50) {
+                    return `귀하의 명식은 ${strongest}의 기운이 압도적으로 순수한 광채를 발하고 있습니다. 이는 남다른 추진력의 근원이 되나, ${weakest}의 기운을 보강하여 조화를 이루는 인장의 힘이 필요합니다.`;
+                  }
+                  return `귀하의 명식은 오행이 고르게 분포되어 사계절의 정기를 두루 갖추었습니다. ${strongest}의 강점을 살리되, 부족한 ${weakest}의 기운을 갈무리하여 운세의 흐름을 더욱 단단하게 굳힐 시기입니다.`;
+                })()}
               </p>
             </div>
           </div>

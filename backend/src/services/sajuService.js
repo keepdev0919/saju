@@ -180,7 +180,7 @@ function calculateWuXing(eightChar, hourGanZhi) {
   const currentSeason = seasonalWeightMap[monthJi] || { name: '중조(中調)' };
   const currentSeasonWeights = seasonalWeightMap[monthJi] || {};
 
-  // [NEW] 4단계 핵심 로그 시스템 (간결성 및 피로도 감소)
+  // [NEW] 4단계 실용적 로그 시스템 (1단계 동적 + 2~4단계 고정)
   analysisLogs.push(`◈ 월지 '${jiNameMap[monthJi]}' 기준 사주 원국 정밀 스캔`);
 
   // 1. 천간 가중치 계산 (천간 점수 * 1.2)
@@ -202,10 +202,6 @@ function calculateWuXing(eightChar, hourGanZhi) {
   jis.forEach(ji => {
     const hiddenGans = jiHiddenGanMap[ji];
     if (hiddenGans) {
-      if (!hiddenGanDetected) {
-        analysisLogs.push(`◈ 지장간(地藏干) 내 잠재 기운 추출`);
-        hiddenGanDetected = true;
-      }
       Object.entries(hiddenGans).forEach(([gan, ratio]) => {
         const element = ganWuxingMap[gan];
         if (element) {
@@ -215,7 +211,8 @@ function calculateWuXing(eightChar, hourGanZhi) {
     }
   });
 
-  analysisLogs.push(`◈ 계절 절기에 따른 에너지 밀도 조율`);
+  analysisLogs.push(`◈ 지장간(地藏干) 내 함축된 잠재 기운 추출`);
+  analysisLogs.push(`◈ 절기 감응도에 따른 에너지 밀도 정밀 조율`);
 
   // 3. 계절 가중치 적용 및 최종 합산
   Object.keys(wuxing).forEach(element => {
@@ -230,10 +227,10 @@ function calculateWuXing(eightChar, hourGanZhi) {
       wuxing[key] = Math.round((wuxing[key] / total) * 100);
     });
   } else {
-    Object.keys(wuxing).forEach(key => wuxing[key] = 20);
+    Object.keys(wuxing).forEach(key => (wuxing[key] = 20));
   }
 
-  analysisLogs.push(`◈ 오행 균형도 산출 및 형상 복원`);
+  analysisLogs.push(`◈ 오행 균형도 산출 및 시각화 형상 복원`);
 
   return { wuxing, analysisLogs };
 }
