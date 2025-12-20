@@ -70,6 +70,8 @@ const SajuApp = () => {
 
   // 현재 수정 중인 필드 ('phone' | 'birthDate' | null)
   const [editingField, setEditingField] = useState(null);
+  // 수정 전 상태 백업 (취소 시 복구용)
+  const [backupUserInfo, setBackupUserInfo] = useState(null);
 
   // 결제 수단 선택 상태 (기본값: 카드/간편결제)
   const [paymentMethod, setPaymentMethod] = useState('card');
@@ -532,9 +534,8 @@ const SajuApp = () => {
           <div className="space-y-16">
             {/* 로고 영역: 브랜드 정체성 강화 - 슬로건을 브랜드명 바로 아래로 이동 */}
             <div className="space-y-4 animate-fade-in-landing">
-              <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
               <h1
-                className={`text-6xl font-black italic text-amber-600/70 tracking-[0.15em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)]`}
+                className={`text-6xl font-black italic text-amber-400/80 tracking-[0.15em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)]`}
                 style={{ transform: 'scaleY(1.08)', transformOrigin: 'center' }}
               >
                 천명록
@@ -550,7 +551,7 @@ const SajuApp = () => {
 
             {/* 메인 카피: 궁서체 계열 Serif 폰트로 전통적 권위감 부여 - 텍스트 밝기 개선 */}
             <div className="space-y-8 animate-fade-in-landing">
-              <h2 className={`text-xl font-medium leading-relaxed text-stone-50/95 tracking-[0.2em] break-keep ${titleFont}`}>
+              <h2 className={`text-xl font-medium italic leading-relaxed text-stone-50/95 tracking-[0.2em] break-keep ${titleFont}`}>
                 천기(天機)를 읽어<br />
                 삶의 지혜를 마주하십시오
               </h2>
@@ -633,8 +634,8 @@ const SajuApp = () => {
 
       {/* 상단 타이틀 */}
       <div className="p-8 pt-12 z-10">
-        <h1 className={`text-2xl font-bold text-stone-100 mb-3 ${titleFont}`}>연락처 기록</h1>
-        <p className="text-stone-500 text-sm font-light">결과지 전달 및 본인 확인을 위해 사용됩니다.</p>
+        <h1 className={`text-2xl font-bold italic text-stone-100 mb-3 ${titleFont}`}>연락처 기록</h1>
+        <p className="text-stone-500 text-sm font-light italic">결과지 전달 및 본인 확인을 위해 사용됩니다.</p>
       </div>
 
       {/* 입력 카드 */}
@@ -643,7 +644,10 @@ const SajuApp = () => {
           {/* 헤더 */}
           <div className="p-5 border-b border-amber-900/10 flex items-center justify-between bg-stone-900/60">
             <button
-              onClick={() => setEditingField(null)}
+              onClick={() => {
+                if (backupUserInfo) setUserInfo(backupUserInfo);
+                setEditingField(null);
+              }}
               className="text-amber-700 hover:text-amber-500 transition-colors"
             >
               <ChevronRight className="rotate-180" size={24} />
@@ -660,12 +664,12 @@ const SajuApp = () => {
               value={userInfo.phone}
               onChange={handleInputChange}
               placeholder="010-0000-0000"
-              className="w-full bg-transparent text-amber-500 text-center text-2xl font-light placeholder:text-stone-800 outline-none py-4 border-b border-amber-900/30 focus:border-amber-500/50 transition-all tracking-[0.1em]"
+              className={`w-full bg-transparent text-amber-500 text-center text-2xl font-serif italic placeholder:text-stone-800 outline-none py-4 border-b border-amber-900/30 focus:border-amber-500/50 transition-all ${titleFont}`}
               autoFocus
             />
             {userInfo.phone && !isPhoneValid(userInfo.phone) && (
-              <p className="text-amber-900/80 text-[10px] mt-4 text-center tracking-tighter uppercase font-medium">
-                Invalid Phone Number Format
+              <p className="text-amber-900/80 text-[10px] mt-4 text-center tracking-tighter uppercase font-serif italic">
+                올바른 연락처 형식이 아닙니다.
               </p>
             )}
           </div>
@@ -675,7 +679,7 @@ const SajuApp = () => {
             <button
               onClick={() => setEditingField(null)}
               disabled={!isPhoneValid(userInfo.phone)}
-              className={`w-full font-medium py-4 rounded-sm transition-all tracking-[0.2em] ${!isPhoneValid(userInfo.phone)
+              className={`w-full py-4 rounded-sm transition-all italic ${titleFont} ${!isPhoneValid(userInfo.phone)
                 ? 'bg-stone-800 text-stone-600 cursor-not-allowed'
                 : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700'
                 }`}
@@ -698,8 +702,8 @@ const SajuApp = () => {
 
       {/* 상단 타이틀 */}
       <div className="p-8 pt-12 z-10">
-        <h1 className={`text-2xl font-bold text-stone-100 mb-3 ${titleFont}`}>생년월일(生年月日時)</h1>
-        <p className="text-stone-500 text-sm font-light">당신의 명(命)이 시작된 시각을 기록해 주세요.</p>
+        <h1 className={`text-2xl font-bold italic text-stone-100 mb-3 ${titleFont}`}>생년월일</h1>
+        <p className="text-stone-500 text-sm font-light italic">당신의 명(命)이 시작된 시각을 기록해 주세요.</p>
       </div>
 
       {/* 입력 카드 */}
@@ -708,7 +712,10 @@ const SajuApp = () => {
           {/* 헤더 */}
           <div className="p-5 border-b border-amber-900/10 flex items-center justify-between bg-stone-900/60">
             <button
-              onClick={() => setEditingField(null)}
+              onClick={() => {
+                if (backupUserInfo) setUserInfo(backupUserInfo);
+                setEditingField(null);
+              }}
               className="text-amber-700 hover:text-amber-500 transition-colors"
             >
               <ChevronRight className="rotate-180" size={24} />
@@ -775,7 +782,10 @@ const SajuApp = () => {
             <button
               onClick={() => setEditingField(null)}
               disabled={!isBirthDateValid(userInfo.birthDate)}
-              className={`w-full font-medium py-4 rounded-sm transition-all tracking-[0.2em] ${!isBirthDateValid(userInfo.birthDate) ? 'bg-stone-800 text-stone-600 cursor-not-allowed' : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700 shadow-lg shadow-amber-900/20'}`}
+              className={`w-full py-4 rounded-sm transition-all italic ${titleFont} ${!isBirthDateValid(userInfo.birthDate)
+                ? 'bg-stone-800 text-stone-600 cursor-not-allowed'
+                : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700'
+                }`}
             >
               기록 완료
             </button>
@@ -814,10 +824,17 @@ const SajuApp = () => {
 
         {/* 상단 타이틀 */}
         <div className="p-8 pt-12 z-10">
-          <h1 className={`text-2xl font-bold text-stone-100 mb-3 ${titleFont}`}>성함(姓名) 기록</h1>
-          <p className="text-stone-500 text-sm font-light leading-relaxed">
-            당신의 명운이 담긴 이름을 기록해 주십시오.<br />
-            애칭이나 별칭도 가능합니다.
+          <div className="flex items-center gap-2 mb-3">
+            <button
+              onClick={() => setStep('landing')}
+              className="p-1 -ml-2 text-amber-600/70 hover:text-amber-500 transition-all group"
+            >
+              <ChevronLeft size={28} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
+            </button>
+            <h1 className={`text-2xl font-bold italic text-stone-100 ${titleFont}`}>성함(姓名) 기록</h1>
+          </div>
+          <p className="text-stone-500 text-sm font-light italic leading-relaxed">
+            당신의 명운이 담긴 이름을 기록해 주십시오.
           </p>
         </div>
 
@@ -832,30 +849,35 @@ const SajuApp = () => {
                 value={userInfo.name}
                 onChange={handleInputChange}
                 placeholder="성함 입력"
-                className="w-full bg-transparent text-amber-500 text-center text-2xl font-light placeholder:text-stone-800 outline-none tracking-[0.2em]"
-                autoFocus
+                className={`w-full bg-transparent text-amber-500 text-center text-2xl font-light italic placeholder:text-stone-800 outline-none ${titleFont}`}
               />
             </div>
 
             {/* 정보 리스트 */}
             <div className="space-y-6">
               {/* 전화번호 */}
-              <div className="flex justify-between items-center group cursor-pointer" onClick={() => setEditingField('phone')}>
-                <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Contact</span>
+              <div className="flex justify-between items-center group cursor-pointer" onClick={() => {
+                setBackupUserInfo({ ...userInfo });
+                setEditingField('phone');
+              }}>
+                <span className="text-stone-500 text-xs tracking-[0.1em] font-serif italic uppercase">연락처</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-stone-300 text-sm font-light tracking-widest">{userInfo.phone || '010-0000-0000'}</span>
+                  <span className="text-stone-300 text-sm font-serif italic tracking-widest">{userInfo.phone || '010-0000-0000'}</span>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
                 </div>
               </div>
 
               {/* 생년월일 */}
-              <div className="flex justify-between items-center group cursor-pointer" onClick={() => setEditingField('birthDate')}>
-                <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Birth Date</span>
+              <div className="flex justify-between items-center group cursor-pointer" onClick={() => {
+                setBackupUserInfo({ ...userInfo });
+                setEditingField('birthDate');
+              }}>
+                <span className="text-stone-500 text-xs tracking-[0.1em] font-serif italic uppercase">생년월일</span>
                 <div className="flex items-center gap-3 text-right">
                   <div className="flex flex-col items-end">
-                    <span className="text-stone-300 text-sm font-light tracking-widest">{userInfo.birthDate ? formatDate(userInfo.birthDate) : '0000년 00월 00일'}</span>
-                    <span className="text-[10px] text-amber-900/80 uppercase tracking-tighter">
-                      {userInfo.calendarType === 'solar' ? 'Solar' : `Lunar${userInfo.isLeap ? ' (Leap)' : ''}`}
+                    <span className="text-stone-300 text-sm font-serif italic tracking-widest">{userInfo.birthDate ? formatDate(userInfo.birthDate) : '0000년 00월 00일'}</span>
+                    <span className="text-[10px] text-amber-900/80 font-serif uppercase tracking-tighter">
+                      {userInfo.calendarType === 'solar' ? '양력' : `음력${userInfo.isLeap ? '(윤달)' : ''}`}
                     </span>
                   </div>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
@@ -864,28 +886,28 @@ const SajuApp = () => {
 
               {/* 생시 */}
               <div className="flex justify-between items-center group cursor-pointer" onClick={() => setShowTimeModal(true)}>
-                <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Birth Time</span>
+                <span className="text-stone-500 text-xs tracking-[0.1em] font-serif italic uppercase">태어난 시각</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-stone-300 text-sm font-light tracking-widest">{userInfo.birthTimeLabel || 'Unknown'}</span>
+                  <span className="text-stone-300 text-sm font-serif italic tracking-widest">{userInfo.birthTimeLabel || '미상'}</span>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
                 </div>
               </div>
 
               {/* 성별 */}
               <div className="flex justify-between items-center">
-                <span className="text-stone-500 text-xs tracking-[0.1em] uppercase">Gender</span>
+                <span className="text-stone-500 text-xs tracking-[0.1em] font-serif italic uppercase">성별</span>
                 <div className="flex bg-stone-950/40 p-1 rounded-sm border border-amber-900/10">
                   <button
                     onClick={() => setUserInfo({ ...userInfo, gender: 'male' })}
-                    className={`px-4 py-1.5 rounded-sm text-[10px] tracking-[0.2em] transition-all ${userInfo.gender === 'male' ? 'bg-amber-900/30 text-amber-500' : 'text-stone-700'}`}
+                    className={`px-4 py-1.5 rounded-sm text-[10px] tracking-[0.2em] font-serif italic transition-all ${userInfo.gender === 'male' ? 'bg-amber-900/30 text-amber-500' : 'text-stone-700'}`}
                   >
-                    乾命 (남)
+                    남
                   </button>
                   <button
                     onClick={() => setUserInfo({ ...userInfo, gender: 'female' })}
-                    className={`px-4 py-1.5 rounded-sm text-[10px] tracking-[0.2em] transition-all ${userInfo.gender === 'female' ? 'bg-amber-900/30 text-amber-500' : 'text-stone-700'}`}
+                    className={`px-4 py-1.5 rounded-sm text-[10px] tracking-[0.2em] font-serif italic transition-all ${userInfo.gender === 'female' ? 'bg-amber-900/30 text-amber-500' : 'text-stone-700'}`}
                   >
-                    坤命 (여)
+                    여
                   </button>
                 </div>
               </div>
@@ -935,7 +957,7 @@ const SajuApp = () => {
                 }
               }}
               disabled={!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading}
-              className={`w-full py-5 rounded-sm text-lg font-medium transition-all tracking-[0.3em] ${!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading
+              className={`w-full py-5 rounded-sm text-lg transition-all italic ${titleFont} ${!userInfo.name || !isBirthDateValid(userInfo.birthDate) || !isPhoneValid(userInfo.phone) || loading
                 ? 'bg-stone-900 text-stone-700 cursor-not-allowed border border-stone-800'
                 : 'bg-amber-800/80 text-amber-100 hover:bg-amber-700 border border-amber-600/30 shadow-[0_0_20px_rgba(180,83,9,0.2)]'
                 }`}
@@ -956,8 +978,8 @@ const SajuApp = () => {
               {/* 모달 헤더 */}
               <div className="p-6 border-b border-amber-900/10 flex justify-between items-center sticky top-0 bg-[#0f0f10] z-10 shrink-0">
                 <div>
-                  <h3 className={`text-stone-100 text-lg font-bold ${titleFont}`}>生時 (태어난 시각)</h3>
-                  <p className="text-stone-500 text-xs mt-1 font-light">정확한 시각을 모를 경우 '모름'을 선택하십시오.</p>
+                  <h3 className={`text-stone-100 text-lg font-bold italic ${titleFont}`}>태어난 시각</h3>
+                  <p className="text-stone-500 text-xs mt-1 font-light italic">정확한 시각을 모를 경우 '모름'을 선택하십시오.</p>
                 </div>
                 <button onClick={() => setShowTimeModal(false)} className="text-amber-900 hover:text-amber-500 p-2 transition-colors">
                   <X size={24} />
@@ -980,15 +1002,15 @@ const SajuApp = () => {
                   </button>
                 ))}
 
-                {/* 모름 버튼 */}
+                {/* 모름 버튼을 그리드 내부에 배치 */}
                 <button
                   onClick={() => handleTimeSelect(null)}
-                  className={`col-span-3 p-5 rounded-sm font-medium text-xs tracking-[0.2em] transition-all mt-4 border ${userInfo.timeUnknown
-                    ? 'bg-amber-900/30 text-amber-500 border-amber-500/50'
+                  className={`flex items-center justify-center p-4 rounded-sm transition-all aspect-[4/3] border ${userInfo.timeUnknown
+                    ? 'bg-amber-900/30 text-amber-500 border-amber-500/50 shadow-inner'
                     : 'bg-stone-950/40 text-stone-600 border-amber-900/10 hover:border-amber-500/30 hover:text-stone-400'
                     }`}
                 >
-                  시간을 모름
+                  <span className="text-sm font-bold tracking-[0.2em]">모름</span>
                 </button>
               </div>
             </div>

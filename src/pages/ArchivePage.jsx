@@ -243,7 +243,7 @@ const ArchivePage = () => {
                         천상의 기록 보관소
                     </h1>
                     <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mb-8"></div>
-                    <p className="text-stone-400/80 text-[max(13px,3.5vw)] sm:text-sm md:text-base tracking-[0.15em] font-serif leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
+                    <p className="text-stone-400/80 text-[max(13px,3.5vw)] sm:text-sm md:text-base tracking-[0.15em] font-serif italic leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
                         천기(天機)의 흐름 속에 나열된<br />
                         <span className="text-amber-800/60 font-bold">60甲子 수호신</span>들을 관조하십시오.
                     </p>

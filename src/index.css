@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gowun+Batang:wght@400;700&family=Hahmlet:wght@100..900&family=Nanum+Myeongjo:wght@400;700;800&family=Song+Myung&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gowun+Batang:wght@400;700&family=Hahmlet:wght@100..900&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@200..900&family=Song+Myung&display=swap');
 @import "tailwindcss";
 
 /* 커스텀 애니메이션 정의 */
@@ -392,11 +392,11 @@
 
 /* 프리미엄 타이포그래피 */
 .font-serif {
-  font-family: 'Song Myung', 'Gungsuh', 'Batang', serif;
+  font-family: 'Song Myung', 'Noto Serif KR', 'Nanum Myeongjo', 'Gungsuh', 'Batang', serif;
 }
 
 .font-brand {
-  font-family: 'Song Myung', serif;
+  font-family: 'Song Myung', 'Noto Serif KR', 'Nanum Myeongjo', serif;
 }
 
 /* 기본 body 스타일 */
