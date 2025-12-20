@@ -17,6 +17,7 @@ const ArchivePage = () => {
     const [talismanViewMode, setTalismanViewMode] = useState('image');
     const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
     const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
+    const [activeChapter, setActiveChapter] = useState(null);
     const touchStartY = useRef(null);
 
     const talismanCardRef = useRef(null);
@@ -58,7 +59,7 @@ const ArchivePage = () => {
             subtitle: 'Balance and Foundation',
             element: '土',
             color: 'text-amber-600',
-            glow: 'bg-amber-500/10',
+            glow: 'bg-amber-500/5',
             circleClass: 'border-stone-100',
             lineClass: 'bg-gradient-to-b from-amber-600/60 to-transparent',
             description: '중앙의 황색(黃), 조화와 포용을 상징합니다.'
@@ -69,7 +70,7 @@ const ArchivePage = () => {
             subtitle: 'Strength and Harvest',
             element: '金',
             color: 'text-stone-300',
-            glow: 'bg-stone-300/10',
+            glow: 'bg-stone-300/5',
             circleClass: 'border-stone-100',
             lineClass: 'bg-gradient-to-b from-stone-400/60 to-transparent',
             description: '서방의 백색(白), 결실과 단단함을 상징합니다.'
@@ -80,7 +81,7 @@ const ArchivePage = () => {
             subtitle: 'Wisdom and Flow',
             element: '水',
             color: 'text-slate-400', // Cool Gray (푸른 빛이 도는 차가운 회색)으로 보정
-            glow: 'bg-slate-500/10',
+            glow: 'bg-slate-500/5',
             circleClass: 'border-stone-100',
             lineClass: 'bg-gradient-to-b from-slate-500/50 to-transparent',
             description: '북방의 흑색(黑), 깊은 지혜와 저장을 상징합니다.',
@@ -98,9 +99,9 @@ const ArchivePage = () => {
     };
 
     // ESC 키로 상세 모달 닫기
-    // Intersection Observer for scroll animations
+    // Intersection Observer for scroll animations and active chapter tracking
     useEffect(() => {
-        const observer = new IntersectionObserver(
+        const revealObserver = new IntersectionObserver(
             (entries) => {
                 entries.forEach((entry) => {
                     if (entry.isIntersecting) {
@@ -111,11 +112,30 @@ const ArchivePage = () => {
             { threshold: 0.1, rootMargin: '0px 0px -50px 0px' }
         );
 
+        const chapterObserver = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    // 섹션이 화면의 일정 부분(상단 30% ~ 하단 70% 사이)에 들어오면 활성화
+                    if (entry.isIntersecting && entry.intersectionRatio > 0.1) {
+                        setActiveChapter(entry.target.getAttribute('data-chapter-id'));
+                    }
+                });
+            },
+            {
+                threshold: [0.1, 0.5],
+                rootMargin: '-15% 0px -45% 0px' // 화면 중심부 근처에서 전환되도록 조정
+            }
+        );
+
         const items = document.querySelectorAll('.reveal-item');
-        items.forEach((item) => observer.observe(item));
+        items.forEach((item) => revealObserver.observe(item));
+
+        const elements = document.querySelectorAll('[data-chapter-id]');
+        elements.forEach((el) => chapterObserver.observe(el));
 
         return () => {
-            items.forEach((item) => observer.unobserve(item));
+            revealObserver.disconnect();
+            chapterObserver.disconnect();
         };
     }, []);
 
@@ -209,7 +229,11 @@ const ArchivePage = () => {
             </div>
 
             {/* [전략 1] 몰입형 히어로 게이트 (완전한 시선 분리: 100vh) */}
-            <div className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center -mt-20 overflow-hidden">
+            <div
+                id="hero"
+                data-chapter-id="hero"
+                className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center -mt-20 overflow-hidden"
+            >
                 <div className="animate-fade-in-up w-full max-w-[90vw] mx-auto">
                     <span className="text-amber-700/50 text-[max(11px,3vw)] sm:text-[13px] tracking-[0.5em] sm:tracking-[0.8em] font-serif uppercase mb-6 block transition-all duration-1000">Celestial Records</span>
                     <h1 className="text-amber-600/70 font-serif italic text-[7.5vw] sm:text-4xl md:text-5xl lg:text-6xl tracking-[0.15em] mb-8 whitespace-nowrap">
@@ -224,7 +248,7 @@ const ArchivePage = () => {
 
                 {/* 하단 스크롤 안내 (정적이면서 은은한 디자인) */}
                 <div className="absolute bottom-12 flex flex-col items-center gap-5 opacity-40">
-                    <span className="text-[max(9px,2.5vw)] sm:text-[11px] tracking-[0.4em] text-amber-600 uppercase font-serif">Scroll to enter</span>
+                    <span className="text-[max(9px,2.5vw)] sm:text-[11px] tracking-[0.4em] text-amber-600 uppercase font-serif">Scroll to Unfold</span>
                     <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
                 </div>
             </div>
@@ -232,7 +256,12 @@ const ArchivePage = () => {
             {/* 메인 전시실 (5개의 장) */}
             <div className="flex-1 relative z-10 pb-8">
                 {CHAPTERS.map((chapter, chapterIdx) => (
-                    <section key={chapter.id} className={`relative ${chapterIdx === CHAPTERS.length - 1 ? 'mb-12' : 'mb-32'} px-6 pt-16`}>
+                    <section
+                        key={chapter.id}
+                        id={chapter.id}
+                        data-chapter-id={chapter.id}
+                        className={`relative ${chapterIdx === CHAPTERS.length - 1 ? 'mb-12' : 'mb-32'} px-6 pt-16 scroll-mt-20`}
+                    >
                         {/* 챕터 가이드 타이틀 */}
                         <div className="flex flex-col items-center mb-16 px-4">
                             <span className={`${chapter.isDarkElement ? 'text-slate-400' : chapter.color} text-[10px] tracking-[0.6em] uppercase font-bold mb-3 opacity-60`}>
@@ -301,6 +330,58 @@ const ArchivePage = () => {
                         </div>
                     </section>
                 ))}
+            </div>
+
+            {/* 천명(天命) 내비게이션 - 플로팅 엘리먼트 바 (모바일 가시성 고려) */}
+            <div className={`fixed right-3 md:right-6 top-1/2 -translate-y-1/2 z-[100] flex flex-col items-center gap-5 md:gap-7 transition-all duration-700 ${activeChapter && activeChapter !== 'hero' ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10 pointer-events-none'
+                }`}>
+                {/* 수직 라인 */}
+                <div className="absolute top-0 bottom-0 w-[1px] bg-gradient-to-b from-transparent via-stone-100/10 to-transparent"></div>
+
+                {CHAPTERS.map((chapter) => {
+                    // 오행별 광채 색상 매핑 (더욱 선명하게 보정)
+                    const glowColors = {
+                        wood: 'rgba(16, 185, 129, 0.8)',   // emerald-500
+                        fire: 'rgba(225, 29, 72, 0.8)',    // rose-600
+                        earth: 'rgba(217, 119, 6, 0.8)',   // amber-600
+                        metal: 'rgba(255, 255, 255, 0.6)', // stone-300 + white
+                        water: 'rgba(100, 116, 139, 0.8)'  // slate-400
+                    };
+
+                    const isActive = activeChapter === chapter.id;
+
+                    return (
+                        <button
+                            key={chapter.id}
+                            onClick={() => {
+                                const el = document.getElementById(chapter.id);
+                                if (el) {
+                                    const offset = 80;
+                                    const bodyRect = document.body.getBoundingClientRect().top;
+                                    const elementRect = el.getBoundingClientRect().top;
+                                    const elementPosition = elementRect - bodyRect;
+                                    const offsetPosition = elementPosition - offset;
+
+                                    window.scrollTo({
+                                        top: offsetPosition,
+                                        behavior: 'smooth'
+                                    });
+                                }
+                            }}
+                            className="relative group/dot focus:outline-none pointer-events-auto p-2"
+                        >
+                            {/* 점 (활성화 시 검정색 중심 + 은은한 광채) */}
+                            <div
+                                className={`w-1.5 h-1.5 md:w-2 md:h-2 rounded-full transition-all duration-700 border ${isActive ? 'bg-stone-900 scale-[2.2]' : 'bg-stone-100/20 group-hover/dot:bg-stone-100/40 border-transparent'
+                                    }`}
+                                style={{
+                                    boxShadow: isActive ? `0 0 15px 3px ${glowColors[chapter.id]}` : 'none',
+                                    borderColor: isActive ? glowColors[chapter.id].replace('0.8)', '0.5)') : 'transparent'
+                                }}
+                            ></div>
+                        </button>
+                    );
+                })}
             </div>
 
             {/* 하단 푸터 가이드 (간격 및 가독성 개선) */}
