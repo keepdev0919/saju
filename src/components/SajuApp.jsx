@@ -658,13 +658,13 @@ const SajuApp = () => {
             <div className="space-y-4 animate-fade-in-landing">
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
               <h1
-                className={`text-6xl font-black text-amber-400/90 tracking-[0.1em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)] inline-block`}
+                className={`text-6xl font-black text-amber-400/90 tracking-[0.1em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)]`}
                 style={{ transform: 'scaleY(1.08)', transformOrigin: 'center' }}
               >
                 천명록
               </h1>
               {/* 슬로건을 브랜드명 바로 아래로 이동 */}
-              <div className="inline-block mt-2">
+              <div className="mt-2 text-center">
                 <p className="text-stone-400/80 text-[10px] font-extralight leading-relaxed tracking-[0.3em] uppercase font-sans">
                   당신의 운명이 새겨진 단 하나의 기록
                 </p>
