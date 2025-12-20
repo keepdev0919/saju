@@ -657,7 +657,10 @@ const SajuApp = () => {
             {/* 로고 영역: 브랜드 정체성 강화 - 슬로건을 브랜드명 바로 아래로 이동 */}
             <div className="space-y-4 animate-fade-in-landing">
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
-              <h1 className={`text-6xl font-black text-amber-400/90 tracking-[0.1em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)]`}>
+              <h1
+                className={`text-6xl font-black text-amber-400/90 tracking-[0.1em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)] inline-block`}
+                style={{ transform: 'scaleY(1.15)', transformOrigin: 'center' }}
+              >
                 천명록
               </h1>
               {/* 슬로건을 브랜드명 바로 아래로 이동 */}
