@@ -8,6 +8,7 @@ import TalismanCard from '../components/TalismanCard';
 /**
  * 천상의 아카이브 (Celestial Archive) 페이지
  * 60甲子 수호신들을 5개의 장(Chapter)으로 나누어 보여주는 독립 페이지
+ * 5행(목화토금수) 고증 컬러 및 현색(玄色) 배경 적용
  */
 const ArchivePage = () => {
     const navigate = useNavigate();
@@ -19,13 +20,65 @@ const ArchivePage = () => {
 
     const talismanCardRef = useRef(null);
 
-    // 오행별 챕터 정보
+    // 오행별 챕터 정보 (고증 컬러 명시 및 테두리/라인 컬러 고정)
+    // 테일윈드 JIT 컴파일러 이슈 해결을 위해 클래스 풀네임 사용
     const CHAPTERS = [
-        { id: 'wood', title: '제 1장: 만물을 깨우는 나무의 기운', subtitle: 'Birth and Growth', element: '木', color: 'text-emerald-500', glow: 'bg-emerald-500/10' },
-        { id: 'fire', title: '제 2장: 찬란하게 타오르는 불의 기운', subtitle: 'Passion and Brilliance', element: '火', color: 'text-rose-500', glow: 'bg-rose-500/10' },
-        { id: 'earth', title: '제 3장: 모든 것을 품는 흙의 기운', subtitle: 'Balance and Foundation', element: '土', color: 'text-amber-500', glow: 'bg-amber-500/10' },
-        { id: 'metal', title: '제 4장: 강인하게 단련된 쇠의 기운', subtitle: 'Strength and Harvest', element: '金', color: 'text-stone-300', glow: 'bg-stone-300/10' },
-        { id: 'water', title: '제 5장: 깊이 있게 흐르는 물의 기운', subtitle: 'Wisdom and Flow', element: '水', color: 'text-blue-500', glow: 'bg-blue-500/10' },
+        {
+            id: 'wood',
+            title: '제 1장: 만물을 깨우는 나무의 기운',
+            subtitle: 'Birth and Growth',
+            element: '木',
+            color: 'text-emerald-600',
+            glow: 'bg-emerald-500/5',
+            circleClass: 'border-stone-100',
+            lineClass: 'bg-gradient-to-b from-emerald-500/60 to-transparent',
+            description: '동방의 청색(靑), 생명의 시작을 상징합니다.'
+        },
+        {
+            id: 'fire',
+            title: '제 2장: 찬란하게 타오르는 불의 기운',
+            subtitle: 'Passion and Brilliance',
+            element: '火',
+            color: 'text-rose-600',
+            glow: 'bg-rose-500/5',
+            circleClass: 'border-stone-100',
+            lineClass: 'bg-gradient-to-b from-rose-500/60 to-transparent',
+            description: '남방의 적색(赤), 만개의 절정을 상징합니다.'
+        },
+        {
+            id: 'earth',
+            title: '제 3장: 모든 것을 품는 흙의 기운',
+            subtitle: 'Balance and Foundation',
+            element: '土',
+            color: 'text-amber-600',
+            glow: 'bg-amber-500/10',
+            circleClass: 'border-stone-100',
+            lineClass: 'bg-gradient-to-b from-amber-600/60 to-transparent',
+            description: '중앙의 황색(黃), 조화와 포용을 상징합니다.'
+        },
+        {
+            id: 'metal',
+            title: '제 4장: 강인하게 단련된 쇠의 기운',
+            subtitle: 'Strength and Harvest',
+            element: '金',
+            color: 'text-stone-300',
+            glow: 'bg-stone-300/10',
+            circleClass: 'border-stone-100',
+            lineClass: 'bg-gradient-to-b from-stone-400/60 to-transparent',
+            description: '서방의 백색(白), 결실과 단단함을 상징합니다.'
+        },
+        {
+            id: 'water',
+            title: '제 5장: 깊이 있게 흐르는 물의 기운',
+            subtitle: 'Wisdom and Flow',
+            element: '水',
+            color: 'text-[#050505]', // 흑색(黑) 고증
+            glow: 'bg-stone-500/10',
+            circleClass: 'border-stone-100',
+            lineClass: 'bg-gradient-to-b from-stone-400 to-transparent',
+            description: '북방의 흑색(黑), 깊은 지혜와 저장을 상징합니다.',
+            isDarkElement: true
+        },
     ];
 
     // 각 오행에 해당하는 천간들
@@ -108,12 +161,12 @@ const ArchivePage = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0c0c0e] text-stone-200 flex flex-col relative overflow-y-auto overflow-x-hidden transition-all duration-700">
-            {/* 장식적 배경 */}
-            <div className="fixed inset-0 bg-hanji-refined opacity-15 pointer-events-none z-0"></div>
+        <div className="min-h-screen bg-[#111113] text-stone-200 flex flex-col relative overflow-y-auto overflow-x-hidden transition-all duration-700">
+            {/* 장식적 배경 - 현색(Deep Charcoal) 텍스처 */}
+            <div className="fixed inset-0 bg-hanji-refined opacity-[0.03] pointer-events-none z-0"></div>
 
-            {/* 고정 헤더 영역 (스크롤 시 투명도 변화 등 연출 가능) */}
-            <div className="sticky top-0 px-6 pt-12 pb-8 flex flex-col items-center bg-[#0c0c0e]/90 backdrop-blur-md relative z-30 border-b border-amber-900/10">
+            {/* 고정 헤더 영역 (현색 배경과 조화) */}
+            <div className="sticky top-0 px-6 pt-12 pb-8 flex flex-col items-center bg-[#111113]/95 backdrop-blur-md relative z-30 border-b border-amber-900/5 shadow-2xl">
                 <button
                     onClick={() => navigate('/')}
                     className="absolute left-6 top-10 p-2 text-stone-600 hover:text-amber-500 transition-colors z-20"
@@ -122,40 +175,58 @@ const ArchivePage = () => {
                 </button>
 
                 <div className="relative flex flex-col items-center">
-                    <h1 className="text-amber-500/80 font-serif italic text-3xl md:text-4xl tracking-[0.2em] mb-4">
+                    <h1 className="text-amber-600/70 font-serif italic text-3xl md:text-4xl tracking-[0.2em] mb-4">
                         천상의 기록 보관소
                     </h1>
-                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-700/40 to-transparent mb-5"></div>
-                    <p className="text-stone-500 text-[11px] md:text-xs tracking-[0.15em] font-serif leading-relaxed text-center break-keep max-w-[80%] opacity-80">
-                        천기(天機)의 흐름 속에 나열된 <span className="text-amber-700/60 font-bold border-b border-amber-900/20 pb-0.5">60甲子 수호신</span>들을 관조하십시오.
+                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-900/30 to-transparent mb-5"></div>
+                    <p className="text-stone-500 text-[11px] md:text-xs tracking-[0.15em] font-serif leading-relaxed text-center break-keep max-w-[80%] opacity-70">
+                        천기(天機)의 흐름 속에 나열된 <span className="text-amber-800/60 font-bold border-b border-amber-900/10 pb-0.5">60甲子 수호신</span>들을 관조하십시오.
                     </p>
                 </div>
             </div>
 
             {/* 메인 전시실 (5개의 장) */}
-            <div className="flex-1 relative z-10 pb-32">
-                {CHAPTERS.map((chapter) => (
-                    <section key={chapter.id} className="relative mb-24 px-6 pt-16">
+            <div className="flex-1 relative z-10 pb-8">
+                {CHAPTERS.map((chapter, chapterIdx) => (
+                    <section key={chapter.id} className={`relative ${chapterIdx === CHAPTERS.length - 1 ? 'mb-12' : 'mb-32'} px-6 pt-16`}>
                         {/* 챕터 가이드 타이틀 */}
                         <div className="flex flex-col items-center mb-16 animate-fade-in-up">
-                            <span className={`${chapter.color} text-[10px] tracking-[0.6em] uppercase font-bold mb-3 opacity-60`}>
+                            <span className={`${chapter.isDarkElement ? 'text-stone-500' : chapter.color} text-[10px] tracking-[0.6em] uppercase font-bold mb-3 opacity-60`}>
                                 {chapter.subtitle}
                             </span>
-                            <h2 className="text-stone-100 font-serif italic text-2xl md:text-3xl tracking-[0.1em] text-center mb-6">
+                            <h2 className={`font-serif italic text-2xl md:text-3xl tracking-[0.1em] text-center mb-4 ${chapter.isDarkElement ? 'text-stone-300 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]' : 'text-stone-100'}`}>
                                 {chapter.title}
                             </h2>
-                            <div className={`w-8 h-8 rounded-full ${chapter.glow} border border-${chapter.color.split('-')[1]}-500/20 flex items-center justify-center`}>
-                                <span className={`${chapter.color} text-sm font-serif`}>{chapter.element}</span>
+                            <p className="text-stone-600 text-[10px] font-serif mb-8 opacity-60 italic">{chapter.description}</p>
+
+                            {/* 챕터 기운 인디케이터 (수기운은 먹색+은색 연출) */}
+                            <div className={`w-12 h-12 rounded-full ${chapter.glow} border-2 ${chapter.circleClass} flex items-center justify-center bg-black/40 backdrop-blur-sm z-10 shadow-[0_0_12px_rgba(255,255,255,0.15)]`}>
+                                <span className={`${chapter.color} text-lg font-serif font-bold`}>
+                                    {chapter.element}
+                                </span>
                             </div>
-                            <div className="w-px h-16 bg-gradient-to-b from-amber-700/20 to-transparent mt-8"></div>
+
+                            {/* 수직 구분선 - 가시성 대폭 강화 */}
+                            <div className={`w-[2px] h-20 -mt-1 ${chapter.lineClass}`}></div>
                         </div>
 
                         {/* 카드 격자 (한 줄에 3개) */}
                         <div className="max-w-md mx-auto grid grid-cols-3 gap-3 md:gap-4 px-2">
                             {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
                                 Object.keys(talismanNames).filter(k => k.endsWith(animal) && elementGans[chapter.id].includes(k[0]))
-                            ).map((key, index) => {
-                                const { color } = getGanColor(key[0]);
+                            ).map((key) => {
+                                // 카드 내부 컬러 결정
+                                let cardFontColor = getGanColor(key[0]).color;
+                                let cardBgColor = 'bg-stone-900/40';
+                                let cardBorderColor = 'border-orange-950/20';
+
+                                // 수(水)기운 고증: 흑색(黑) + 은은한 은빛 테두리
+                                if (chapter.isDarkElement) {
+                                    cardFontColor = 'text-[#050505]'; // 진한 먹색
+                                    cardBgColor = 'bg-stone-800/30';
+                                    cardBorderColor = 'border-stone-400/20';
+                                }
+
                                 return (
                                     <div
                                         key={key}
@@ -163,23 +234,29 @@ const ArchivePage = () => {
                                             setSelectedTalismanKey(key);
                                             setShowTalismanDetail(true);
                                         }}
-                                        className="relative p-2 rounded-sm border border-orange-950/40 bg-wood-refined flex flex-col items-center justify-center group aspect-[3/4] active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),inset_0_0_20px_rgba(0,0,0,0.7),0_5px_10px_rgba(0,0,0,0.6)]"
+                                        className={`relative p-2 rounded-sm border ${cardBorderColor} ${cardBgColor} flex flex-col items-center justify-center group aspect-[3/4] active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.02),0_10px_20px_rgba(0,0,0,0.4)]`}
                                     >
-                                        <div className="absolute inset-0 bg-hanji-refined opacity-[0.05] pointer-events-none z-10"></div>
+                                        <div className="absolute inset-0 bg-hanji-refined opacity-[0.02] pointer-events-none z-10"></div>
+
+                                        {/* 수기운 특별 효과: 은은한 은빛 광채 */}
+                                        {chapter.isDarkElement && (
+                                            <div className="absolute inset-0 bg-gradient-to-br from-stone-400/5 to-transparent z-0 opacity-50"></div>
+                                        )}
+
                                         <div className="relative z-10 flex flex-col items-center justify-center gap-1.5">
                                             <div className="flex flex-col items-center leading-[1.1] select-none scale-90">
-                                                <span className={`font-serif font-black ${color} text-[24px]`}>
+                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]' : 'text-[24px]'} transition-all duration-700`}>
                                                     {ganHanjaMap[key[0]]}
                                                 </span>
-                                                <span className={`font-serif font-black ${color} text-[24px]`}>
+                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]' : 'text-[24px]'} transition-all duration-700`}>
                                                     {jiHanjaMap[key[1]]}
                                                 </span>
                                             </div>
-                                            <span className={`text-[7px] font-sans font-black tracking-[0.1em] ${color} opacity-70`}>
+                                            <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} ${chapter.isDarkElement ? 'text-[10px] opacity-100 drop-shadow-[0_0_1px_rgba(255,255,255,0.2)]' : 'text-[7px] opacity-70'}`}>
                                                 {key}
                                             </span>
                                         </div>
-                                        <div className="absolute inset-[1px] border border-orange-950/30 rounded-sm pointer-events-none shadow-[inset_0_0_3px_rgba(0,0,0,0.5)]" />
+                                        <div className={`absolute inset-[1px] border ${chapter.isDarkElement ? 'border-stone-400/10' : 'border-orange-950/10'} rounded-sm pointer-events-none`} />
                                     </div>
                                 );
                             })}
@@ -188,14 +265,15 @@ const ArchivePage = () => {
                 ))}
             </div>
 
-            {/* 하단 푸터 가이드 */}
-            <div className="p-12 text-center relative z-10 bg-gradient-to-t from-black to-transparent">
-                <p className="text-amber-500/80 text-[16px] tracking-[0.2em] font-serif italic mb-2">
+            {/* 하단 푸터 가이드 (간격 및 가독성 개선) */}
+            <div className="pb-40 pt-10 px-6 text-center relative z-10 bg-gradient-to-t from-black via-[#111113] to-transparent">
+                <p className="text-amber-600/80 text-xl md:text-3xl tracking-[0.15em] font-serif italic mb-6 break-keep">
                     "나열된 만상(萬象) 중,"
                 </p>
-                <p className="text-amber-500/60 text-[14px] tracking-[0.1em] font-serif italic">
-                    당신을 기다리는 단 하나의 인연을 찾으십시오.
+                <p className="text-amber-700/60 text-base md:text-xl tracking-[0.1em] font-serif italic leading-relaxed break-keep">
+                    당신을 기다리는 단 하나의<br className="md:hidden" /> 인연은 무엇입니까.
                 </p>
+                <div className="w-12 h-px bg-amber-900/40 mx-auto mt-12"></div>
             </div>
 
             {showTalismanDetail && renderTalismanPreviewModal()}
