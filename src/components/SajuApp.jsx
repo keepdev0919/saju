@@ -659,7 +659,7 @@ const SajuApp = () => {
               <p className={`text-amber-500/70 text-[9px] tracking-[0.8em] uppercase font-light ${titleFont}`}>The Sacred Archive</p>
               <h1
                 className={`text-6xl font-black text-amber-400/90 tracking-[0.1em] font-brand drop-shadow-[0_0_40px_rgba(217,119,6,0.6)] inline-block`}
-                style={{ transform: 'scaleY(1.15)', transformOrigin: 'center' }}
+                style={{ transform: 'scaleY(1.08)', transformOrigin: 'center' }}
               >
                 천명록
               </h1>
