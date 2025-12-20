@@ -166,20 +166,21 @@ const ArchivePage = () => {
             <div className="fixed inset-0 bg-hanji-refined opacity-[0.03] pointer-events-none z-0"></div>
 
             {/* 고정 헤더 영역 (현색 배경과 조화) */}
-            <div className="sticky top-0 px-6 pt-12 pb-8 flex flex-col items-center bg-[#111113]/95 backdrop-blur-md relative z-30 border-b border-amber-900/5 shadow-2xl">
+            <div className="sticky top-0 px-6 pt-14 pb-8 flex flex-col items-center bg-[#111113]/95 backdrop-blur-md relative z-40 border-b border-amber-900/5 shadow-2xl">
+                {/* 상단 내비게이션 바 스타일: 뒤로가기 버튼을 구석으로 배치 */}
                 <button
                     onClick={() => navigate('/')}
-                    className="absolute left-6 top-10 p-2 text-stone-600 hover:text-amber-500 transition-colors z-20"
+                    className="absolute left-4 top-7 p-2 text-stone-600/50 hover:text-amber-600 transition-all z-50 group"
                 >
-                    <ChevronLeft size={28} strokeWidth={1.5} />
+                    <ChevronLeft size={24} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
 
                 <div className="relative flex flex-col items-center">
-                    <h1 className="text-amber-600/70 font-serif italic text-3xl md:text-4xl tracking-[0.2em] mb-4">
+                    <h1 className="text-amber-600/70 font-serif italic text-2xl md:text-3xl tracking-[0.2em] mb-3">
                         천상의 기록 보관소
                     </h1>
-                    <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-900/30 to-transparent mb-5"></div>
-                    <p className="text-stone-500 text-[11px] md:text-xs tracking-[0.15em] font-serif leading-relaxed text-center break-keep max-w-[80%] opacity-70">
+                    <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mb-4"></div>
+                    <p className="text-stone-500 text-[10px] md:text-xs tracking-[0.15em] font-serif leading-relaxed text-center break-keep max-w-[85%] opacity-70">
                         천기(天機)의 흐름 속에 나열된 <span className="text-amber-800/60 font-bold border-b border-amber-900/10 pb-0.5">60甲子 수호신</span>들을 관조하십시오.
                     </p>
                 </div>
@@ -238,14 +239,14 @@ const ArchivePage = () => {
 
                                         <div className="relative z-10 flex flex-col items-center justify-center gap-1.5">
                                             <div className="flex flex-col items-center leading-[1.1] select-none scale-90">
-                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : 'text-[24px]'} transition-all duration-700`}>
+                                                <span className={`font-serif font-black ${cardFontColor} text-[30px] ${chapter.isDarkElement ? 'drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : ''} transition-all duration-700`}>
                                                     {ganHanjaMap[key[0]]}
                                                 </span>
-                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : 'text-[24px]'} transition-all duration-700`}>
+                                                <span className={`font-serif font-black ${cardFontColor} text-[30px] ${chapter.isDarkElement ? 'drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : ''} transition-all duration-700`}>
                                                     {jiHanjaMap[key[1]]}
                                                 </span>
                                             </div>
-                                            <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} ${chapter.isDarkElement ? 'text-[10px] opacity-100' : 'text-[7px] opacity-70'}`}>
+                                            <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} text-[10px] ${chapter.isDarkElement ? 'opacity-100' : 'opacity-80'}`}>
                                                 {key}
                                             </span>
                                         </div>
