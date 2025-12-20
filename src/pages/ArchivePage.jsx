@@ -244,7 +244,7 @@ const ArchivePage = () => {
                     </h1>
                     <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mb-8"></div>
                     <p className="text-stone-400/80 text-[max(13px,3.5vw)] sm:text-sm md:text-base tracking-[0.15em] font-serif leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
-                        천기(天機)의 흐름 속에 나열된<br className="sm:hidden" />
+                        천기(天機)의 흐름 속에 나열된<br />
                         <span className="text-amber-800/60 font-bold">60甲子 수호신</span>들을 관조하십시오.
                     </p>
                 </div>
@@ -393,7 +393,7 @@ const ArchivePage = () => {
                     "나열된 만상(萬象) 중,"
                 </p>
                 <p className="text-amber-700/60 text-base md:text-xl tracking-[0.1em] font-serif italic leading-relaxed break-keep">
-                    당신을 기다리는 단 하나의<br className="md:hidden" /> 인연은 무엇입니까
+                    당신을 기다리는 단 하나의<br className="md:hidden" /> 인연은 무엇입니까?
                 </p>
                 <div className="w-12 h-px bg-amber-900/40 mx-auto mt-12"></div>
             </div>
