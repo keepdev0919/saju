@@ -51,7 +51,7 @@ export async function calculateSaju({ birthDate, birthTime, calendarType, gender
     }
 
     // 오행 분석
-    const wuxing = calculateWuXing(eightChar, hourGanZhi);
+    const { wuxing, analysisLogs } = calculateWuXing(eightChar, hourGanZhi);
 
     // 용신 분석 (간단 로직 - 부족한 오행 찾기)
     const yongshen = findYongShen(wuxing);
@@ -65,6 +65,7 @@ export async function calculateSaju({ birthDate, birthTime, calendarType, gender
       birthDate,
       birthTime,
       wuxing,        // 오행 분포
+      analysisLogs,  // [NEW] 실시간 분석 로그
       yongshen,      // 용신
       dayMaster: parseSingleGan(dayMaster), // 일간 (日干)
 
@@ -124,10 +125,21 @@ function parseSingleGan(gan) {
  */
 function calculateWuXing(eightChar, hourGanZhi) {
   const wuxing = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
+  const analysisLogs = [];
 
   const ganWuxingMap = {
     '甲': '목', '乙': '목', '丙': '화', '丁': '화', '戊': '토',
     '己': '토', '庚': '금', '辛': '금', '壬': '수', '癸': '수'
+  };
+
+  const ganNameMap = {
+    '甲': '갑목(甲木)', '乙': '을목(乙木)', '丙': '병화(丙火)', '丁': '정화(丁火)', '戊': '무토(戊土)',
+    '己': '기토(己土)', '庚': '경금(庚金)', '辛': '신금(辛金)', '壬': '임수(壬水)', '癸': '계수(癸水)'
+  };
+
+  const jiNameMap = {
+    '子': '자수(子水)', '丑': '축토(丑土)', '寅': '인목(寅木)', '卯': '묘목(卯木)', '辰': '진토(辰土)', '巳': '사화(巳火)',
+    '午': '오화(午火)', '未': '미토(未土)', '申': '신금(申金)', '酉': '유금(酉金)', '戌': '술토(戌土)', '亥': '해수(亥水)'
   };
 
   // 지장간 정밀 분할 매핑 (초기/중기/정기 비율 반영)
@@ -151,24 +163,30 @@ function calculateWuXing(eightChar, hourGanZhi) {
 
   // 계절 가중치 테이블 (월지 기준)
   const seasonalWeightMap = {
-    '寅': { 목: 3.0, 화: 2.0 }, // 초봄
-    '卯': { 목: 3.0, 화: 2.0 }, // 한봄
-    '辰': { 목: 2.0, 토: 2.0 }, // 늦봄
-    '巳': { 화: 3.0, 토: 2.0 }, // 초여름
-    '午': { 화: 3.0, 토: 2.0 }, // 한여름
-    '未': { 화: 2.0, 토: 3.0 }, // 늦여름
-    '申': { 금: 3.0, 수: 2.0 }, // 초가을
-    '酉': { 금: 3.0, 수: 2.0 }, // 한가을
-    '戌': { 금: 2.0, 토: 2.0 }, // 늦가을
-    '亥': { 수: 3.0, 목: 2.0 }, // 초겨울
-    '子': { 수: 3.0, 목: 2.0 }, // 한겨울
-    '丑': { 수: 2.0, 토: 2.0 }  // 늦겨울
+    '寅': { 목: 3.0, 화: 2.0, name: '초봄(孟春)' },
+    '卯': { 목: 3.0, 화: 2.0, name: '한봄(仲春)' },
+    '辰': { 목: 2.0, 토: 2.0, name: '늦봄(季春)' },
+    '巳': { 화: 3.0, 토: 2.0, name: '초여름(孟夏)' },
+    '午': { 화: 3.0, 토: 2.0, name: '한여름(仲夏)' },
+    '未': { 화: 2.0, 토: 3.0, name: '늦여름(季夏)' },
+    '申': { 금: 3.0, 수: 2.0, name: '초가을(孟秋)' },
+    '酉': { 금: 3.0, 수: 2.0, name: '한가을(仲秋)' },
+    '戌': { 금: 2.0, 토: 2.0, name: '늦가을(季秋)' },
+    '亥': { 수: 3.0, 목: 2.0, name: '초겨울(孟冬)' },
+    '子': { 수: 3.0, 목: 2.0, name: '한겨울(仲冬)' },
+    '丑': { 수: 2.0, 토: 2.0, name: '늦겨울(季冬)' }
   };
 
+  const currentSeason = seasonalWeightMap[monthJi] || { name: '중조(中調)' };
   const currentSeasonWeights = seasonalWeightMap[monthJi] || {};
 
+  // [NEW] 4단계 핵심 로그 시스템 (간결성 및 피로도 감소)
+  analysisLogs.push(`◈ 월지 '${jiNameMap[monthJi]}' 기준 사주 원국 정밀 스캔`);
+
   // 1. 천간 가중치 계산 (천간 점수 * 1.2)
-  const gans = [eightChar.getYear()[0], monthGZ[0], eightChar.getDay()[0]];
+  const yearGZ = eightChar.getYear();
+  const dayGZ = eightChar.getDay();
+  const gans = [yearGZ[0], monthGZ[0], dayGZ[0]];
   if (hourGanZhi) gans.push(hourGanZhi[0]);
 
   gans.forEach(gan => {
@@ -177,18 +195,27 @@ function calculateWuXing(eightChar, hourGanZhi) {
   });
 
   // 2. 지장간 가중치 계산 (지장간 분할 점수 * 1.0)
-  const jis = [eightChar.getYear()[1], monthJi, eightChar.getDay()[1]];
+  const jis = [yearGZ[1], monthJi, dayGZ[1]];
   if (hourGanZhi) jis.push(hourGanZhi[1]);
 
+  let hiddenGanDetected = false;
   jis.forEach(ji => {
     const hiddenGans = jiHiddenGanMap[ji];
     if (hiddenGans) {
+      if (!hiddenGanDetected) {
+        analysisLogs.push(`◈ 지장간(地藏干) 내 잠재 기운 추출`);
+        hiddenGanDetected = true;
+      }
       Object.entries(hiddenGans).forEach(([gan, ratio]) => {
         const element = ganWuxingMap[gan];
-        if (element) wuxing[element] += (1.0 * ratio);
+        if (element) {
+          wuxing[element] += (1.0 * ratio);
+        }
       });
     }
   });
+
+  analysisLogs.push(`◈ 계절 절기에 따른 에너지 밀도 조율`);
 
   // 3. 계절 가중치 적용 및 최종 합산
   Object.keys(wuxing).forEach(element => {
@@ -206,7 +233,9 @@ function calculateWuXing(eightChar, hourGanZhi) {
     Object.keys(wuxing).forEach(key => wuxing[key] = 20);
   }
 
-  return wuxing;
+  analysisLogs.push(`◈ 오행 균형도 산출 및 형상 복원`);
+
+  return { wuxing, analysisLogs };
 }
 
 /**

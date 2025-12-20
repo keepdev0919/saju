@@ -111,7 +111,10 @@ export async function calculateSaju(req, res) {
     res.json({
       success: true,
       resultId: resultData.insertId,
-      result,
+      result: {
+        ...result,
+        analysisLogs: sajuData.analysisLogs // 서비스에서 생성된 로그 포함
+      },
       message: '사주 계산이 완료되었습니다.'
     });
   } catch (error) {
@@ -184,6 +187,7 @@ export async function calculateFreeResult(req, res) {
       result: {
         sajuData,
         oheng: sajuData.wuxing,
+        analysisLogs: sajuData.analysisLogs, // 서비스에서 계산된 실시간 로그 포함
         scores, // 계산된 기초 점수 포함
         isPaid: false
       },

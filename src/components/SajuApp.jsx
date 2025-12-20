@@ -61,6 +61,10 @@ const SajuApp = () => {
   // 분석 진행률 상태
   const [progress, setProgress] = useState(0);
 
+  // 실시간 분석 로그 상태 [NEW]
+  const [analysisLogs, setAnalysisLogs] = useState([]);
+  const [activeLogIndex, setActiveLogIndex] = useState(-1);
+
   // 터치/마우스 위치 추적을 위한 상태 (모바일 인터랙티브용)
   const [interactionPos, setInteractionPos] = useState({ x: 50, y: 50 });
   const [isInteracting, setIsInteracting] = useState(false);
@@ -396,8 +400,36 @@ const SajuApp = () => {
 
       console.log('✅ 사주 계산 완료:', sajuResponse);
 
-      // 프로그레스 바 완료
-      setProgress(100);
+      // [NEW] 로그 순차 노출 애니메이션 시작 (로그 하나당 2초)
+      if (sajuResponse.result && sajuResponse.result.analysisLogs) {
+        const logs = sajuResponse.result.analysisLogs;
+        setAnalysisLogs(logs);
+
+        // 전체 소요 시간 계산
+        const dynamicDuration = logs.length * 2000;
+        let logIdx = 0;
+
+        // 데이터 받자마자 0번 로그 노출 및 초기 프로그레스 설정
+        setActiveLogIndex(0);
+        setProgress((1 / logs.length) * 100);
+
+        const logInterval = setInterval(() => {
+          logIdx++;
+          if (logIdx < logs.length) {
+            setActiveLogIndex(logIdx);
+            // 로그가 바뀔 때마다 프로그레스 바를 동기화하여 전진
+            setProgress(((logIdx + 1) / logs.length) * 100);
+          } else {
+            clearInterval(logInterval);
+          }
+        }, 2000);
+
+        // 모든 로그가 다 읽히고 1초 뒤에 결과 페이지로 이동 (여유 전환경로)
+        setTimeout(() => {
+          navigate(`/result/${accessToken}`);
+          setLoading(false);
+        }, dynamicDuration + 1000);
+      }
 
       // 3. 사주 결과 저장
       setSajuResult(sajuResponse.result);
@@ -407,13 +439,6 @@ const SajuApp = () => {
         setUserInfo(prev => ({ ...prev, accessToken: verifyResponse.accessToken }));
       }
 
-      // 결과 페이지로 이동 (토큰을 URL에 포함)
-      console.log('🚀 결과 페이지로 이동:', { token: accessToken });
-      setTimeout(() => {
-        navigate(`/result/${accessToken}`);
-        setLoading(false);
-      }, 800);
-
     } catch (err) {
       console.error('❌ 결제 후 처리 오류:', {
         error: err,
@@ -422,6 +447,10 @@ const SajuApp = () => {
         status: err.status,
         code: err.code
       });
+
+      // 에러 시 로그 초기화
+      setAnalysisLogs([]);
+      setActiveLogIndex(-1);
 
       // 타임아웃 에러 구분
       let errorMessage;
@@ -451,12 +480,14 @@ const SajuApp = () => {
     setLoading(true);
     setError(null);
     setProgress(0);
+    setAnalysisLogs([]);
+    setActiveLogIndex(-1);
 
     try {
       // 분석 시작 시간 기록
       const startTime = Date.now();
 
-      // 프로그레스 바 애니메이션 (의도적인 지연 연출)
+      // 1. 프로그레스 바 애니메이션 (의도적인 지연 연출)
       let currentProgress = 0;
       const progressInterval = setInterval(() => {
         currentProgress += Math.random() * 5;
@@ -474,7 +505,7 @@ const SajuApp = () => {
         throw new Error('인증 토큰이 없습니다. 다시 시도해주세요.');
       }
 
-      // 무료 사용자 사주 결과 호출 (매우 빠름, 하지만 애니메이션을 위해 기다림)
+      // 2. 무료 사용자 사주 결과 호출 (매우 빠름)
       const sajuResponse = await getFreeResult({
         accessToken: token,
         birthDate: userInfo.birthDate,
@@ -483,27 +514,50 @@ const SajuApp = () => {
         isLeap: userInfo.isLeap
       });
 
-      // 최소 3.5초는 애니메이션을 보여주도록 보장 (운명적 무게감 유지)
-      const elapsedTime = Date.now() - startTime;
-      const minAnalysisTime = 3500;
-      const remainingTime = Math.max(0, minAnalysisTime - elapsedTime);
+      // [FIX] 데이터 구조 정밀 매칭 및 로그 추출
+      const finalLogs = sajuResponse.result?.analysisLogs || [
+        `[鑑定] 천명 팔자(八字)의 기운을 원국별로 정밀 분화 중`,
+        `[解析] 사용자의 생월령(生月令)을 기준으로 기운의 세기 계측`,
+        `[通氣] 오행 2.0 엔진을 통한 잠재 에너지 밀도 연산 완료`
+      ];
+      setAnalysisLogs(finalLogs);
+
+      // [NEW] 동적 로딩 시간 계산 (로그 하나당 2초)
+      const dynamicAnalysisTime = finalLogs.length * 2000;
+
+      // 1번 로그(0번 인덱스) 즉시 노출 및 초기 프로그레스 설정
+      setActiveLogIndex(0);
+      setProgress((1 / finalLogs.length) * 100);
+
+      let logIdx = 0;
+      const logInterval = setInterval(() => {
+        logIdx++;
+        if (logIdx < finalLogs.length) {
+          setActiveLogIndex(logIdx);
+          // 진행률을 로그 개수에 비례하여 동기화
+          setProgress(((logIdx + 1) / finalLogs.length) * 100);
+        } else {
+          clearInterval(logInterval);
+        }
+      }, 2000);
 
       setTimeout(() => {
-        clearInterval(progressInterval);
-        setProgress(100);
         setSajuResult(sajuResponse.result);
 
+        // 전체 동적 시간이 흐른 뒤 결과로 이동
         setTimeout(() => {
           navigate(`/result/${token}`);
           setLoading(false);
-        }, 800);
-      }, remainingTime);
+        }, 1000);
+      }, dynamicAnalysisTime);
 
     } catch (err) {
       console.error('분석 시작 실패:', err);
       setError(err.message || '분석 중 오류가 발생했습니다.');
       setLoading(false);
       setProgress(0);
+      setAnalysisLogs([]);
+      setActiveLogIndex(-1);
 
       // 실패 시 입력 페이지로 복귀
       setTimeout(() => setStep('input'), 3000);
@@ -1269,41 +1323,51 @@ const SajuApp = () => {
         </div>
 
         {/* 프로그레스 바 (Enhanced Amber Glow with Flare & Shimmer) */}
-        <div className="w-full max-w-[260px] space-y-4">
-          <div className="relative h-[3px] w-full bg-stone-950/80 rounded-full border border-white/5 shadow-inner overflow-hidden">
+        <div className="w-full max-w-[280px] space-y-6">
+          <div className="relative h-[3px] w-full bg-stone-950/80 rounded-full border border-white/5 shadow-inner">
             {/* Base Progress Bar */}
             <div
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-900 via-amber-500 to-amber-300 h-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(217,119,6,0.4)]"
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-900 via-amber-600 to-amber-400 h-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(217,119,6,0.3)]"
               style={{ width: `${progress}%` }}
             >
-              {/* Internal Shimmer Layer (에너지 흐름 효과) */}
-              <div className="absolute inset-0 shimmer opacity-40"></div>
+              <div className="absolute inset-0 shimmer opacity-20"></div>
             </div>
 
-            {/* Glowing Head (Flare) - 차오르는 끝부분에서 빛이 개척하는 효과 */}
+            {/* Glowing Head (Flare) */}
             <div
-              className="absolute top-1/2 -translate-y-1/2 h-3 w-8 bg-amber-400/20 blur-md rounded-full transition-all duration-700 ease-out"
-              style={{ left: `calc(${progress}% - 20px)` }}
+              className={`absolute top-1/2 -translate-y-1/2 h-4 w-12 bg-amber-400/10 blur-md rounded-full transition-all duration-700 ease-out ${progress >= 100 ? 'opacity-0' : 'opacity-100'}`}
+              style={{ left: `calc(${progress}% - 24px)` }}
             />
             <div
-              className="absolute top-1/2 -translate-y-1/2 h-1.5 w-1.5 bg-amber-100 rounded-full shadow-[0_0_8px_2px_rgba(252,211,77,0.9)] transition-all duration-700 ease-out"
+              className={`absolute top-1/2 -translate-y-1/2 h-1.5 w-1.5 bg-amber-100 rounded-full shadow-[0_0_10px_2px_rgba(252,211,77,0.8)] transition-all duration-700 ease-out ${progress >= 100 ? 'opacity-0' : 'opacity-100'}`}
               style={{ left: `calc(${progress}% - 1px)` }}
             />
           </div>
 
-          <div className="flex justify-between items-end px-1">
-            <div className="flex flex-col items-start gap-1">
-              <span className="text-[7px] text-amber-900/60 tracking-[0.3em] font-mono leading-none">SYSTEM_SCANNING</span>
-              <span className="text-[10px] text-stone-500 font-serif italic tracking-wider animate-pulse min-w-[140px] text-left">
-                {progress < 25 ? "천상 기록 보관소 접속 중..." :
-                  progress < 50 ? "운명의 실타래를 탐색 중..." :
-                    progress < 80 ? "사주 원국과 시공간 조율 중..." :
-                      "천기의 흐름을 결과에 담는 중..."}
-              </span>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="text-[7px] text-amber-900/60 tracking-[0.3em] font-mono leading-none">MEM_RATIO</span>
-              <span className="text-xs text-amber-700 font-mono tracking-tighter font-bold">{Math.floor(progress)}%</span>
+          {/* Dynamic Analysis Logs [NEW] - Oriental Matrix Style */}
+          <div className="flex flex-col items-center space-y-4 min-h-[100px]">
+            <div className="w-full space-y-2 transition-all duration-500">
+              {analysisLogs.length > 0 ? (
+                // 실제 백엔드 로그 순차 노출
+                analysisLogs.slice(0, activeLogIndex + 1).map((log, idx) => (
+                  <div
+                    key={idx}
+                    className={`flex items-center justify-center gap-3 animate-ink-bleed
+                               ${idx === activeLogIndex ? 'text-amber-500/90' : 'text-stone-500 opacity-40'}`}
+                  >
+                    <span className="text-[10px] sm:text-xs font-serif leading-none mt-0.5 animate-pulse">◈</span>
+                    <p className="text-[10px] sm:text-xs font-serif italic tracking-tight text-center">
+                      {log.replace('◈ ', '').replace('◈', '')}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                // 데이터 수신 전 초기 대기 문구
+                <p className="text-[10px] text-stone-600 font-serif italic tracking-tight animate-pulse text-center">
+                  {progress < 30 ? "천상 기록 보관소 접속 중..." :
+                    progress < 60 ? "운명의 실타래를 탐색 중..." : "천기를 해독하는 중..."}
+                </p>
+              )}
             </div>
           </div>
         </div>
