@@ -225,7 +225,7 @@ const ArchivePage = () => {
             <div className="sticky top-0 w-full z-50 flex items-center px-4 py-6 pointer-events-none">
                 <button
                     onClick={() => navigate('/')}
-                    className="p-2 text-stone-600/50 hover:text-amber-600 transition-all pointer-events-auto group"
+                    className="p-2 text-amber-600/70 hover:text-amber-500 transition-all pointer-events-auto group"
                 >
                     <ChevronLeft size={24} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
