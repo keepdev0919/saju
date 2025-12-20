@@ -72,10 +72,10 @@ const ArchivePage = () => {
             title: '제 5장: 깊이 있게 흐르는 물의 기운',
             subtitle: 'Wisdom and Flow',
             element: '水',
-            color: 'text-[#050505]', // 흑색(黑) 고증
-            glow: 'bg-stone-500/10',
+            color: 'text-slate-400', // Cool Gray (푸른 빛이 도는 차가운 회색)으로 보정
+            glow: 'bg-slate-500/10',
             circleClass: 'border-stone-100',
-            lineClass: 'bg-gradient-to-b from-stone-400 to-transparent',
+            lineClass: 'bg-gradient-to-b from-slate-500/50 to-transparent',
             description: '북방의 흑색(黑), 깊은 지혜와 저장을 상징합니다.',
             isDarkElement: true
         },
@@ -191,10 +191,10 @@ const ArchivePage = () => {
                     <section key={chapter.id} className={`relative ${chapterIdx === CHAPTERS.length - 1 ? 'mb-12' : 'mb-32'} px-6 pt-16`}>
                         {/* 챕터 가이드 타이틀 */}
                         <div className="flex flex-col items-center mb-16 animate-fade-in-up">
-                            <span className={`${chapter.isDarkElement ? 'text-stone-500' : chapter.color} text-[10px] tracking-[0.6em] uppercase font-bold mb-3 opacity-60`}>
+                            <span className={`${chapter.isDarkElement ? 'text-slate-400' : chapter.color} text-[10px] tracking-[0.6em] uppercase font-bold mb-3 opacity-60`}>
                                 {chapter.subtitle}
                             </span>
-                            <h2 className={`font-serif italic text-2xl md:text-3xl tracking-[0.1em] text-center mb-4 ${chapter.isDarkElement ? 'text-stone-300 drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]' : 'text-stone-100'}`}>
+                            <h2 className={`font-serif italic text-2xl md:text-3xl tracking-[0.1em] text-center mb-4 text-stone-100 ${chapter.isDarkElement ? 'drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]' : ''}`}>
                                 {chapter.title}
                             </h2>
                             <p className="text-stone-600 text-[10px] font-serif mb-8 opacity-60 italic">{chapter.description}</p>
@@ -215,17 +215,10 @@ const ArchivePage = () => {
                             {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
                                 Object.keys(talismanNames).filter(k => k.endsWith(animal) && elementGans[chapter.id].includes(k[0]))
                             ).map((key) => {
-                                // 카드 내부 컬러 결정
-                                let cardFontColor = getGanColor(key[0]).color;
-                                let cardBgColor = 'bg-stone-900/40';
-                                let cardBorderColor = 'border-orange-950/20';
-
-                                // 수(水)기운 고증: 흑색(黑) + 은은한 은빛 테두리
-                                if (chapter.isDarkElement) {
-                                    cardFontColor = 'text-[#050505]'; // 진한 먹색
-                                    cardBgColor = 'bg-stone-800/30';
-                                    cardBorderColor = 'border-stone-400/20';
-                                }
+                                // 카드 내부 컬러 결정: 챕터의 대표 컬러를 상속받아 통일성 강화
+                                const cardFontColor = chapter.isDarkElement ? 'text-slate-400' : chapter.color;
+                                const cardBgColor = chapter.isDarkElement ? 'bg-stone-800/30' : 'bg-stone-900/40';
+                                const cardBorderColor = chapter.isDarkElement ? 'border-stone-400/20' : 'border-orange-950/20';
 
                                 return (
                                     <div
@@ -240,19 +233,19 @@ const ArchivePage = () => {
 
                                         {/* 수기운 특별 효과: 은은한 은빛 광채 */}
                                         {chapter.isDarkElement && (
-                                            <div className="absolute inset-0 bg-gradient-to-br from-stone-400/5 to-transparent z-0 opacity-50"></div>
+                                            <div className="absolute inset-0 bg-gradient-to-br from-slate-400/5 to-transparent z-0 opacity-50"></div>
                                         )}
 
                                         <div className="relative z-10 flex flex-col items-center justify-center gap-1.5">
                                             <div className="flex flex-col items-center leading-[1.1] select-none scale-90">
-                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]' : 'text-[24px]'} transition-all duration-700`}>
+                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : 'text-[24px]'} transition-all duration-700`}>
                                                     {ganHanjaMap[key[0]]}
                                                 </span>
-                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.3)]' : 'text-[24px]'} transition-all duration-700`}>
+                                                <span className={`font-serif font-black ${cardFontColor} ${chapter.isDarkElement ? 'text-[30px] drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : 'text-[24px]'} transition-all duration-700`}>
                                                     {jiHanjaMap[key[1]]}
                                                 </span>
                                             </div>
-                                            <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} ${chapter.isDarkElement ? 'text-[10px] opacity-100 drop-shadow-[0_0_1px_rgba(255,255,255,0.2)]' : 'text-[7px] opacity-70'}`}>
+                                            <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} ${chapter.isDarkElement ? 'text-[10px] opacity-100' : 'text-[7px] opacity-70'}`}>
                                                 {key}
                                             </span>
                                         </div>
@@ -271,7 +264,7 @@ const ArchivePage = () => {
                     "나열된 만상(萬象) 중,"
                 </p>
                 <p className="text-amber-700/60 text-base md:text-xl tracking-[0.1em] font-serif italic leading-relaxed break-keep">
-                    당신을 기다리는 단 하나의<br className="md:hidden" /> 인연은 무엇입니까.
+                    당신을 기다리는 단 하나의<br className="md:hidden" /> 인연은 무엇입니까
                 </p>
                 <div className="w-12 h-px bg-amber-900/40 mx-auto mt-12"></div>
             </div>
