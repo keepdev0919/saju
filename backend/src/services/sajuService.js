@@ -117,65 +117,93 @@ function parseSingleGan(gan) {
 }
 
 /**
- * 오행(五行) 분포 계산
- * @param {Object} eightChar - 사주팔자 객체
- * @param {string} hourGanZhi - 시주 간지
- * @returns {Object} { 목: 수치, 화: 수치, ... }
+ * 오행(五行) 분포 계산 (고도화 버전 2.0)
+ * 1. 천간 가중치: 1.2
+ * 2. 지장간(地藏干) 분할 가중치: 1.0
+ * 3. 계절 가중치 (득시): 월지에 따른 오행별 강화 (2.0~3.0배)
  */
 function calculateWuXing(eightChar, hourGanZhi) {
   const wuxing = { 목: 0, 화: 0, 토: 0, 금: 0, 수: 0 };
 
-  // 오행 매핑 (천간)
   const ganWuxingMap = {
-    '甲': '목', '乙': '목',
-    '丙': '화', '丁': '화',
-    '戊': '토', '己': '토',
-    '庚': '금', '辛': '금',
-    '壬': '수', '癸': '수'
+    '甲': '목', '乙': '목', '丙': '화', '丁': '화', '戊': '토',
+    '己': '토', '庚': '금', '辛': '금', '壬': '수', '癸': '수'
   };
 
-  // 오행 매핑 (지지)
-  const jiWuxingMap = {
-    '子': '수', '丑': '토', '寅': '목', '卯': '목', '辰': '토', '巳': '화',
-    '午': '화', '未': '토', '申': '금', '酉': '금', '戌': '토', '亥': '수'
+  // 지장간 정밀 분할 매핑 (초기/중기/정기 비율 반영)
+  const jiHiddenGanMap = {
+    '子': { '壬': 0.3, '癸': 0.7 },
+    '丑': { '癸': 0.2, '辛': 0.1, '己': 0.7 },
+    '寅': { '戊': 0.2, '丙': 0.1, '甲': 0.7 },
+    '卯': { '甲': 0.3, '乙': 0.7 },
+    '辰': { '乙': 0.2, '癸': 0.1, '戊': 0.7 },
+    '巳': { '戊': 0.2, '庚': 0.1, '丙': 0.7 },
+    '午': { '丙': 0.3, '己': 0.2, '丁': 0.5 },
+    '未': { '丁': 0.3, '乙': 0.1, '己': 0.6 },
+    '申': { '戊': 0.2, '壬': 0.1, '庚': 0.7 },
+    '酉': { '庚': 0.3, '辛': 0.7 },
+    '戌': { '辛': 0.3, '丁': 0.1, '戊': 0.6 },
+    '亥': { '戊': 0.2, '甲': 0.1, '壬': 0.7 }
   };
 
-  // 년주, 월주, 일주의 간지에서 오행 추출
-  const yearGZ = eightChar.getYear();
   const monthGZ = eightChar.getMonth();
-  const dayGZ = eightChar.getDay();
+  const monthJi = monthGZ[1]; // 월지 (계절의 기준)
 
-  // 천간 오행 추출 (가중치 2)
-  [yearGZ[0], monthGZ[0], dayGZ[0]].forEach(gan => {
+  // 계절 가중치 테이블 (월지 기준)
+  const seasonalWeightMap = {
+    '寅': { 목: 3.0, 화: 2.0 }, // 초봄
+    '卯': { 목: 3.0, 화: 2.0 }, // 한봄
+    '辰': { 목: 2.0, 토: 2.0 }, // 늦봄
+    '巳': { 화: 3.0, 토: 2.0 }, // 초여름
+    '午': { 화: 3.0, 토: 2.0 }, // 한여름
+    '未': { 화: 2.0, 토: 3.0 }, // 늦여름
+    '申': { 금: 3.0, 수: 2.0 }, // 초가을
+    '酉': { 금: 3.0, 수: 2.0 }, // 한가을
+    '戌': { 금: 2.0, 토: 2.0 }, // 늦가을
+    '亥': { 수: 3.0, 목: 2.0 }, // 초겨울
+    '子': { 수: 3.0, 목: 2.0 }, // 한겨울
+    '丑': { 수: 2.0, 토: 2.0 }  // 늦겨울
+  };
+
+  const currentSeasonWeights = seasonalWeightMap[monthJi] || {};
+
+  // 1. 천간 가중치 계산 (천간 점수 * 1.2)
+  const gans = [eightChar.getYear()[0], monthGZ[0], eightChar.getDay()[0]];
+  if (hourGanZhi) gans.push(hourGanZhi[0]);
+
+  gans.forEach(gan => {
     const element = ganWuxingMap[gan];
-    if (element) wuxing[element] += 2;
+    if (element) wuxing[element] += 1.2;
   });
 
-  // 지지 오행 추출 (가중치 1)
-  [yearGZ[1], monthGZ[1], dayGZ[1]].forEach(ji => {
-    const element = jiWuxingMap[ji];
-    if (element) wuxing[element] += 1;
+  // 2. 지장간 가중치 계산 (지장간 분할 점수 * 1.0)
+  const jis = [eightChar.getYear()[1], monthJi, eightChar.getDay()[1]];
+  if (hourGanZhi) jis.push(hourGanZhi[1]);
+
+  jis.forEach(ji => {
+    const hiddenGans = jiHiddenGanMap[ji];
+    if (hiddenGans) {
+      Object.entries(hiddenGans).forEach(([gan, ratio]) => {
+        const element = ganWuxingMap[gan];
+        if (element) wuxing[element] += (1.0 * ratio);
+      });
+    }
   });
 
-  // 시주가 있으면 추가
-  if (hourGanZhi) {
-    const hourGan = hourGanZhi[0];
-    const hourJi = hourGanZhi[1];
-    if (ganWuxingMap[hourGan]) wuxing[ganWuxingMap[hourGan]] += 2;
-    if (jiWuxingMap[hourJi]) wuxing[jiWuxingMap[hourJi]] += 1;
-  }
+  // 3. 계절 가중치 적용 및 최종 합산
+  Object.keys(wuxing).forEach(element => {
+    const sWeight = currentSeasonWeights[element] || 1.0;
+    wuxing[element] *= sWeight;
+  });
 
-  // 백분율로 변환
+  // 4. 백분율로 정규화
   const total = Object.values(wuxing).reduce((sum, val) => sum + val, 0);
   if (total > 0) {
     Object.keys(wuxing).forEach(key => {
       wuxing[key] = Math.round((wuxing[key] / total) * 100);
     });
   } else {
-    // total이 0인 경우 균등 분배
-    Object.keys(wuxing).forEach(key => {
-      wuxing[key] = 20;
-    });
+    Object.keys(wuxing).forEach(key => wuxing[key] = 20);
   }
 
   return wuxing;
