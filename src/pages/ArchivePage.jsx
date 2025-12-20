@@ -198,24 +198,34 @@ const ArchivePage = () => {
             {/* 장식적 배경 - 현색(Deep Charcoal) 텍스처 */}
             <div className="fixed inset-0 bg-hanji-refined opacity-[0.03] pointer-events-none z-0"></div>
 
-            {/* 고정 헤더 영역 (현색 배경과 조화) */}
-            <div className="sticky top-0 px-6 pt-14 pb-8 flex flex-col items-center bg-[#111113]/95 backdrop-blur-md relative z-40 border-b border-amber-900/5 shadow-2xl">
-                {/* 상단 내비게이션 바 스타일: 뒤로가기 버튼을 구석으로 배치 */}
+            {/* 상단 내비게이션 바 (뒤로가기 기능 전용) */}
+            <div className="sticky top-0 w-full z-50 flex items-center px-4 py-6 pointer-events-none">
                 <button
                     onClick={() => navigate('/')}
-                    className="absolute left-4 top-7 p-2 text-stone-600/50 hover:text-amber-600 transition-all z-50 group"
+                    className="p-2 text-stone-600/50 hover:text-amber-600 transition-all pointer-events-auto group"
                 >
                     <ChevronLeft size={24} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
+            </div>
 
-                <div className="relative flex flex-col items-center">
-                    <h1 className="text-amber-600/70 font-serif italic text-2xl md:text-3xl tracking-[0.2em] mb-3">
+            {/* [전략 1] 몰입형 히어로 게이트 (완전한 시선 분리: 100vh) */}
+            <div className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center -mt-20 overflow-hidden">
+                <div className="animate-fade-in-up w-full max-w-[90vw] mx-auto">
+                    <span className="text-amber-700/50 text-[max(11px,3vw)] sm:text-[13px] tracking-[0.5em] sm:tracking-[0.8em] font-serif uppercase mb-6 block transition-all duration-1000">Celestial Records</span>
+                    <h1 className="text-amber-600/70 font-serif italic text-[7.5vw] sm:text-4xl md:text-5xl lg:text-6xl tracking-[0.15em] mb-8 whitespace-nowrap">
                         천상의 기록 보관소
                     </h1>
-                    <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mb-4"></div>
-                    <p className="text-stone-500 text-[10px] md:text-xs tracking-[0.15em] font-serif leading-relaxed text-center break-keep max-w-[85%] opacity-70">
-                        천기(天機)의 흐름 속에 나열된 <span className="text-amber-800/60 font-bold border-b border-amber-900/10 pb-0.5">60甲子 수호신</span>들을 관조하십시오.
+                    <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mb-8"></div>
+                    <p className="text-stone-400/80 text-[max(13px,3.5vw)] sm:text-sm md:text-base tracking-[0.15em] font-serif leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
+                        천기(天機)의 흐름 속에 나열된<br className="sm:hidden" />
+                        <span className="text-amber-800/60 font-bold">60甲子 수호신</span>들을 관조하십시오.
                     </p>
+                </div>
+
+                {/* 하단 스크롤 안내 (정적이면서 은은한 디자인) */}
+                <div className="absolute bottom-12 flex flex-col items-center gap-5 opacity-40">
+                    <span className="text-[max(9px,2.5vw)] sm:text-[11px] tracking-[0.4em] text-amber-600 uppercase font-serif">Scroll to enter</span>
+                    <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
                 </div>
             </div>
 
@@ -224,7 +234,7 @@ const ArchivePage = () => {
                 {CHAPTERS.map((chapter, chapterIdx) => (
                     <section key={chapter.id} className={`relative ${chapterIdx === CHAPTERS.length - 1 ? 'mb-12' : 'mb-32'} px-6 pt-16`}>
                         {/* 챕터 가이드 타이틀 */}
-                        <div className="flex flex-col items-center mb-16 animate-fade-in-up">
+                        <div className="flex flex-col items-center mb-16 px-4">
                             <span className={`${chapter.isDarkElement ? 'text-slate-400' : chapter.color} text-[10px] tracking-[0.6em] uppercase font-bold mb-3 opacity-60`}>
                                 {chapter.subtitle}
                             </span>
