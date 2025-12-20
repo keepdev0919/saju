@@ -180,12 +180,12 @@ const ArchivePage = () => {
                 onTouchEnd={handleTouchEnd}
             >
                 <div className="relative w-full max-w-[480px] flex flex-col items-center animate-modal-entrance pointer-events-none">
-                    <div className="w-full flex flex-col items-center mb-10 px-6 text-center">
-                        <h3 className="text-amber-500 font-serif text-lg tracking-widest mb-2">
+                    <div className="w-full flex flex-col items-center mb-6 px-6 text-center">
+                        <h3 className="text-amber-500 font-serif text-lg tracking-widest">
                             열람용 사본 (閱覽用 寫本)
                         </h3>
-                        <p className="text-stone-500 text-[10px] tracking-tight leading-relaxed opacity-60">
-                            화면 어디든 터치하거나 아래로 밀어서 닫으십시오.
+                        <p className="text-stone-600 text-[10px] tracking-tight mt-2 leading-relaxed opacity-90">
+                            인연 확인 시 중앙 인장이 해제되며, 우측 하단에 천명록의 공식 낙인이 깃듭니다.
                         </p>
                     </div>
 
@@ -204,7 +204,10 @@ const ArchivePage = () => {
                                 isArchiveMode={true}
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                                <div className="sacred-seal-large opacity-20 scale-75 border-amber-900/40 text-amber-900/40">閱覽用</div>
+                                <div className="sacred-seal-large flex flex-col items-center justify-center gap-2">
+                                    <span className="text-6xl font-bold tracking-tighter leading-none select-none">天命錄</span>
+                                    <span className="text-[10px] tracking-[0.3em] opacity-80 uppercase font-sans">Sacred Archive</span>
+                                </div>
                             </div>
                         </div>
                     </div>
