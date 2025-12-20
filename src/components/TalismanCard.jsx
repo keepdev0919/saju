@@ -198,6 +198,9 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
         keyword: '천명 수호'
     } : (descriptions[type] || descriptions.water);
 
+    // 카드 제목 스타일 공통화
+    const titleTextClass = 'text-3xl font-bold text-[#f5efe0] tracking-[0.15em] drop-shadow-2xl mb-1';
+
     // 부적 저장하기 (html2canvas)
     const handleDownload = async () => {
         if (!isPurchased) {
@@ -249,7 +252,7 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
 
                     {/* 텍스트 정보 (상단 중앙) */}
                     <div className="absolute top-10 left-0 w-full text-center z-10 flex flex-col items-center pointer-events-none">
-                        <h3 className="text-3xl font-bold text-[#f5efe0] tracking-[0.15em] drop-shadow-2xl mb-1"
+                        <h3 className={titleTextClass}
                             style={{
                                 fontFamily: '"Nanum Myeongjo", serif',
                                 textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.6)'
@@ -269,7 +272,7 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                     {/* 설명 텍스트 (하단) - A/B 테스트용 다양한 가리기 효과 */}
                     <div className="absolute bottom-8 left-6 right-6 text-center z-20">
                         <div className="relative">
-                            <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                            <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep whitespace-pre-wrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
                                 {info.desc}
                             </p>
 
@@ -390,7 +393,7 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                             {/* 3. 텍스트 정보 (상단 중앙) - Premium Typography Upgrade */}
                             <div className="absolute top-10 left-0 w-full text-center z-10 flex flex-col items-center pointer-events-none">
                                 {/* Main Title - Nanum Myeongjo, Larger, Tighter Tracking */}
-                                <h3 className="text-3xl font-bold text-[#f5efe0] tracking-[0.15em] drop-shadow-2xl mb-1"
+                                <h3 className={titleTextClass}
                                     style={{
                                         fontFamily: '"Nanum Myeongjo", serif',
                                         textShadow: '0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.6)'
@@ -443,7 +446,7 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
 
                             {/* 5. 설명 텍스트 */}
                             <div className="absolute bottom-8 left-6 right-6 text-center z-20">
-                                <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                                <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep whitespace-pre-wrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
                                     {info.desc}
                                 </p>
                             </div>

@@ -248,6 +248,44 @@ const ResultPage = () => {
     } catch (e) { setPdfError(e.message); } finally { setPdfLoading(false); }
   };
 
+  const handleBasicPayment = async () => {
+    if (!userInfo?.id) return;
+    setLoading(true);
+    try {
+      if (typeof window.IMP === 'undefined') throw new Error('결제 모듈 로드 실패');
+      const amount = parseInt(import.meta.env.VITE_PAYMENT_AMOUNT_BASIC || '100', 10);
+      const { merchantUid } = await createPayment({ userId: userInfo.id, amount, productType: 'basic' });
+
+      window.IMP.init(import.meta.env.VITE_PORTONE_IMP_KEY || 'imp12345678');
+      window.IMP.request_pay({
+        pg: 'html5_inicis', pay_method: 'card', merchant_uid: merchantUid,
+        name: '2026 프리미엄 사주 상세 리포트', amount, buyer_name: userInfo.name, buyer_tel: userInfo.phone,
+        m_redirect_url: `${window.location.origin}/payment/callback`
+      }, async (rsp) => {
+        if (rsp.success) await processBasicPaymentSuccess(rsp.imp_uid, merchantUid);
+        else { setError(rsp.error_msg); setLoading(false); }
+      });
+    } catch (e) { setError(e.message); setLoading(false); }
+  };
+
+  const processBasicPaymentSuccess = async (impUid, merchantUid) => {
+    try {
+      const verify = await verifyPayment({ imp_uid: impUid, merchant_uid: merchantUid });
+      if (!verify.success) throw new Error(verify.error);
+
+      // 결제 성공 시 AI 사주 계산 실행 (백엔드의 상세 계산 로직 호출)
+      const sajuResponse = await calculateSaju({
+        accessToken: token,
+        birthDate: userInfo.birthDate,
+        birthTime: userInfo.birthTime,
+        calendarType: userInfo.calendarType,
+        isLeap: userInfo.isLeap
+      });
+
+      setSajuResult(sajuResponse.result);
+    } catch (e) { setError(e.message); } finally { setLoading(false); }
+  };
+
   const handlePdfDownload = async () => {
     setPdfLoading(true);
     try {
@@ -601,72 +639,87 @@ const ResultPage = () => {
               {/* 종이 질감 오버레이 */}
               <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
 
-              {activeTab === 'overall' && (
-                <>
-                  <h4 className="text-amber-600 font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b border-amber-900/10 pb-2">
-                    총평 분석
-                  </h4>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] mb-6 whitespace-pre-line text-justify">
-                    {sajuResult.overallFortune || sajuResult.detailedData?.overall?.summary}
-                  </p>
-                  {/* Quick Stats: MBTI Style - 성향 분석 */}
-                  <div className="space-y-4 pt-6 border-t border-amber-900/20">
-                    <h5 className="text-sm font-bold text-stone-500 font-serif">성향 분석 (性向分析)</h5>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-xs text-stone-400 font-serif">
-                        <span>이성적 (理性的)</span>
-                        <span>감성적 (感性的)</span>
-                      </div>
-                      <div className="h-2 w-full bg-[#151517] rounded-full overflow-hidden border border-amber-900/30">
-                        <div className="h-full bg-amber-700/80 w-[60%]" />
+              <div className={`${!sajuResult.isPaid ? 'blur-[8px] select-none pointer-events-none opacity-50' : ''}`}>
+                {activeTab === 'overall' && (
+                  <>
+                    <h4 className="text-amber-600 font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b border-amber-900/10 pb-2">
+                      총평 분석
+                    </h4>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] mb-6 whitespace-pre-line text-justify">
+                      {sajuResult.overallFortune || sajuResult.detailedData?.overall?.summary}
+                    </p>
+                    {/* Quick Stats: MBTI Style - 성향 분석 */}
+                    <div className="space-y-4 pt-6 border-t border-amber-900/20">
+                      <h5 className="text-sm font-bold text-stone-500 font-serif">성향 분석 (性向分析)</h5>
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-xs text-stone-400 font-serif">
+                          <span>이성적 (理性的)</span>
+                          <span>감성적 (감격的)</span>
+                        </div>
+                        <div className="h-2 w-full bg-[#151517] rounded-full overflow-hidden border border-amber-900/30">
+                          <div className="h-full bg-amber-700/80 w-[60%]" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </>
-              )}
+                  </>
+                )}
 
-              {activeTab === 'money' && (
-                <>
-                  <h4 className="text-emerald-700 font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b border-emerald-900/20 pb-2">
-                    재물운 상세
-                  </h4>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] mb-6 text-justify">
-                    {sajuResult.wealthFortune || sajuResult.detailedData?.wealth?.description}
-                  </p>
-                  <div className="bg-[#151517] p-4 rounded border border-emerald-900/20">
-                    <h5 className="text-emerald-600/80 text-sm font-bold mb-1 font-serif">💰 투자 포인트</h5>
-                    <p className="text-xs text-stone-400 font-serif">{sajuResult.detailedData?.wealth?.investment || '안정적인 자산 운용이 필요한 시기입니다.'}</p>
-                  </div>
-                </>
-              )}
+                {activeTab === 'money' && (
+                  <>
+                    <h4 className="text-emerald-700 font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b border-emerald-900/20 pb-2">
+                      재물운 상세
+                    </h4>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] mb-6 text-justify">
+                      {sajuResult.wealthFortune || sajuResult.detailedData?.wealth?.description}
+                    </p>
+                    <div className="bg-[#151517] p-4 rounded border border-emerald-900/20">
+                      <h5 className="text-emerald-600/80 text-sm font-bold mb-1 font-serif">💰 투자 포인트</h5>
+                      <p className="text-xs text-stone-400 font-serif">{sajuResult.detailedData?.wealth?.investment || '안정적인 자산 운용이 필요한 시기입니다.'}</p>
+                    </div>
+                  </>
+                )}
 
-              {activeTab === 'love' && (
-                <>
-                  <h4 className="text-rose-700 font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b border-rose-900/20 pb-2">
-                    애정운 상세
-                  </h4>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] mb-6 text-justify">
-                    {sajuResult.loveFortune || sajuResult.detailedData?.marriage?.description}
-                  </p>
-                  <div className="bg-[#151517] p-4 rounded border border-rose-900/20">
-                    <h5 className="text-rose-600/80 text-sm font-bold mb-1 font-serif">❤️ 추천 파트너</h5>
-                    <p className="text-xs text-stone-400 font-serif">{sajuResult.detailedData?.marriage?.partnerType || '자신과 비슷한 가치관을 가진 사람이 좋습니다.'}</p>
-                  </div>
-                </>
-              )}
+                {activeTab === 'love' && (
+                  <>
+                    <h4 className="text-rose-700 font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b border-rose-900/20 pb-2">
+                      애정운 상세
+                    </h4>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] mb-6 text-justify">
+                      {sajuResult.loveFortune || sajuResult.detailedData?.marriage?.description}
+                    </p>
+                    <div className="bg-[#151517] p-4 rounded border border-rose-900/20">
+                      <h5 className="text-rose-600/80 text-sm font-bold mb-1 font-serif">❤️ 추천 파트너</h5>
+                      <p className="text-xs text-stone-400 font-serif">{sajuResult.detailedData?.marriage?.partnerType || '자신과 비슷한 가치관을 가진 사람이 좋습니다.'}</p>
+                    </div>
+                  </>
+                )}
 
-              {['career', 'health'].includes(activeTab) && (
-                <>
-                  <h4 className={`font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b pb-2 ${activeTab === 'career' ? 'text-blue-700 border-blue-900/20' : 'text-amber-700 border-amber-900/20'}`}>
-                    {activeTab === 'career' ? '직업운 상세' : '건강운 상세'}
-                  </h4>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] text-justify">
-                    {activeTab === 'career'
-                      ? (sajuResult.careerFortune || sajuResult.detailedData?.business?.advice)
-                      : (sajuResult.healthFortune || sajuResult.detailedData?.health?.description)
-                    }
+                {['career', 'health'].includes(activeTab) && (
+                  <>
+                    <h4 className={`font-bold text-lg mb-4 flex items-center gap-2 font-serif border-b pb-2 ${activeTab === 'career' ? 'text-blue-700 border-blue-900/20' : 'text-amber-700 border-amber-900/20'}`}>
+                      {activeTab === 'career' ? '직업운 상세' : '건강운 상세'}
+                    </h4>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] text-justify">
+                      {activeTab === 'career'
+                        ? (sajuResult.careerFortune || sajuResult.detailedData?.business?.advice)
+                        : (sajuResult.healthFortune || sajuResult.detailedData?.health?.description)
+                      }
+                    </p>
+                  </>
+                )}
+              </div>
+
+              {!sajuResult.isPaid && (
+                <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center">
+                  <div className="w-16 h-16 rounded-full bg-amber-900/20 border border-amber-500/30 flex items-center justify-center mb-4 backdrop-blur-sm">
+                    <Lock size={24} className="text-amber-500 shadow-glow" />
+                  </div>
+                  <h5 className="text-amber-500 font-serif font-bold text-lg mb-2">천기(天機) 봉인됨</h5>
+                  <p className="text-stone-400 text-xs font-serif leading-relaxed px-4">
+                    당신의 상세한 운명 기록은<br />
+                    인연을 맺은 후에만 열람할 수 있습니다.
                   </p>
-                </>
+                </div>
               )}
             </div>
 
@@ -700,35 +753,45 @@ const ResultPage = () => {
           {/* Floating Action Button (PDF) - 전통 목판 스타일 */}
           <div className="fixed bottom-6 left-0 w-full flex justify-center z-50 pointer-events-none">
             <div className="w-full max-w-[480px] px-6 pointer-events-auto">
-              <div className="flex gap-2">
+              {sajuResult.isPaid ? (
+                <div className="flex gap-2">
+                  <button
+                    onClick={handlePdfPreview}
+                    className="flex-1 bg-[#2a2a2c] hover:bg-[#323235] text-stone-300 py-4 rounded font-bold shadow-lg border border-amber-900/30 flex items-center justify-center gap-2 transition-transform active:scale-95 font-serif"
+                  >
+                    <Eye size={18} /> 미리보기
+                  </button>
+                  <button
+                    onClick={handlePdfPayment}
+                    className="flex-[2] bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-4 rounded font-bold shadow-lg border border-amber-700/50 flex items-center justify-center gap-2 transition-transform active:scale-95 font-serif relative overflow-hidden group"
+                  >
+                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
+                    <Download size={18} />
+                    <span>소장하기</span>
+                    <span className="text-[10px] bg-amber-900/80 px-1.5 py-0.5 rounded text-amber-200/70 border border-amber-500/20 ml-1">Premium</span>
+                  </button>
+                  {/* [Tech Demo] Talisman Collection / Test Button */}
+                  <button
+                    onClick={() => setShowTalismanSelector(true)}
+                    className="w-14 bg-[#1a1a1c] hover:bg-[#252528] text-amber-500/70 hover:text-amber-400 rounded font-bold border border-amber-900/30 flex items-center justify-center transition-transform active:scale-95 shadow-lg group relative"
+                    title="수호부적 도감 (테스트)"
+                  >
+                    <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
+                    <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                    </span>
+                  </button>
+                </div>
+              ) : (
                 <button
-                  onClick={handlePdfPreview}
-                  className="flex-1 bg-[#2a2a2c] hover:bg-[#323235] text-stone-300 py-4 rounded font-bold shadow-lg border border-amber-900/30 flex items-center justify-center gap-2 transition-transform active:scale-95 font-serif"
+                  onClick={handleBasicPayment}
+                  className="w-full bg-amber-800/80 hover:bg-amber-700 text-amber-100 py-5 rounded font-bold shadow-lg border border-amber-600/30 flex items-center justify-center gap-3 transition-all animate-pulse-subtle font-serif text-lg tracking-[0.2em]"
                 >
-                  <Eye size={18} /> 미리보기
+                  <Lock size={20} className="text-amber-400" />
+                  <span>천기의 기록 열람하기</span>
                 </button>
-                <button
-                  onClick={handlePdfPayment}
-                  className="flex-[2] bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-4 rounded font-bold shadow-lg border border-amber-700/50 flex items-center justify-center gap-2 transition-transform active:scale-95 font-serif relative overflow-hidden group"
-                >
-                  <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                  <Download size={18} />
-                  <span>소장하기</span>
-                  <span className="text-[10px] bg-amber-900/80 px-1.5 py-0.5 rounded text-amber-200/70 border border-amber-500/20 ml-1">Premium</span>
-                </button>
-                {/* [Tech Demo] Talisman Collection / Test Button */}
-                <button
-                  onClick={() => setShowTalismanSelector(true)}
-                  className="w-14 bg-[#1a1a1c] hover:bg-[#252528] text-amber-500/70 hover:text-amber-400 rounded font-bold border border-amber-900/30 flex items-center justify-center transition-transform active:scale-95 shadow-lg group relative"
-                  title="수호부적 도감 (테스트)"
-                >
-                  <Sparkles size={20} className="group-hover:rotate-12 transition-transform" />
-                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
-                  </span>
-                </button>
-              </div>
+              )}
             </div>
           </div>
 
@@ -847,25 +910,38 @@ const ResultPage = () => {
                 </button>
               )}
 
-              <div className="perspective-1000">
-                <TalismanCard
-                  ref={talismanCardRef}
-                  type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
-                  userName={userInfo?.name || '사용자'}
-                  reason={sajuResult.talisman?.reason}
-                  activeTab={talismanViewMode}
-                  onFlip={(flipped) => setIsTalismanFlipped(flipped)}
-                  isPurchased={isTalismanPurchased}
-                  setIsPurchased={setIsTalismanPurchased}
-                  // Use selected test talisman data if available, otherwise fallback to result or default
-                  talismanData={
-                    testTalismanKey
-                      ? talismanNames[testTalismanKey]
-                      : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
-                        ? talismanNames[sajuResult.talisman.name]
-                        : talismanNames['갑자'])
-                  }
-                />
+              <div className="perspective-1000 relative">
+                <div className={`${!sajuResult.isPaid ? 'blur-[12px] opacity-40 grayscale pointer-events-none' : ''}`}>
+                  <TalismanCard
+                    ref={talismanCardRef}
+                    type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
+                    userName={userInfo?.name || '사용자'}
+                    reason={sajuResult.talisman?.reason}
+                    activeTab={talismanViewMode}
+                    onFlip={(flipped) => setIsTalismanFlipped(flipped)}
+                    isPurchased={isTalismanPurchased}
+                    setIsPurchased={setIsTalismanPurchased}
+                    // Use selected test talisman data if available, otherwise fallback to result or default
+                    talismanData={
+                      testTalismanKey
+                        ? talismanNames[testTalismanKey]
+                        : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
+                          ? talismanNames[sajuResult.talisman.name]
+                          : talismanNames['갑자'])
+                    }
+                  />
+                </div>
+
+                {!sajuResult.isPaid && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                    <div className="p-8 rounded-full border-4 border-amber-600/30 text-amber-600/40 font-bold text-3xl tracking-[0.5em] font-serif rotate-12 bg-black/20 backdrop-blur-[2px]">
+                      未結 (미결)
+                    </div>
+                    <p className="text-amber-500/60 mt-6 font-serif text-sm tracking-widest animate-pulse">
+                      수호신령의 인연을 맺어주세요
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Right Arrow (Ghost Navigation) */}

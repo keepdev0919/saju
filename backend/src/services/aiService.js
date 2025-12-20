@@ -336,7 +336,7 @@ function parseAIResponse(aiResponse) {
  * @param {Object} wuxing - 오행 분포
  * @returns {Object} 점수 객체
  */
-function generateScoresFromWuxing(wuxing) {
+export function generateScoresFromWuxing(wuxing) {
   // 오행 균형도를 점수로 환산
   // 오행 균형도를 점수로 환산
   // 기존 로직: 100 - (Max - Min) -> 차이가 40만 나도 바로 60점(최하점)이 되는 문제 수정

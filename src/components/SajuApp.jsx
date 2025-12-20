@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { CreditCard, Download, ChevronRight, ChevronDown, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock, ChevronLeft } from 'lucide-react';
-import { createUser, createPayment, verifyPayment, calculateSaju, getSajuResult } from '../utils/api';
+import { createUser, createPayment, verifyPayment, calculateSaju, getFreeResult, getSajuResult } from '../utils/api';
 import { getGanColor, getJiAnimal, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
 import { talismanNames } from '../data/talismanData';
 import TalismanCard from './TalismanCard';
@@ -443,6 +443,70 @@ const SajuApp = () => {
       setTimeout(() => {
         setStep('payment');
       }, 5000);
+    }
+  };
+
+  const startFastAnalysis = async (providedToken = null) => {
+    setStep('analyzing');
+    setLoading(true);
+    setError(null);
+    setProgress(0);
+
+    try {
+      // 분석 시작 시간 기록
+      const startTime = Date.now();
+
+      // 프로그레스 바 애니메이션 (의도적인 지연 연출)
+      let currentProgress = 0;
+      const progressInterval = setInterval(() => {
+        currentProgress += Math.random() * 5;
+        if (currentProgress > 95) {
+          currentProgress = 95;
+          clearInterval(progressInterval);
+        }
+        setProgress(currentProgress);
+      }, 150);
+
+      // 전달받은 토큰이 있으면 그것을 사용, 없으면 상태값 사용 (업계 표준: 인자 우선)
+      const token = providedToken || userInfo.accessToken;
+
+      if (!token) {
+        throw new Error('인증 토큰이 없습니다. 다시 시도해주세요.');
+      }
+
+      // 무료 사용자 사주 결과 호출 (매우 빠름, 하지만 애니메이션을 위해 기다림)
+      const sajuResponse = await getFreeResult({
+        accessToken: token,
+        birthDate: userInfo.birthDate,
+        birthTime: userInfo.timeUnknown ? null : userInfo.birthTime,
+        calendarType: userInfo.calendarType,
+        isLeap: userInfo.isLeap
+      });
+
+      // 최소 3.5초는 애니메이션을 보여주도록 보장 (운명적 무게감 유지)
+      const elapsedTime = Date.now() - startTime;
+      const minAnalysisTime = 3500;
+      const remainingTime = Math.max(0, minAnalysisTime - elapsedTime);
+
+      setTimeout(() => {
+        clearInterval(progressInterval);
+        setProgress(100);
+        setSajuResult(sajuResponse.result);
+
+        setTimeout(() => {
+          navigate(`/result/${token}`);
+          setLoading(false);
+        }, 800);
+      }, remainingTime);
+
+    } catch (err) {
+      console.error('분석 시작 실패:', err);
+      setError(err.message || '분석 중 오류가 발생했습니다.');
+      setLoading(false);
+      setProgress(0);
+
+      // 실패 시 입력 페이지로 복귀
+      setTimeout(() => setStep('input'), 3000);
     }
   };
 
@@ -948,7 +1012,8 @@ const SajuApp = () => {
                     accessToken: response.accessToken
                   }));
 
-                  setStep('payment');
+                  // 업계 표준: 비동기 State에 의존하지 않고 응답받은 토큰을 직접 전달하여 레이스 컨디션 방지
+                  startFastAnalysis(response.accessToken);
                 } catch (err) {
                   setError(err.message || '정보 저장에 실패했습니다.');
                   console.error('사용자 생성 오류:', err);
@@ -1142,38 +1207,105 @@ const SajuApp = () => {
    * 천명록 브랜딩 적용: 신비롭고 묵직한 분석 연출
    */
   const renderAnalyzingPage = () => (
-    <div className="flex flex-col h-full bg-[#0f0f10] text-stone-200 items-center justify-center p-8 text-center relative overflow-hidden">
-      {/* 상단 금빛 조명 */}
-      <div className="absolute top-0 left-0 w-full h-[500px] bg-amber-900/10 blur-[120px] rounded-full z-0"></div>
+    <div className="flex flex-col h-full bg-ink-abyss text-stone-200 items-center justify-center p-8 text-center relative overflow-hidden">
+      {/* 1. Microscopic Grain Layer (Tactile Immersion) */}
+      <div className="absolute inset-0 bg-grain-premium z-0 pointer-events-none" />
 
-      {/* 한지 텍스처 */}
-      <div className="absolute inset-0 opacity-[0.03] pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper.png')]"></div>
+      {/* 2. Procedural Ink Bleeding (Fluid Atmosphere) */}
+      <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="ink-bleed-layer absolute top-0 left-0 w-full h-full" />
+      </div>
+
+      {/* 3. Refined Hanji Texture */}
+      <div className="absolute inset-0 bg-hanji-refined z-0 pointer-events-none" />
+
+      {/* 4. Golden Aura Projection */}
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-amber-900/10 blur-[150px] rounded-full z-0 pointer-events-none"></div>
 
       <div className="z-10 w-full flex flex-col items-center space-y-12">
-        {/* 고풍스러운 로딩 애니메이션 */}
-        <div className="relative w-32 h-32 flex items-center justify-center">
-          <div className="absolute inset-0 border border-orange-950/40 rounded-full"></div>
-          <div className="absolute inset-0 border-t-2 border-amber-500 rounded-full animate-spin"></div>
-          <div className="text-amber-500/50 animate-pulse">
-            <Sparkles size={32} strokeWidth={1} />
+        {/* 고풍스러운 로딩 애니메이션 (복원 버전: Celestial Resonance) */}
+        <div className="relative w-48 h-48 flex items-center justify-center">
+          {/* 천상의 공명 (Multiple Ripple Waves) */}
+          <div className="absolute inset-0 border border-amber-500/20 rounded-full animate-celestial-resonance"></div>
+          <div className="absolute inset-0 border border-amber-600/10 rounded-full animate-celestial-resonance [animation-delay:1s]"></div>
+          <div className="absolute inset-0 border border-amber-700/5 rounded-full animate-celestial-resonance [animation-delay:2s]"></div>
+
+          {/* 중앙 로딩 궤적 (Dual-orbit spin) */}
+          <div className="absolute inset-6 border border-orange-950/40 rounded-full"></div>
+          <div className="absolute inset-6 border-t-2 border-amber-500 rounded-full animate-spin"></div>
+          <div className="absolute inset-10 border border-amber-900/20 rounded-full animate-[spin_4s_linear_infinite_reverse]"></div>
+
+          {/* 중앙 아이콘 (Soul Breathing) */}
+          <div className="text-amber-500/60 animate-soul-breathing relative z-10">
+            <Sparkles size={40} strokeWidth={1} />
           </div>
+
+          {/* 천상의 입자 (Celestial Particles) - CSS 클래스 활용 */}
+          {[...Array(8)].map((_, i) => (
+            <div
+              key={i}
+              className="celestial-particle opacity-0 animate-[twinkle_3s_ease-in-out_infinite]"
+              style={{
+                top: `${15 + Math.random() * 70}%`,
+                left: `${15 + Math.random() * 70}%`,
+                animationDelay: `${i * 0.4}s`,
+                width: `${1 + Math.random() * 2}px`,
+                height: `${1 + Math.random() * 2}px`
+              }}
+            />
+          ))}
         </div>
 
         <div className="space-y-6">
-          <h2 className={`text-3xl font-bold leading-relaxed text-stone-100 ${titleFont}`}>
+          <h2 className={`text-3xl font-bold leading-relaxed text-stone-100 italic ${titleFont}`}>
             천기(天機)를<br />읽고 있습니다.
           </h2>
-          <p className="text-stone-500 text-sm font-light tracking-widest uppercase">
-            Consulting the celestial archive...
-          </p>
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-12 h-px bg-gradient-to-r from-transparent via-amber-800 to-transparent"></div>
+            <p className="text-amber-600/50 text-[9px] tracking-[0.5em] uppercase font-light">
+              Consulting the celestial archive
+            </p>
+          </div>
         </div>
 
-        {/* 프로그레스 바 (엠버 컬러 적용) */}
-        <div className="w-full max-w-[240px] space-y-4">
-          <div className="w-full bg-stone-900 rounded-full h-[2px] overflow-hidden">
-            <div className="bg-amber-600 h-full transition-all duration-300 shadow-[0_0_10px_rgba(217,119,6,0.5)]" style={{ width: `${progress}%` }}></div>
+        {/* 프로그레스 바 (Enhanced Amber Glow with Flare & Shimmer) */}
+        <div className="w-full max-w-[260px] space-y-4">
+          <div className="relative h-[3px] w-full bg-stone-950/80 rounded-full border border-white/5 shadow-inner overflow-hidden">
+            {/* Base Progress Bar */}
+            <div
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-900 via-amber-500 to-amber-300 h-full transition-all duration-700 ease-out shadow-[0_0_15px_rgba(217,119,6,0.4)]"
+              style={{ width: `${progress}%` }}
+            >
+              {/* Internal Shimmer Layer (에너지 흐름 효과) */}
+              <div className="absolute inset-0 shimmer opacity-40"></div>
+            </div>
+
+            {/* Glowing Head (Flare) - 차오르는 끝부분에서 빛이 개척하는 효과 */}
+            <div
+              className="absolute top-1/2 -translate-y-1/2 h-3 w-8 bg-amber-400/20 blur-md rounded-full transition-all duration-700 ease-out"
+              style={{ left: `calc(${progress}% - 20px)` }}
+            />
+            <div
+              className="absolute top-1/2 -translate-y-1/2 h-1.5 w-1.5 bg-amber-100 rounded-full shadow-[0_0_8px_2px_rgba(252,211,77,0.9)] transition-all duration-700 ease-out"
+              style={{ left: `calc(${progress}% - 1px)` }}
+            />
           </div>
-          <p className="text-[10px] text-amber-900 font-mono tracking-[0.2em]">{Math.floor(progress)}% ANALYZED</p>
+
+          <div className="flex justify-between items-end px-1">
+            <div className="flex flex-col items-start gap-1">
+              <span className="text-[7px] text-amber-900/60 tracking-[0.3em] font-mono leading-none">SYSTEM_SCANNING</span>
+              <span className="text-[10px] text-stone-500 font-serif italic tracking-wider animate-pulse min-w-[140px] text-left">
+                {progress < 25 ? "천상 기록 보관소 접속 중..." :
+                  progress < 50 ? "운명의 실타래를 탐색 중..." :
+                    progress < 80 ? "사주 원국과 시공간 조율 중..." :
+                      "천기의 흐름을 결과에 담는 중..."}
+              </span>
+            </div>
+            <div className="flex flex-col items-end gap-1">
+              <span className="text-[7px] text-amber-900/60 tracking-[0.3em] font-mono leading-none">MEM_RATIO</span>
+              <span className="text-xs text-amber-700 font-mono tracking-tighter font-bold">{Math.floor(progress)}%</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>

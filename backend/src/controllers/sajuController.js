@@ -4,7 +4,7 @@
  */
 import db from '../config/database.js';
 import { calculateSaju as callSajuAPI } from '../services/sajuService.js';
-import { interpretSajuWithAI } from '../services/aiService.js';
+import { interpretSajuWithAI, generateScoresFromWuxing } from '../services/aiService.js';
 
 /**
  * 사주 계산
@@ -124,6 +124,81 @@ export async function calculateSaju(req, res) {
 }
 
 /**
+ * 무료 사용자용 사주 결과 계산 (AI 해석 제외)
+ * 라이브러리(lunar-javascript)만 사용하여 즉시 결과를 반환하고 저장
+ */
+export async function calculateFreeResult(req, res) {
+  try {
+    const { accessToken, birthDate, birthTime, calendarType, isLeap } = req.body;
+
+    if (!accessToken || !birthDate) {
+      return res.status(400).json({
+        error: '접근 토큰과 생년월일이 필요합니다.'
+      });
+    }
+
+    // 사용자 정보 조회
+    const [users] = await db.execute(
+      `SELECT id, name, gender FROM users WHERE access_token = ? AND deleted_at IS NULL`,
+      [accessToken]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
+    }
+
+    const user = users[0];
+    const userId = user.id;
+
+    // 1단계: lunar-javascript로 사주 계산 (매우 빠름)
+    const sajuData = await callSajuAPI({
+      birthDate,
+      birthTime,
+      calendarType: calendarType || 'solar',
+      isLeap: !!isLeap,
+      gender: user.gender
+    });
+
+    // 오행 분석 데이터를 기반으로 기초 점수 생성
+    const scores = generateScoresFromWuxing(sajuData.wuxing);
+
+    // 기본 결과 저장 (AI 데이터는 비워둠)
+    const [resultData] = await db.execute(
+      `INSERT INTO saju_results
+       (user_id, saju_data, oheng_data, overall_score, wealth_score, love_score, career_score, health_score)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        JSON.stringify(sajuData),
+        JSON.stringify(sajuData.wuxing), // 서비스에서 계산된 오행
+        scores.overall,
+        scores.wealth,
+        scores.love,
+        scores.career,
+        scores.health
+      ]
+    );
+
+    res.json({
+      success: true,
+      result: {
+        sajuData,
+        oheng: sajuData.wuxing,
+        scores, // 계산된 기초 점수 포함
+        isPaid: false
+      },
+      message: '기초 사주 계산이 완료되었습니다.'
+    });
+  } catch (error) {
+    console.error('❌ 기초 사주 계산 오류:', error);
+    res.status(500).json({
+      error: '기초 사주 계산에 실패했습니다.',
+      message: error.message
+    });
+  }
+}
+
+/**
  * 사주 결과 조회
  * 접근 토큰으로 사주 결과를 조회
  */
@@ -161,6 +236,13 @@ export async function getSajuResult(req, res) {
 
     const result = results[0];
 
+    // 결제 여부 확인
+    const [payments] = await db.execute(
+      `SELECT id FROM payments WHERE user_id = ? AND product_type = 'basic' AND status = 'paid'`,
+      [userId]
+    );
+    const isPaid = payments.length > 0;
+
     /**
      * JSON 데이터 파싱 헬퍼 함수
      * 문자열이면 파싱하고, 객체면 그대로 반환, null이면 기본값 반환
@@ -191,6 +273,7 @@ export async function getSajuResult(req, res) {
       },
       result: {
         id: result.id,
+        isPaid, // 결제 여부 추가
         overallFortune: result.overall_fortune,
         wealthFortune: result.wealth_fortune,
         loveFortune: result.love_fortune,

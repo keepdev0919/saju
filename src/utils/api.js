@@ -136,6 +136,17 @@ export const calculateSaju = async (sajuData) => {
 };
 
 /**
+ * 무료 사용자 사주 결과 계산 (AI 제외 - 선노출용)
+ * 라이브러리 연산만 수행하므로 응답이 빠름
+ * @param {Object} sajuData - 사주 계산 데이터
+ * @returns {Promise} 기초 사주 계산 결과
+ */
+export const getFreeResult = async (sajuData) => {
+  const response = await apiClient.post('/saju/result-freeuser', sajuData);
+  return response.data;
+};
+
+/**
  * 사주 결과 조회
  * @param {string} token - 접근 토큰
  * @returns {Promise} 사주 결과
