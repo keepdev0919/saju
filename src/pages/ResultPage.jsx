@@ -640,50 +640,46 @@ const ResultPage = () => {
         <main className="snap-parent relative z-10 w-full">
 
           {/* Step 1: The Entrance - 천상의 서고 입문 */}
-          <section ref={entranceRef} className="snap-section px-6">
-            <div className="flex-1 flex flex-col items-center justify-center pt-20 pb-10">
+          <section ref={entranceRef} className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            <div className="flex-1 flex flex-col items-center justify-center pt-12 pb-10">
               {/* 중앙 컨텐츠 - Always visible, no reveal-item/animation blocking */}
-              <div className="text-center space-y-10 animate-fade-in">
+              <div className="text-center space-y-6 animate-fade-in">
                 {/* 사용자 이름 및 타이틀 */}
-                <div className="space-y-4">
-                  <h1
-                    className="text-5xl sm:text-6xl font-bold italic tracking-[0.1em]"
-                    style={{
-                      fontFamily: '"Song Myung", "Noto Serif KR", serif',
-                      color: '#f5f5f4', // stone-100
-                    }}
-                  >
-                    {userInfo?.name || '사용자'}
-                  </h1>
-                  {/* 오행 기운 표시 (5개 점) */}
-                  {(() => {
-                    const oheng = sajuResult?.oheng || {};
-                    const elements = ['목', '화', '토', '금', '수'];
-                    let maxVal = 0;
-                    let dominantKey = '토';
-                    elements.forEach(el => {
-                      if ((oheng[el] || 0) > maxVal) {
-                        maxVal = oheng[el];
-                        dominantKey = el;
-                      }
-                    });
+                <div className="flex flex-col items-center">
+                  {/* 상단 라벨 */}
+                  <div className="flex items-center gap-4 mb-12 opacity-80">
+                    <div className="w-10 h-px bg-gradient-to-r from-transparent to-amber-600/40" />
+                    <span className="text-[#e8dac0] text-sm sm:tracking-[0.5em] tracking-[0.2em] font-serif font-bold uppercase">천명록 (天命錄)</span>
+                    <div className="w-10 h-px bg-gradient-to-l from-transparent to-amber-600/40" />
+                  </div>
 
-                    return (
-                      <div className="flex items-center justify-center gap-2 mt-4">
-                        {elements.map(el => (
-                          <div
-                            key={el}
-                            className={`rounded-full transition-all ${el === dominantKey ? 'w-[7px] h-[7px]' : 'w-[5px] h-[5px] opacity-30'}`}
-                            style={{ backgroundColor: getElementColor(el) }}
-                          />
-                        ))}
+                  {/* 메인 이름 + 낙관 (Seal) */}
+                  <div className="relative mb-6">
+                    <h1
+                      className="text-6xl sm:text-7xl font-bold italic tracking-[0.15em]"
+                      style={{
+                        fontFamily: '"Song Myung", "Noto Serif KR", serif',
+                        color: '#f5f5f4', // stone-100
+                        textShadow: '0 0 40px rgba(232, 218, 192, 0.1)'
+                      }}
+                    >
+                      {userInfo?.name || '사용자'}
+                    </h1>
+
+                    {/* 천명(天命) 낙관 - 고서 전문가 스타일 */}
+                    <div className="absolute -top-2 -right-8 sm:-right-10 w-8 h-8 sm:w-9 sm:h-9 border-[1.5px] border-red-800/60 bg-red-800/5 flex items-center justify-center rotate-[-6deg] mix-blend-screen opacity-80 shadow-[inset_0_0_8px_rgba(153,27,27,0.2)]">
+                      <div className="text-[10px] sm:text-[11px] text-red-700/90 font-bold leading-[1.1] text-center p-1" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
+                        天<br />命
                       </div>
-                    );
-                  })()}
+                    </div>
+                  </div>
+
+                  {/* 수직 구분자 - 가로선 중첩 방지 */}
+                  <div className="w-px h-8 bg-gradient-to-b from-amber-600/40 to-transparent mx-auto mb-6" />
                 </div>
 
                 {/* 엄숙한 서사 문구 - 가독성을 위해 너비 조절 및 문구 정립 */}
-                <div className="pt-6 border-t border-amber-900/15 w-64 mx-auto">
+                <div className="w-64 mx-auto">
                   <p className="text-stone-400 text-sm font-serif italic tracking-[0.2em] leading-relaxed">
                     태어난 순간 새겨진 당신의 무늬,<br />
                     그 서사의 첫 문을 엽니다
@@ -692,7 +688,7 @@ const ResultPage = () => {
 
                 {/* 스크롤 안내 (천상기록보관소와 통일: SCROLL TO UNFOLD) */}
                 <div className="pt-10 flex flex-col items-center gap-4 animate-bounce-gentle opacity-70">
-                  <span className="text-[10px] text-amber-500 tracking-[0.4em] font-serif">펼쳐보기</span>
+                  <span className="text-[10px] text-amber-500 tracking-[0.4em] font-serif">열람하기</span>
                   <div className="w-px h-12 bg-gradient-to-b from-amber-500/80 to-transparent mx-auto" />
                 </div>
               </div>
@@ -1036,7 +1032,7 @@ const ResultPage = () => {
           {/* Step 4: The Sealed Archive - 제 3권: 천개의 비밀 */}
           <section className="snap-section px-6 h-auto pb-20" style={{ paddingTop: 'var(--safe-area-top)' }}>
             {/* Chapter 3 Heading */}
-            <div className="mb-10 z-10 relative reveal-item max-w-sm mx-auto">
+            <div className="pt-12 mb-10 z-10 relative reveal-item max-w-sm mx-auto">
               <div className="flex items-center justify-center gap-4 mb-3 border-b border-amber-900/20 pb-4">
                 <div className="w-4 h-px bg-amber-600/30" />
                 <h3 className="text-sm font-bold text-[#e8dac0] sm:tracking-[0.3em] tracking-[0.1em] font-serif uppercase whitespace-nowrap">
