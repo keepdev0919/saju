@@ -22,6 +22,9 @@ export async function createUser(req, res) {
   try {
     const { name, phone, birthDate, birthTime, gender, calendarType, isLeap } = req.body;
 
+    // 휴대폰 번호에서 숫자만 추출 (하이픈 제거 등)
+    const cleanPhone = phone ? String(phone).replace(/[^\d]/g, '') : phone;
+
     // 필수 필드 검증
     if (!name || !phone || !birthDate || !gender) {
       return res.status(400).json({
@@ -45,7 +48,7 @@ export async function createUser(req, res) {
          is_leap = VALUES(is_leap),
          access_token = VALUES(access_token),
          deleted_at = NULL`,
-      [name, phone, birthDate, birthTime || null, gender, calendarType || 'solar', isLeap ? 1 : 0, accessToken]
+      [name, cleanPhone, birthDate, birthTime || null, gender, calendarType || 'solar', isLeap ? 1 : 0, accessToken]
     );
 
     const userId = result.insertId || result.affectedRows;
@@ -79,12 +82,15 @@ export async function verifyUser(req, res) {
       });
     }
 
+    // 휴대폰 번호에서 숫자만 추출 (하이픈 제거 등)
+    const cleanPhone = String(phone).replace(/[^\d]/g, '');
+
     // 사용자 조회 (삭제된 사용자 제외)
     const [users] = await db.execute(
       `SELECT id, name, phone, birth_date, birth_time, gender, calendar_type, is_leap, access_token 
        FROM users 
        WHERE phone = ? AND birth_date = ? AND deleted_at IS NULL`,
-      [phone, birthDate]
+      [cleanPhone, birthDate]
     );
 
     if (users.length === 0) {

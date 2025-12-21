@@ -355,7 +355,13 @@ const ResultPage = () => {
     setAuthFieldErrors({ phone: null, birthDate: null });
 
     try {
-      const response = await verifyUser(authData);
+      // 휴대폰 번호 하이픈 제거 후 전송 (DB 저장 형식과 일치)
+      const sanitizedAuthData = {
+        ...authData,
+        phone: authData.phone.replace(/[^\d]/g, '')
+      };
+
+      const response = await verifyUser(sanitizedAuthData);
       if (response.user?.accessToken) {
         const res = await getSajuResult(response.user.accessToken);
         setSajuResult(res.result);
