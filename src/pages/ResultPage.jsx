@@ -653,43 +653,43 @@ const ResultPage = () => {
                 {/* 사용자 이름 및 타이틀 */}
                 <div className="flex flex-col items-center">
                   {/* 상단 라벨 */}
-                  <div className="flex items-center gap-4 mb-12 opacity-80">
+                  <div className="flex items-center gap-4 mb-10 opacity-80">
                     <div className="w-10 h-px bg-gradient-to-r from-transparent to-amber-600/40" />
-                    <span className="text-[#e8dac0] text-sm sm:tracking-[0.5em] tracking-[0.2em] font-serif font-bold uppercase">천명록 (天命錄)</span>
+                    <span className="text-[#e8dac0] text-lg sm:text-xl tracking-[0.5em] font-serif font-bold uppercase whitespace-nowrap">천명록 (天命錄)</span>
                     <div className="w-10 h-px bg-gradient-to-l from-transparent to-amber-600/40" />
                   </div>
 
                   {/* 메인 이름 + 낙관 (Seal) */}
                   <div className="relative mb-6">
                     <h1
-                      className="text-6xl sm:text-7xl font-bold italic tracking-[0.15em]"
+                      className="text-4xl sm:text-5xl font-bold italic tracking-[0.2em]"
                       style={{
                         fontFamily: '"Song Myung", "Noto Serif KR", serif',
                         color: '#f5f5f4', // stone-100
-                        textShadow: '0 0 40px rgba(232, 218, 192, 0.1)'
+                        textShadow: '0 0 30px rgba(232, 218, 192, 0.08)'
                       }}
                     >
                       {userInfo?.name || '사용자'}
                     </h1>
 
                     {/* 천명(天命) 낙관 - 고서 전문가 스타일 */}
-                    <div className="absolute -top-2 -right-8 sm:-right-10 w-8 h-8 sm:w-9 sm:h-9 border-[1.5px] border-red-800/60 bg-red-800/5 flex items-center justify-center rotate-[-6deg] mix-blend-screen opacity-80 shadow-[inset_0_0_8px_rgba(153,27,27,0.2)]">
-                      <div className="text-[10px] sm:text-[11px] text-red-700/90 font-bold leading-[1.1] text-center p-1" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
+                    <div className="absolute -top-3 -right-6 sm:-right-8 w-7 h-7 sm:w-8 sm:h-8 border border-red-800/60 bg-red-800/5 flex items-center justify-center rotate-[-6deg] mix-blend-screen opacity-70 shadow-[inset_0_0_6px_rgba(153,27,27,0.15)]">
+                      <div className="text-[9px] sm:text-[10px] text-red-700/90 font-bold leading-[1.1] text-center p-1" style={{ fontFamily: '"Gungsuh", "Batang", serif' }}>
                         天<br />命
                       </div>
                     </div>
                   </div>
 
-                  {/* 수직 구분자 - 가로선 중첩 방지 */}
-                  <div className="w-px h-8 bg-gradient-to-b from-amber-600/40 to-transparent mx-auto mb-6" />
                 </div>
 
-                {/* 엄숙한 서사 문구 - 가독성을 위해 너비 조절 및 문구 정립 */}
-                <div className="w-64 mx-auto">
-                  <p className="text-stone-400 text-sm font-serif italic tracking-[0.2em] leading-relaxed">
+                {/* 제안 3. [구조적 여백] : 고서의 '판심(版心)' 스타일 */}
+                <div className="w-80 mx-auto mt-16 relative">
+                  <div className="absolute -top-4 left-0 text-stone-700 text-lg">「</div>
+                  <p className="text-stone-400 text-sm font-serif italic tracking-[0.2em] leading-relaxed px-6">
                     태어난 순간 새겨진 당신의 무늬,<br />
                     그 서사의 첫 문을 엽니다
                   </p>
+                  <div className="absolute -bottom-4 right-0 text-stone-700 text-lg">」</div>
                 </div>
 
                 {/* 스크롤 안내 (천상기록보관소와 통일: SCROLL TO UNFOLD) */}
