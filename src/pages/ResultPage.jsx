@@ -725,24 +725,11 @@ const ResultPage = () => {
 
           {/* 오행 그래프 2.5 - 최적화된 스케일 및 가독성 버전 */}
           <div className="bg-stone-900/60 backdrop-blur-2xl p-6 pt-12 pb-14 rounded-sm border border-amber-900/30 animate-fade-in-up delay-200 opacity-0-init relative overflow-hidden group shadow-2xl" style={{ animationFillMode: "forwards" }}>
-            <div className="flex flex-col items-center mb-16 relative z-10 text-center">
+            <div className="flex flex-col items-center mb-4 relative z-10 text-center">
               <span className="text-amber-600/40 text-[9px] uppercase tracking-[0.4em] font-medium block mb-2">Five Elements Balance</span>
               <h3 className={`font-bold text-2xl text-stone-100 ${titleFont}`}>
                 五行調和 <span className="text-stone-500 font-light text-base">(오행 조화)</span>
               </h3>
-              <div className="mt-4 px-4 py-1 bg-amber-900/40 border border-amber-600/40 rounded-full shadow-[0_0_20px_rgba(180,83,9,0.3)]">
-                <span className="text-amber-400 text-[10px] font-bold tracking-widest font-serif leading-none">
-                  {(() => {
-                    const vals = Object.values(sajuResult.oheng || { 목: 20, 화: 20, 토: 20, 금: 20, 수: 20 });
-                    const mean = 20;
-                    const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / 5;
-                    const stdDev = Math.sqrt(variance);
-                    if (stdDev < 5) return "천상중화 (極美)";
-                    if (stdDev < 15) return "안정적 조화 (良)";
-                    return "강렬한 개성 (氣)";
-                  })()}
-                </span>
-              </div>
             </div>
 
             <div className="relative flex flex-col items-center py-6">
@@ -823,8 +810,18 @@ const ResultPage = () => {
 
                   const finalVals = elements.map(el => finalOheng[el.key]);
                   const maxFinalVal = Math.max(...finalVals);
-                  const maxVal = Math.max(maxFinalVal, 20);
-                  const scaleFactor = 45 / maxVal;
+
+                  // --- 어댑티브 스카이 스케일링 (Adaptive Sky Scaling) ---
+                  // 사용자의 기세에 맞춰 우주의 크기를 유연하게 조절합니다.
+                  let standardMax = 50;
+                  if (maxFinalVal >= 45 && maxFinalVal <= 60) {
+                    standardMax = 60; // 강력한 주도권 사주를 위한 여백 확보
+                  } else if (maxFinalVal > 60) {
+                    standardMax = maxFinalVal + 15; // 극단적 에너지를 우아하게 담아내는 확장
+                  }
+
+                  const scaleFactor = 45 / standardMax;
+                  // ---------------------------------------------------
 
                   const points = elements.map(el => {
                     const r = finalOheng[el.key] * scaleFactor;
@@ -879,22 +876,6 @@ const ResultPage = () => {
                 })()}
 
               </svg>
-            </div>
-
-            <div className="mt-16 p-7 bg-gradient-to-br from-amber-950/30 to-stone-950/50 rounded-sm border border-orange-950/60 relative">
-              <div className="absolute -top-3.5 left-6 px-4 py-0.5 bg-[#1c1c1e] border border-orange-950/60">
-                <span className="text-amber-600 text-[10px] font-bold uppercase tracking-[0.3em]">Fate Signal</span>
-              </div>
-              <p className="text-[14.5px] text-stone-200 leading-[1.9] font-serif italic tracking-tight text-justify">
-                {(() => {
-                  const oheng = sajuResult.oheng || {};
-                  const sorted = Object.entries(oheng).sort((a, b) => b[1] - a[1]);
-                  const strongest = sorted[0][0];
-                  const weakest = sorted[sorted.length - 1][0];
-                  if (sorted[0][1] >= 50) return `귀하의 명식은 ${strongest}의 기운이 압도적으로 순수한 광채를 발하고 있습니다. 이는 남다른 추진력의 근원이 되나, ${weakest}의 기운을 보강하여 조화를 이루는 인장의 힘이 필요합니다.`;
-                  return `귀하의 명식은 오행이 고르게 분포되어 사계절의 정기를 두루 갖추었습니다. ${strongest}의 강점을 살리되, 부족한 ${weakest}의 기운을 갈무리하여 운세의 흐름을 더욱 단단하게 굳힐 시기입니다.`;
-                })()}
-              </p>
             </div>
           </div>
           {/* Section 2: Card Navigation (Horizontal Scroll) - 인장/패 스타일 */}
