@@ -646,32 +646,15 @@ const ResultPage = () => {
               <div className="text-center space-y-10 animate-fade-in">
                 {/* 사용자 이름 및 타이틀 */}
                 <div className="space-y-4">
-                  {(() => {
-                    // 가장 높은 오행 찾기
-                    const oheng = sajuResult?.oheng || {};
-                    const elements = ['목', '화', '토', '금', '수'];
-                    let dominantElement = '토'; // 기본값
-                    let maxVal = 0;
-                    elements.forEach(el => {
-                      if ((oheng[el] || 0) > maxVal) {
-                        maxVal = oheng[el];
-                        dominantElement = el;
-                      }
-                    });
-                    const dominantColor = getElementColor(dominantElement);
-
-                    return (
-                      <h1
-                        className="text-5xl sm:text-6xl font-bold italic tracking-[0.1em]"
-                        style={{
-                          fontFamily: '"Song Myung", "Noto Serif KR", serif',
-                          color: dominantColor
-                        }}
-                      >
-                        {userInfo?.name || '사용자'}
-                      </h1>
-                    );
-                  })()}
+                  <h1
+                    className="text-5xl sm:text-6xl font-bold italic tracking-[0.1em]"
+                    style={{
+                      fontFamily: '"Song Myung", "Noto Serif KR", serif',
+                      color: '#f5f5f4', // stone-100
+                    }}
+                  >
+                    {userInfo?.name || '사용자'}
+                  </h1>
                   {/* 오행 기운 표시 (5개 점) */}
                   {(() => {
                     const oheng = sajuResult?.oheng || {};
@@ -720,40 +703,26 @@ const ResultPage = () => {
           <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
             <div className="flex-1 flex flex-col items-center justify-center py-12">
               {/* 섹션 헤더 - 서사적 도입 */}
-              <div className="flex flex-col items-center mb-10 reveal-item">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-6 h-px bg-amber-600/30" />
-                  <span className="text-amber-600/70 text-[10px] tracking-[0.4em] uppercase font-bold">Volume 1: Destiny</span>
-                  <div className="w-6 h-px bg-amber-600/30" />
+              <div className="flex flex-col items-center mb-12 reveal-item">
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-px bg-amber-600/30" />
+                  <span className="text-[#e8dac0] text-sm sm:tracking-[0.5em] tracking-[0.2em] font-serif font-bold uppercase whitespace-nowrap">제1서 : 사주팔자 (四柱八字)</span>
+                  <div className="w-8 h-px bg-amber-600/30" />
                 </div>
-                <h2 className="text-amber-200 font-serif text-3xl tracking-widest relative">
-                  四柱八字
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-px bg-amber-900/30" />
-                </h2>
-                <span className="text-stone-500 font-serif text-sm mt-4 italic">사주팔자 : 하늘이 새긴 당신의 여덟 글자</span>
               </div>
 
-              {/* 사주팔자 메인 카드 */}
-              <div className="w-full max-w-sm bg-[#1a1a1c] border border-amber-900/15 rounded-sm p-6 shadow-2xl relative overflow-hidden group reveal-item delay-100">
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')]" />
+              {/* 사주팔자 메인 카드 - 박스 제거 테스트 */}
+              <div className="w-full max-w-sm p-6 relative overflow-hidden group reveal-item delay-100">
+                {/* 배경 오행 기운 제거 */}
 
-                {/* 배경 오행 기운 (은은한 백그라운드) */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.03),transparent_70%)] pointer-events-none" />
 
-                {/* 안내 문구 */}
-                <div className="mb-8 p-4 bg-black/30 border border-amber-900/10 rounded-sm relative z-10">
-                  <p className="text-[11px] text-stone-400 leading-relaxed text-center font-serif italic">
-                    당신이 태어난 <span className="text-amber-600">연월일시</span>를<br />
-                    천상의 기운으로 치환한 운명의 좌표입니다.
-                  </p>
-                </div>
 
                 {/* 사주팔자 그리드 */}
                 <div className="flex gap-4 mb-8 relative z-10">
                   {/* 행 레이블 (천간 / 지지) */}
                   <div className="flex flex-col justify-center gap-3 pt-8">
                     <div className="flex items-center justify-center h-16 w-8">
-                      <span className="text-[10px] text-amber-700/60 tracking-[0.2em] font-serif [writing-mode:vertical-rl] whitespace-nowrap">천간</span>
+                      <span className="text-[10px] text-stone-600/60 tracking-[0.2em] font-serif [writing-mode:vertical-rl] whitespace-nowrap">천간</span>
                     </div>
                     <div className="flex items-center justify-center h-16 w-8">
                       <span className="text-[10px] text-stone-600/60 tracking-[0.2em] font-serif [writing-mode:vertical-rl] whitespace-nowrap">지지</span>
@@ -761,7 +730,7 @@ const ResultPage = () => {
                   </div>
 
                   {/* 팔자 그리드 (우측에서 좌측으로: 년->월->일->시) */}
-                  <div className="grid grid-cols-4 gap-2 flex-1 dir-rtl">
+                  <div className="grid grid-cols-4 gap-1.5 sm:gap-2 flex-1">
                     {[
                       { pillar: '시주', meaning: '자식/말년', gan: sajuResult?.sajuData?.hour?.gan, ji: sajuResult?.sajuData?.hour?.ji, key: 'hour' },
                       { pillar: '일주', meaning: '나/배우자', gan: sajuResult?.sajuData?.day?.gan, ji: sajuResult?.sajuData?.day?.ji, key: 'day', isDay: true },
@@ -773,44 +742,65 @@ const ResultPage = () => {
                       const ganColor = getElementColor(ganElem);
                       const jiColor = getElementColor(jiElem);
 
+                      // 가장 강한 오행색 계산 (일간에 적용)
+                      const oheng = sajuResult?.oheng || {};
+                      const elements = ['목', '화', '토', '금', '수'];
+                      let dominantOhengColor = '#d97706';
+                      let maxVal = 0;
+                      elements.forEach(el => {
+                        if ((oheng[el] || 0) > maxVal) {
+                          maxVal = oheng[el];
+                          dominantOhengColor = getElementColor(el);
+                        }
+                      });
+
                       return (
                         <div key={idx} className="flex flex-col gap-2">
                           {/* 기둥 라벨 (2줄) */}
                           <div className="text-center mb-1">
-                            <div className={`text-[10px] font-serif tracking-[0.1em] transition-colors duration-700 ${isDay ? 'text-amber-500/90 font-bold' : 'text-stone-500/50'}`}>
+                            <div className={`text-[10px] font-serif tracking-[0.1em] transition-colors duration-700 ${isDay ? 'text-stone-100 font-bold' : 'text-stone-500/50'}`}>
                               {pillar}
                             </div>
-                            <div className={`text-[8px] font-serif tracking-[0.05em] transition-colors duration-700 ${isDay ? 'text-amber-600/60' : 'text-stone-600/40'}`}>
+                            <div className={`text-[8px] font-serif tracking-[0.05em] transition-colors duration-700 ${isDay ? 'text-stone-300/80' : 'text-stone-500/60'}`}>
                               {meaning}
                             </div>
                           </div>
 
-                          {/* 천간 (Gan) - 은은한 속광(Inner Glow) 시스템 */}
-                          <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-1000 overflow-hidden
-                                          ${isDay ? 'bg-[#1c1c1f] border-amber-900/30 shadow-[0_4px_20px_rgba(217,119,6,0.12)] scale-105 z-10'
-                              : 'bg-[#121214] border-stone-800/40'}`}
-                            style={{ borderStyle: 'solid', borderWidth: '1px' }}>
+                          {/* 천간 (Gan) - 오행색 테두리 + 일간 발광 효과 */}
+                          <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-1000 overflow-hidden bg-[#121214]
+                                          ${isDay ? 'z-10' : ''}`}
+                            style={{
+                              borderStyle: 'solid',
+                              borderWidth: '1px',
+                              borderColor: `${ganColor}90`,
+                              ...(isDay && {
+                                animation: 'day-master-glow 2.5s ease-in-out infinite',
+                                '--glow-color': ganColor.replace('#', '').match(/.{2}/g)?.map(hex => parseInt(hex, 16)).join(', ') || '217, 119, 6'
+                              })
+                            }}>
 
                             {/* 오행 기운 언더라이트 (Very Subtle) */}
                             <div className="absolute inset-0 opacity-[0.15] pointer-events-none"
                               style={{
-                                background: `radial-gradient(circle at 50% 120%, ${isDay ? '#D97706' : ganColor}, transparent 70%)`
+                                background: `radial-gradient(circle at 50% 120%, ${ganColor}, transparent 70%)`
                               }} />
 
                             {/* 하단 엑센트 라인 (Faint) */}
-                            <div className="absolute bottom-0 left-0 w-full h-[1px] opacity-20"
-                              style={{ backgroundColor: isDay ? '#D97706' : ganColor }} />
+                            <div className="absolute bottom-0 left-0 w-full h-[1px] opacity-30"
+                              style={{ backgroundColor: ganColor }} />
 
-                            <span className={`relative z-10 text-[32px] font-bold font-serif transition-colors duration-700
-                                            ${isDay ? 'text-[#D97706] drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : 'text-stone-300'}`}>
+                            <span className="relative z-10 text-[32px] font-bold font-serif transition-colors duration-700 text-stone-300/80">
                               {ganHanjaMap[gan] || gan}
                             </span>
                           </div>
 
-                          {/* 지지 (Ji) - 하단 기운 강조 */}
-                          <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-1000 overflow-hidden
-                                          ${isDay ? 'bg-[#1a1a1c] border-amber-900/20' : 'bg-[#121214] border-stone-800/40'}`}
-                            style={{ borderStyle: 'solid', borderWidth: '1px' }}>
+                          {/* 지지 (Ji) - 오행색 테두리 */}
+                          <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-1000 overflow-hidden bg-[#121214]`}
+                            style={{
+                              borderStyle: 'solid',
+                              borderWidth: '1px',
+                              borderColor: `${jiColor}90`
+                            }}>
 
                             {/* 오행 기운 언더라이트 */}
                             <div className="absolute inset-0 opacity-[0.12] pointer-events-none"
@@ -829,18 +819,18 @@ const ResultPage = () => {
                 </div>
 
                 {/* 일간 설명 및 관계 안내 */}
-                <div className="mt-10 text-center space-y-3">
+                <div className="mt-10 text-center space-y-3 relative z-10">
                   {dayMasterDescriptions[sajuResult?.sajuData?.day?.gan] && (
                     <p className="text-stone-300 font-serif text-[14px] leading-relaxed">
                       당신의 정신적 근간은<br />
-                      <span className="text-amber-500 font-bold">
-                        {dayMasterDescriptions[sajuResult.sajuData.day.gan].desc}, {dayMasterDescriptions[sajuResult.sajuData.day.gan].hanja}의 기운
+                      <span className="font-bold text-[#e8dac0] italic">
+                        {dayMasterDescriptions[sajuResult.sajuData.day.gan].desc}, {sajuResult.sajuData.day.gan}({dayMasterDescriptions[sajuResult.sajuData.day.gan].hanja})의 기운
                       </span>
-                      입니다.
+                      {' '}입니다.
                     </p>
                   )}
                   <p className="text-stone-500 font-serif text-[12px] italic">
-                    일곱 개의 기운이 이 중심과 얽히며 당신만의 서사를 완성합니다.
+                    나머지 일곱 기운이 이 중심과 얽히며 당신만의 서사를 완성합니다.
                   </p>
                 </div>
               </div>
@@ -860,20 +850,15 @@ const ResultPage = () => {
           <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
             <div className="flex-1 flex flex-col items-center justify-center py-12">
               <div className="flex flex-col items-center mb-10 reveal-item">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="w-6 h-px bg-blue-600/30" />
-                  <span className="text-blue-600/70 text-[9px] tracking-[0.5em] uppercase font-bold">Volume 2: Balance</span>
-                  <div className="w-6 h-px bg-blue-600/30" />
+                <div className="flex items-center gap-4">
+                  <div className="w-8 h-px bg-amber-600/30" />
+                  <span className="text-[#e8dac0] text-sm sm:tracking-[0.5em] tracking-[0.2em] font-serif font-bold uppercase whitespace-nowrap">제2서 : 기운의 조화 (五行分析)</span>
+                  <div className="w-8 h-px bg-amber-600/30" />
                 </div>
-                <h4 className="text-blue-200 font-serif text-3xl tracking-widest relative">
-                  기운의 調和
-                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-px bg-blue-900/30" />
-                </h4>
-                <span className="text-stone-500 font-serif text-sm mt-4 italic">당신을 구성하는 다섯 가지 원소</span>
               </div>
 
-              <div className="w-full max-w-sm bg-[#1a1a1c] border border-blue-900/10 rounded-sm p-6 pt-12 pb-14 shadow-xl relative overflow-hidden group reveal-item delay-100">
-                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+              {/* 오행 차트 메인 카드 - 박스 제거 테스트 */}
+              <div className="w-full max-w-sm p-6 pt-12 pb-14 relative overflow-hidden group reveal-item delay-100">
 
                 <div className="relative flex flex-col items-center py-6">
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] bg-amber-800/5 blur-[100px] rounded-full group-hover:bg-amber-700/10 transition-colors duration-1000"></div>
@@ -1051,12 +1036,13 @@ const ResultPage = () => {
           {/* Step 4: The Sealed Archive - 제 3권: 천개의 비밀 */}
           <section className="snap-section px-6 h-auto pb-20" style={{ paddingTop: 'var(--safe-area-top)' }}>
             {/* Chapter 3 Heading */}
-            <div className="mb-10 z-10 relative reveal-item">
-              <div className="px-6 mb-3 flex items-end justify-between border-b border-amber-900/20 pb-2">
-                <h3 className="text-lg font-bold text-[#e8dac0] flex items-center gap-2" style={{ fontFamily: '"Gungsuh", serif' }}>
-                  第三卷: 천개의 비밀 (天機錄)
+            <div className="mb-10 z-10 relative reveal-item max-w-sm mx-auto">
+              <div className="flex items-center justify-center gap-4 mb-3 border-b border-amber-900/20 pb-4">
+                <div className="w-4 h-px bg-amber-600/30" />
+                <h3 className="text-sm font-bold text-[#e8dac0] sm:tracking-[0.3em] tracking-[0.1em] font-serif uppercase whitespace-nowrap">
+                  제3서 : 천개의 비밀 (天機錄)
                 </h3>
-                <span className="text-[9px] text-amber-700/60 uppercase tracking-[0.2em] mb-1 font-serif font-bold">5 Secrets of Life</span>
+                <div className="w-4 h-px bg-amber-600/30" />
               </div>
             </div>
 
@@ -1175,8 +1161,9 @@ const ResultPage = () => {
           {/* Step 5: The Final Guardian - 수호신령 */}
           <section className="snap-section px-6 pb-32" style={{ paddingTop: 'var(--safe-area-top)' }}>
             <div className="flex-1 flex flex-col items-center justify-center py-12 reveal-item">
-              <div className="bg-[#1a1a1c] border border-purple-900/10 rounded-sm p-6 pb-24 shadow-xl relative overflow-hidden group w-full max-w-sm">
-                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+
+              <div className="p-6 pb-24 relative overflow-hidden group w-full max-w-sm">
+                {/* 배경 효과 제거 */}
 
                 <div className="relative z-10">
                   {/* ... Guardian Content ... */}

@@ -65,6 +65,39 @@
   }
 }
 
+@keyframes pulse-gentle {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 2.5s ease-in-out infinite;
+}
+
+/* 일간 발광 맥동 효과 (Day Master Glow Pulse) */
+@keyframes day-master-glow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(var(--glow-color), 0);
+  }
+
+  50% {
+    box-shadow: 0 0 20px 3px rgba(var(--glow-color), 0.35);
+  }
+}
+
+.animate-day-master-glow {
+  animation: day-master-glow 2.5s ease-in-out infinite;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;
