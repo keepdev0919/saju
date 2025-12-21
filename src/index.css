@@ -1,6 +1,19 @@
 @import url('https://fonts.googleapis.com/css2?family=East+Sea+Dokdo&family=Gowun+Batang:wght@400;700&family=Hahmlet:wght@100..900&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Serif+KR:wght@200..900&family=Song+Myung&display=swap');
 @import "tailwindcss";
 
+/* ==============================================
+   Layout CSS Variables (Safe Area Padding)
+   - 헤더/FAB 높이를 변수로 관리하여 유지보수성 향상
+   ============================================== */
+:root {
+  --header-height: 80px;
+  /* 고정 헤더 높이 */
+  --safe-area-top: 50px;
+  /* 콘텐츠 상단 안전 영역 (헤더 + 여유) */
+  --safe-area-bottom: 120px;
+  /* 콘텐츠 하단 안전 영역 (FAB + 여유, 현재 미사용) */
+}
+
 /* 커스텀 애니메이션 정의 */
 @keyframes fade-in-up {
   from {

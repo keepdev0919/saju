@@ -67,6 +67,20 @@ const getElementFromJi = (ji) => {
 const getElementColor = (element) => elementColorMap[element] || '#78716c';
 const getElementAura = (element) => elementAuraMap[element] || 'transparent';
 
+// 일간(日干)별 성격 키워드 맵
+const dayMasterDescriptions = {
+  '갑': { hanja: '甲', desc: '곧게 뻗어 나가는 거목(巨木)' },
+  '을': { hanja: '乙', desc: '바람에 흔들려도 꺾이지 않는 꽃' },
+  '병': { hanja: '丙', desc: '만물을 비추는 뜨거운 태양' },
+  '정': { hanja: '丁', desc: '어둠 속에서도 길을 밝히는 촛불' },
+  '무': { hanja: '戊', desc: '묵직하고 흔들림 없는 큰 산' },
+  '기': { hanja: '己', desc: '만물을 품어 기르는 대지' },
+  '경': { hanja: '庚', desc: '단단하고 결단력 있는 강철' },
+  '신': { hanja: '辛', desc: '깎일수록 빛나는 보석' },
+  '임': { hanja: '壬', desc: '깊고 넓게 흐르는 큰 바다' },
+  '계': { hanja: '癸', desc: '은밀히 스며들어 적시는 빗물' }
+};
+
 // --- Sub-components for Archive Style ---
 
 const ChapterLockOverlay = ({ element }) => (
@@ -159,12 +173,30 @@ const ResultPage = () => {
       { threshold: 0.1 }
     );
 
+    // reveal-item 애니메이션 감시자
+    const revealObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('reveal-item-active');
+          }
+        });
+      },
+      { threshold: 0.05 }
+    );
+
     if (entranceRef.current) {
       observer.observe(entranceRef.current);
     }
 
-    return () => observer.disconnect();
-  }, []);
+    const items = document.querySelectorAll('.reveal-item');
+    items.forEach((item) => revealObserver.observe(item));
+
+    return () => {
+      observer.disconnect();
+      revealObserver.disconnect();
+    };
+  }, [loading, sajuResult]); // 인쇄 데이터나 로딩 상태가 바뀌면 다시 스캔
 
   // 인증 및 PDF 상태
   const [showAuth, setShowAuth] = useState(false);
@@ -579,7 +611,7 @@ const ResultPage = () => {
 
   return (
     <div className="min-h-screen bg-black flex justify-center">
-      <div className="min-h-screen bg-[#0f0f10] text-slate-100 relative overflow-hidden font-sans">
+      <div className="min-h-screen bg-[#0f0f10] text-slate-100 relative font-sans">
         {/* 통합 배경: 최상단부터 끊김 없이 이어지는 먹빛 캔터스 */}
         <div className="fixed inset-0 bg-[#0f0f10] z-0" />
         <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_-10%,rgba(60,40,20,0.18),transparent_80%)] z-1 pointer-events-none" />
@@ -609,25 +641,62 @@ const ResultPage = () => {
 
           {/* Step 1: The Entrance - 천상의 서고 입문 */}
           <section ref={entranceRef} className="snap-section px-6">
-            <div className="h-full flex flex-col items-center justify-center pt-20">
-              {/* 중앙 컨텐츠 */}
-              <div className="text-center space-y-10 animate-fade-in-up">
-
-
+            <div className="flex-1 flex flex-col items-center justify-center pt-20 pb-10">
+              {/* 중앙 컨텐츠 - Always visible, no reveal-item/animation blocking */}
+              <div className="text-center space-y-10 animate-fade-in">
                 {/* 사용자 이름 및 타이틀 */}
                 <div className="space-y-4">
-                  <h1 className="text-6xl font-bold italic text-[#e8dac0] tracking-[0.1em] drop-shadow-[0_0_40px_rgba(180,83,9,0.3)]"
-                    style={{ fontFamily: '"Song Myung", "Noto Serif KR", serif' }}>
-                    {userInfo?.name || '사용자'}
-                  </h1>
-                  <div className="flex flex-col items-center">
-                    <div className="text-amber-500 text-2xl tracking-[0.6em] font-serif font-medium mt-2">
-                      運命分析
-                    </div>
-                    <div className="text-stone-500 text-[10px] tracking-[0.2em] font-serif mt-2 opacity-60">
-                      운명 분석 : 당신의 고유한 기운을 읽어내다
-                    </div>
-                  </div>
+                  {(() => {
+                    // 가장 높은 오행 찾기
+                    const oheng = sajuResult?.oheng || {};
+                    const elements = ['목', '화', '토', '금', '수'];
+                    let dominantElement = '토'; // 기본값
+                    let maxVal = 0;
+                    elements.forEach(el => {
+                      if ((oheng[el] || 0) > maxVal) {
+                        maxVal = oheng[el];
+                        dominantElement = el;
+                      }
+                    });
+                    const dominantColor = getElementColor(dominantElement);
+
+                    return (
+                      <h1
+                        className="text-5xl sm:text-6xl font-bold italic tracking-[0.1em]"
+                        style={{
+                          fontFamily: '"Song Myung", "Noto Serif KR", serif',
+                          color: dominantColor
+                        }}
+                      >
+                        {userInfo?.name || '사용자'}
+                      </h1>
+                    );
+                  })()}
+                  {/* 오행 기운 표시 (5개 점) */}
+                  {(() => {
+                    const oheng = sajuResult?.oheng || {};
+                    const elements = ['목', '화', '토', '금', '수'];
+                    let maxVal = 0;
+                    let dominantKey = '토';
+                    elements.forEach(el => {
+                      if ((oheng[el] || 0) > maxVal) {
+                        maxVal = oheng[el];
+                        dominantKey = el;
+                      }
+                    });
+
+                    return (
+                      <div className="flex items-center justify-center gap-2 mt-4">
+                        {elements.map(el => (
+                          <div
+                            key={el}
+                            className={`rounded-full transition-all ${el === dominantKey ? 'w-[7px] h-[7px]' : 'w-[5px] h-[5px] opacity-30'}`}
+                            style={{ backgroundColor: getElementColor(el) }}
+                          />
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* 엄숙한 서사 문구 - 가독성을 위해 너비 조절 및 문구 정립 */}
@@ -639,126 +708,145 @@ const ResultPage = () => {
                 </div>
 
                 {/* 스크롤 안내 (천상기록보관소와 통일: SCROLL TO UNFOLD) */}
-                <div className="pt-24 flex flex-col items-center gap-6 animate-bounce-gentle opacity-40">
-                  <span className="text-[10px] text-amber-600 tracking-[0.4em] uppercase font-serif">Scroll to Unfold</span>
-                  <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent mx-auto" />
+                <div className="pt-10 flex flex-col items-center gap-4 animate-bounce-gentle opacity-70">
+                  <span className="text-[10px] text-amber-500 tracking-[0.4em] font-serif">펼쳐보기</span>
+                  <div className="w-px h-12 bg-gradient-to-b from-amber-500/80 to-transparent mx-auto" />
                 </div>
               </div>
             </div>
           </section>
 
-          {/* Chapter 1: 사주팔자 */}
-          <div className="relative scroll-reveal px-6 mt-12">
-            <div className="flex flex-col items-center mb-6">
-              <span className="text-amber-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Volume 1: Destiny</span>
-              <h4 className="text-amber-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-amber-900/10 pb-2">
-                第一卷: 숙명의 기록 (宿命) <span className="text-stone-500 font-light text-sm">- 운명의 각인</span>
-              </h4>
-            </div>
-            <div className="bg-[#1a1a1c] border border-amber-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-              <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-
-              {/* 설명 텍스트 */}
-              <div className="mb-4 p-3 bg-amber-900/5 border border-amber-900/10 rounded relative z-10">
-                <p className="text-[11px] text-stone-400 leading-relaxed text-center">
-                  당신이 태어난 <span className="text-amber-600">연월일시</span>를<br />
-                  하늘의 기운(<span className="text-amber-600">천간</span>)과 땅의 기운(<span className="text-amber-600">지지</span>)으로 나타낸 것입니다.
-                </p>
+          {/* Step 2: The First Seal - 제 1권: 숙명의 기록 */}
+          <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            <div className="flex-1 flex flex-col items-center justify-center py-12">
+              {/* 섹션 헤더 - 서사적 도입 */}
+              <div className="flex flex-col items-center mb-10 reveal-item">
+                <div className="flex items-center gap-3 mb-8">
+                  <div className="w-6 h-px bg-amber-600/30" />
+                  <span className="text-amber-600/70 text-[10px] tracking-[0.4em] uppercase font-bold">Volume 1: Destiny</span>
+                  <div className="w-6 h-px bg-amber-600/30" />
+                </div>
+                <h2 className="text-amber-200 font-serif text-3xl tracking-widest relative">
+                  四柱八字
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-px bg-amber-900/30" />
+                </h2>
+                <span className="text-stone-500 font-serif text-sm mt-4 italic">사주팔자 : 하늘이 새긴 당신의 여덟 글자</span>
               </div>
 
-              {/* Grid Container with Labels */}
-              <div className="flex gap-3 mb-6 relative z-10">
-                {/* 천간/지지 Labels */}
-                <div className="flex flex-col justify-center gap-2 pt-8">
-                  <div className="flex items-center justify-center h-[calc(25vw-0.5rem)] max-h-[80px] min-h-[60px]">
-                    <span className="text-[9px] text-amber-700/50 tracking-wide writing-mode-vertical-rl">
-                      천간
-                    </span>
+              {/* 사주팔자 메인 카드 */}
+              <div className="w-full max-w-sm bg-[#1a1a1c] border border-amber-900/15 rounded-sm p-6 shadow-2xl relative overflow-hidden group reveal-item delay-100">
+                <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')]" />
+
+                {/* 배경 오행 기운 (은은한 백그라운드) */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(217,119,6,0.03),transparent_70%)] pointer-events-none" />
+
+                {/* 안내 문구 */}
+                <div className="mb-8 p-4 bg-black/30 border border-amber-900/10 rounded-sm relative z-10">
+                  <p className="text-[11px] text-stone-400 leading-relaxed text-center font-serif italic">
+                    당신이 태어난 <span className="text-amber-600">연월일시</span>를<br />
+                    천상의 기운으로 치환한 운명의 좌표입니다.
+                  </p>
+                </div>
+
+                {/* 사주팔자 그리드 */}
+                <div className="flex gap-4 mb-8 relative z-10">
+                  {/* 행 레이블 (천간 / 지지) */}
+                  <div className="flex flex-col justify-center gap-3 pt-8">
+                    <div className="flex items-center justify-center h-16 w-8">
+                      <span className="text-[10px] text-amber-700/60 tracking-[0.2em] font-serif [writing-mode:vertical-rl] whitespace-nowrap">천간</span>
+                    </div>
+                    <div className="flex items-center justify-center h-16 w-8">
+                      <span className="text-[10px] text-stone-600/60 tracking-[0.2em] font-serif [writing-mode:vertical-rl] whitespace-nowrap">지지</span>
+                    </div>
                   </div>
-                  <div className="flex items-center justify-center h-[calc(25vw-0.5rem)] max-h-[80px] min-h-[60px]">
-                    <span className="text-[9px] text-stone-500/50 tracking-wide writing-mode-vertical-rl">
-                      지지
-                    </span>
+
+                  {/* 팔자 그리드 (우측에서 좌측으로: 년->월->일->시) */}
+                  <div className="grid grid-cols-4 gap-2 flex-1 dir-rtl">
+                    {[
+                      { pillar: '시주', meaning: '자식/말년', gan: sajuResult?.sajuData?.hour?.gan, ji: sajuResult?.sajuData?.hour?.ji, key: 'hour' },
+                      { pillar: '일주', meaning: '나/배우자', gan: sajuResult?.sajuData?.day?.gan, ji: sajuResult?.sajuData?.day?.ji, key: 'day', isDay: true },
+                      { pillar: '월주', meaning: '부모/사회', gan: sajuResult?.sajuData?.month?.gan, ji: sajuResult?.sajuData?.month?.ji, key: 'month' },
+                      { pillar: '연주', meaning: '조상', gan: sajuResult?.sajuData?.year?.gan, ji: sajuResult?.sajuData?.year?.ji, key: 'year' }
+                    ].map(({ pillar, meaning, gan, ji, isDay }, idx) => {
+                      const ganElem = getElementFromGan(gan);
+                      const jiElem = getElementFromJi(ji);
+                      const ganColor = getElementColor(ganElem);
+                      const jiColor = getElementColor(jiElem);
+
+                      return (
+                        <div key={idx} className="flex flex-col gap-2">
+                          {/* 기둥 라벨 (2줄) */}
+                          <div className="text-center mb-1">
+                            <div className={`text-[10px] font-serif tracking-[0.1em] transition-colors duration-700 ${isDay ? 'text-amber-500/90 font-bold' : 'text-stone-500/50'}`}>
+                              {pillar}
+                            </div>
+                            <div className={`text-[8px] font-serif tracking-[0.05em] transition-colors duration-700 ${isDay ? 'text-amber-600/60' : 'text-stone-600/40'}`}>
+                              {meaning}
+                            </div>
+                          </div>
+
+                          {/* 천간 (Gan) - 은은한 속광(Inner Glow) 시스템 */}
+                          <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-1000 overflow-hidden
+                                          ${isDay ? 'bg-[#1c1c1f] border-amber-900/30 shadow-[0_4px_20px_rgba(217,119,6,0.12)] scale-105 z-10'
+                              : 'bg-[#121214] border-stone-800/40'}`}
+                            style={{ borderStyle: 'solid', borderWidth: '1px' }}>
+
+                            {/* 오행 기운 언더라이트 (Very Subtle) */}
+                            <div className="absolute inset-0 opacity-[0.15] pointer-events-none"
+                              style={{
+                                background: `radial-gradient(circle at 50% 120%, ${isDay ? '#D97706' : ganColor}, transparent 70%)`
+                              }} />
+
+                            {/* 하단 엑센트 라인 (Faint) */}
+                            <div className="absolute bottom-0 left-0 w-full h-[1px] opacity-20"
+                              style={{ backgroundColor: isDay ? '#D97706' : ganColor }} />
+
+                            <span className={`relative z-10 text-[32px] font-bold font-serif transition-colors duration-700
+                                            ${isDay ? 'text-[#D97706] drop-shadow-[0_0_8px_rgba(217,119,6,0.3)]' : 'text-stone-300'}`}>
+                              {ganHanjaMap[gan] || gan}
+                            </span>
+                          </div>
+
+                          {/* 지지 (Ji) - 하단 기운 강조 */}
+                          <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-1000 overflow-hidden
+                                          ${isDay ? 'bg-[#1a1a1c] border-amber-900/20' : 'bg-[#121214] border-stone-800/40'}`}
+                            style={{ borderStyle: 'solid', borderWidth: '1px' }}>
+
+                            {/* 오행 기운 언더라이트 */}
+                            <div className="absolute inset-0 opacity-[0.12] pointer-events-none"
+                              style={{
+                                background: `radial-gradient(circle at 50% 120%, ${jiColor}, transparent 70%)`
+                              }} />
+
+                            <span className="relative z-10 text-[30px] font-bold font-serif text-stone-300/80">
+                              {jiHanjaMap[ji] || ji}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 
-                {/* Grid: 4 Pillars, 2 Rows each, Right-to-Left Ordering */}
-                <div className="grid grid-cols-4 gap-2 flex-1 dir-rtl">
-                  {[
-                    { label: '시', gan: sajuResult?.sajuData?.hour?.gan, ji: sajuResult?.sajuData?.hour?.ji, key: 'hour' },
-                    { label: '일', gan: sajuResult?.sajuData?.day?.gan, ji: sajuResult?.sajuData?.day?.ji, key: 'day', isSelf: true },
-                    { label: '월', gan: sajuResult?.sajuData?.month?.gan, ji: sajuResult?.sajuData?.month?.ji, key: 'month' },
-                    { label: '년', gan: sajuResult?.sajuData?.year?.gan, ji: sajuResult?.sajuData?.year?.ji, key: 'year' }
-                  ].map(({ label, gan, ji, isSelf }, idx) => {
-                    const ganElem = getElementFromGan(gan);
-                    const jiElem = getElementFromJi(ji);
-
-                    return (
-                      <div key={idx} className="flex flex-col gap-2">
-                        <div className={`text-[9px] text-center tracking-[0.3em] font-serif mb-1
-                                        ${isSelf ? 'text-amber-500/40 font-bold' : 'text-stone-700/30'}`}>
-                          {label}
-                        </div>
-
-                        {/* 천간 (Gan) - Stem Row */}
-                        <div className={`relative aspect-square flex items-center justify-center rounded-sm transition-all duration-700
-                                      ${isSelf ? 'bg-[#1a1a20] border border-amber-600/40 ring-1 ring-amber-900/20 shadow-[inset_0_0_20px_rgba(0,0,0,0.9)]'
-                            : 'bg-[#111113] border border-stone-800/40 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]'}`}>
-                          {/* Elemental Aura */}
-                          <div className={`absolute inset-0 blur-xl opacity-40 rounded-full z-0 ${isSelf ? 'animate-pulse-subtle' : ''}`}
-                            style={{ background: `radial-gradient(circle, ${getElementAura(ganElem)} 0%, transparent 70%)` }} />
-
-                          <div className={`relative z-10 text-[32px] font-bold font-serif leading-none
-                                        ${isSelf ? 'text-stone-50 drop-shadow-[0_0_12px_rgba(255,255,255,0.4)] scale-110' : 'text-stone-300 drop-shadow-md'}`}
-                            style={{ color: isSelf ? '#fff' : getElementColor(ganElem) }}>
-                            {ganHanjaMap[gan] || (gan === '?' ? '?' : gan)}
-                          </div>
-                        </div>
-
-                        {/* 지지 (Ji) - Branch Row */}
-                        <div className="relative aspect-square flex items-center justify-center rounded-sm bg-[#111113] border border-stone-800/40 shadow-[inset_0_0_15px_rgba(0,0,0,0.6)]">
-                          {/* Elemental Aura */}
-                          <div className="absolute inset-0 blur-xl opacity-30 rounded-full z-0"
-                            style={{ background: `radial-gradient(circle, ${getElementAura(jiElem)} 0%, transparent 70%)` }} />
-
-                          <div className="relative z-10 text-[30px] font-bold font-serif leading-none drop-shadow-md"
-                            style={{ color: getElementColor(jiElem) }}>
-                            {jiHanjaMap[ji] || (ji === '?' ? '?' : ji)}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                {/* 일간 설명 및 관계 안내 */}
+                <div className="mt-10 text-center space-y-3">
+                  {dayMasterDescriptions[sajuResult?.sajuData?.day?.gan] && (
+                    <p className="text-stone-300 font-serif text-[14px] leading-relaxed">
+                      당신의 정신적 근간은<br />
+                      <span className="text-amber-500 font-bold">
+                        {dayMasterDescriptions[sajuResult.sajuData.day.gan].desc}, {dayMasterDescriptions[sajuResult.sajuData.day.gan].hanja}의 기운
+                      </span>
+                      입니다.
+                    </p>
+                  )}
+                  <p className="text-stone-500 font-serif text-[12px] italic">
+                    일곱 개의 기운이 이 중심과 얽히며 당신만의 서사를 완성합니다.
+                  </p>
                 </div>
               </div>
-
-              {/* 오행 범례 (Legend) */}
-              <div className="flex justify-center flex-wrap items-center gap-3 text-[8px] text-stone-600/60 tracking-wide opacity-100 relative z-10">
-                {[
-                  { label: '목', element: '목' },
-                  { label: '화', element: '화' },
-                  { label: '토', element: '토' },
-                  { label: '금', element: '금' },
-                  { label: '수', element: '수' }
-                ].map((item) => (
-                  <div key={item.label} className="flex items-center gap-1">
-                    <span className="w-1 h-1 rounded-full" style={{ backgroundColor: getElementColor(item.element) }} />
-                    <span>{item.label}</span>
-                  </div>
-                ))}
-              </div>
             </div>
-          </div>
+          </section>
 
-          {/* 개발자 모드 토글 (숨겨진 기능처럼 배치) */}
-          <div className="fixed bottom-4 right-4 z-50 opacity-20 hover:opacity-100 transition-opacity">
-            <button
-              onClick={() => setShowTechData(!showTechData)}
-              className="text-xs font-bold text-slate-500 bg-black/50 p-2 rounded-full border border-slate-700"
-            >
-              🛠️
-            </button>
-          </div>
 
           {/* Tech Demo Inspector Panel is omitted for brevity, keeping existing functionality hidden */}
           {showTechData && sajuResult?.sajuData?.techData && (
@@ -768,535 +856,525 @@ const ResultPage = () => {
             </div>
           )}
 
-          {/* Chapter 2: 오행 균형 */}
-          <div className="relative scroll-reveal px-6 mt-12">
-            <div className="flex flex-col items-center mb-6">
-              <span className="text-blue-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Volume 2: Balance</span>
-              <h4 className="text-blue-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-blue-900/10 pb-2">
-                第二卷: 기운의 조화 (調和) <span className="text-stone-500 font-light text-sm">- 운명의 질감</span>
-              </h4>
-            </div>
-            <div className="bg-[#1a1a1c] border border-blue-900/10 rounded-sm p-6 pt-12 pb-14 shadow-xl relative overflow-hidden group">
-              <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-
-              <div className="relative flex flex-col items-center py-6">
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] bg-amber-800/5 blur-[100px] rounded-full group-hover:bg-amber-700/10 transition-colors duration-1000"></div>
-
-                {/* SVG 레이더 차트 (Safe Scaling for Mobile) */}
-                <svg width="310" height="310" viewBox="0 0 120 120" className="overflow-visible relative z-10">
-                  <defs>
-                    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-                      <feGaussianBlur stdDeviation="1.5" result="blur" />
-                      <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                    </filter>
-                    <linearGradient id="poly-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
-                      <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
-                      <stop offset="100%" stopColor="#78350f" stopOpacity="0.7" />
-                    </linearGradient>
-                    {/* 심해 우주 네뷸라 그라데이션 */}
-                    <radialGradient id="nebula-grad" cx="50%" cy="50%" r="50%">
-                      <stop offset="0%" stopColor="rgba(217, 119, 6, 0.15)" />
-                      <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
-                    </radialGradient>
-                  </defs>
-                  {/* 가이드 라인 시스템 (Reverted to Classic Style from Photo) */}
-                  {[15, 30].map((r, i) => (
-                    <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.04)" strokeWidth="0.2" />
-                  ))}
-
-                  {/* 메인 경계선 (Outer Boundary at 45) */}
-                  <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.4" />
-
-                  {/* 5행 메인 축 (Extending to 45) */}
-                  {[0, 72, 144, 216, 288].map((angle, i) => {
-                    const rad = (angle - 90) * (Math.PI / 180);
-                    return (
-                      <line
-                        key={i} x1="60" y1="60"
-                        x2={60 + 45 * Math.cos(rad)}
-                        y2={60 + 45 * Math.sin(rad)}
-                        stroke="rgba(217, 119, 6, 0.05)"
-                        strokeWidth="0.3"
-                      />
-                    );
-                  })}
-
-                  {(() => {
-                    const elements = [
-                      { key: "목", label: "木", meaning: "성장", angle: 0 },
-                      { key: "화", label: "火", meaning: "열정", angle: 72 },
-                      { key: "토", label: "土", meaning: "안정", angle: 144 },
-                      { key: "금", label: "金", meaning: "결실", angle: 216 },
-                      { key: "수", label: "水", meaning: "지혜", angle: 288 }
-                    ];
-
-                    // --- Largest Remainder Method (합계 100% 보정 로직) ---
-                    const rawData = elements.map(el => ({
-                      key: el.key,
-                      val: sajuResult.oheng?.[el.key] || 0
-                    }));
-
-                    let floorSum = 0;
-                    const processed = rawData.map(d => {
-                      const integer = Math.floor(d.val);
-                      const remainder = d.val - integer;
-                      floorSum += integer;
-                      return { ...d, integer, remainder };
-                    });
-
-                    let diff = 100 - floorSum;
-
-                    const finalOheng = {};
-                    [...processed]
-                      .sort((a, b) => b.remainder - a.remainder)
-                      .forEach((d, idx) => {
-                        finalOheng[d.key] = d.integer + (idx < diff ? 1 : 0);
-                      });
-                    // ---------------------------------------------------
-
-                    const finalVals = elements.map(el => finalOheng[el.key]);
-                    const maxFinalVal = Math.max(...finalVals);
-
-                    // --- 어댑티브 스카이 스케일링 (Adaptive Sky Scaling) ---
-                    // 사용자의 기세에 맞춰 우주의 크기를 유연하게 조절합니다.
-                    let standardMax = 50;
-                    if (maxFinalVal >= 45 && maxFinalVal <= 60) {
-                      standardMax = 60; // 강력한 주도권 사주를 위한 여백 확보
-                    } else if (maxFinalVal > 60) {
-                      standardMax = maxFinalVal + 15; // 극단적 에너지를 우아하게 담아내는 확장
-                    }
-
-                    const scaleFactor = 45 / standardMax;
-                    // ---------------------------------------------------
-
-                    const points = elements.map(el => {
-                      const r = finalOheng[el.key] * scaleFactor;
-                      const rad = (el.angle - 90) * (Math.PI / 180);
-                      return `${60 + r * Math.cos(rad)},${60 + r * Math.sin(rad)}`;
-                    }).join(" ");
-
-                    return (
-                      <g>
-                        <polygon
-                          points={points}
-                          fill="url(#poly-grad)"
-                          stroke="rgba(251, 191, 36, 0.15)"
-                          strokeWidth="0.4"
-                          strokeLinejoin="round"
-                          filter="url(#glow)"
-                          className="animate-pulse-subtle"
-                        />
-                        {elements.map((el, i) => {
-                          const val = finalOheng[el.key];
-                          const r = val * scaleFactor;
-                          const rad = (el.angle - 90) * (Math.PI / 180);
-                          const x = 60 + r * Math.cos(rad);
-                          const y = 60 + r * Math.sin(rad);
-                          const tx = 60 + 56 * Math.cos(rad);
-                          const ty = 60 + 56 * Math.sin(rad);
-
-                          const isStrongest = val === maxFinalVal && val > 0;
-
-                          return (
-                            <g key={i}>
-                              <circle cx={x} cy={y} r="0.7" fill="#fff" filter="url(#glow)" className="opacity-100" />
-                              <g className={isStrongest ? 'animate-highest-pulse' : ''}>
-                                <text
-                                  x={tx} y={ty}
-                                  textAnchor="middle"
-                                  dominantBaseline="middle"
-                                  fill={elementColorMap[el.key] || "#d6d3d1"}
-                                  className={`text-[6.8px] font-bold ${titleFont} tracking-widest`}
-                                  style={{
-                                    color: elementColorMap[el.key],
-                                    filter: isStrongest ? undefined : 'drop-shadow(0 0 2px rgba(255,255,255,0.1))'
-                                  }}
-                                >
-                                  {el.label}({el.meaning})
-                                </text>
-                                <text
-                                  x={tx} y={ty + 8}
-                                  textAnchor="middle"
-                                  className="text-[5.5px] font-mono font-bold"
-                                  fill="#a8a29e"
-                                  style={{ color: '#a8a29e' }}
-                                >
-                                  {val}%
-                                </text>
-                              </g>
-                            </g>
-                          );
-                        })}
-                      </g>
-                    );
-                  })()}
-
-                </svg>
-              </div>
-            </div>
-          </div>
-
-          {/* Chapter 3: 천상의 기록 - Chapter Navigation Indicator */}
-          <div className="mb-6 z-10 relative">
-            <div className="px-6 mb-3 flex items-end justify-between border-b border-amber-900/20 pb-2 mx-6">
-              <h3 className="text-lg font-bold text-[#e8dac0] flex items-center gap-2" style={{ fontFamily: '"Gungsuh", serif' }}>
-                第三卷: 천개의 비밀 (天機錄)
-              </h3>
-              <span className="text-[9px] text-amber-700/60 uppercase tracking-[0.2em] mb-1 font-serif font-bold">5 Secrets of Life</span>
-            </div>
-          </div>
-
-          {/* Section 3: Detailed Content Chapters */}
-          <div className="px-6 pb-0 z-10 relative space-y-12">
-
-            {/* Chapter 1: 명(命) - 타고난 근원과 기질 */}
-            <div className="relative scroll-reveal">
-              <div className="flex flex-col items-center mb-6">
-                <span className="text-emerald-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 1: Life</span>
-                <h4 className="text-emerald-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-emerald-900/10 pb-2">
-                  제 1장: 명(命) <span className="text-stone-500 font-light text-sm">- 근원과 기질</span>
+          {/* Step 3: The Energy Balance - 제 2권: 기운의 조화 */}
+          <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            <div className="flex-1 flex flex-col items-center justify-center py-12">
+              <div className="flex flex-col items-center mb-10 reveal-item">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="w-6 h-px bg-blue-600/30" />
+                  <span className="text-blue-600/70 text-[9px] tracking-[0.5em] uppercase font-bold">Volume 2: Balance</span>
+                  <div className="w-6 h-px bg-blue-600/30" />
+                </div>
+                <h4 className="text-blue-200 font-serif text-3xl tracking-widest relative">
+                  기운의 調和
+                  <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-12 h-px bg-blue-900/30" />
                 </h4>
+                <span className="text-stone-500 font-serif text-sm mt-4 italic">당신을 구성하는 다섯 가지 원소</span>
               </div>
-              <div className="bg-[#1a1a1c] border border-emerald-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+
+              <div className="w-full max-w-sm bg-[#1a1a1c] border border-blue-900/10 rounded-sm p-6 pt-12 pb-14 shadow-xl relative overflow-hidden group reveal-item delay-100">
                 <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                    {sajuResult.overallFortune || sajuResult.detailedData?.overall?.summary || "기록을 해제하면 당신의 타고난 기질과 운명의 뿌리가 담긴 분석이 펼쳐집니다."}
-                  </p>
-                </div>
-                {!sajuResult.isPaid && <ChapterLockOverlay element="木" />}
-              </div>
-            </div>
 
-            {/* Chapter 2: 업(業) - 부와 사회적 위엄 */}
-            <div className="relative scroll-reveal">
-              <div className="flex flex-col items-center mb-6">
-                <span className="text-amber-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 2: Karma</span>
-                <h4 className="text-amber-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-amber-900/10 pb-2">
-                  제 2장: 업(業) <span className="text-stone-500 font-light text-sm">- 부와 사회적 위엄</span>
-                </h4>
-              </div>
-              <div className="bg-[#1a1a1c] border border-amber-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                    {sajuResult.wealthFortune || sajuResult.detailedData?.wealth?.description || "현세에서 당신이 거머쥘 재물의 크기와 사회적 지위의 한계를 분석합니다."}
-                  </p>
-                </div>
-                {!sajuResult.isPaid && <ChapterLockOverlay element="土" />}
-              </div>
-            </div>
+                <div className="relative flex flex-col items-center py-6">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] bg-amber-800/5 blur-[100px] rounded-full group-hover:bg-amber-700/10 transition-colors duration-1000"></div>
 
-            {/* Chapter 3: 연(緣) - 마음의 거울과 인연 */}
-            <div className="relative scroll-reveal">
-              <div className="flex flex-col items-center mb-6">
-                <span className="text-rose-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 3: Connection</span>
-                <h4 className="text-rose-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-rose-900/10 pb-2">
-                  제 3장: 연(緣) <span className="text-stone-500 font-light text-sm">- 마음의 거울과 인연</span>
-                </h4>
-              </div>
-              <div className="bg-[#1a1a1c] border border-rose-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                    {sajuResult.loveFortune || sajuResult.detailedData?.marriage?.description || "나를 완성해 줄 타자와의 연결 고리, 평생의 인연에 대한 기록입니다."}
-                  </p>
-                </div>
-                {!sajuResult.isPaid && <ChapterLockOverlay element="火" />}
-              </div>
-            </div>
+                  {/* SVG 레이더 차트 (기존 로직 유지) */}
+                  <svg width="280" height="280" viewBox="0 0 120 120" className="overflow-visible relative z-10">
+                    {/* ... (기존 SVG 코드는 그대로 유지됨) ... */}
+                    <defs>
+                      <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                        <feGaussianBlur stdDeviation="1.5" result="blur" />
+                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                      </filter>
+                      <linearGradient id="poly-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+                        <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
+                        <stop offset="100%" stopColor="#78350f" stopOpacity="0.7" />
+                      </linearGradient>
+                      {/* 심해 우주 네뷸라 그라데이션 */}
+                      <radialGradient id="nebula-grad" cx="50%" cy="50%" r="50%">
+                        <stop offset="0%" stopColor="rgba(217, 119, 6, 0.15)" />
+                        <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
+                      </radialGradient>
+                    </defs>
+                    {/* 가이드 라인 시스템 (Reverted to Classic Style from Photo) */}
+                    {[15, 30].map((r, i) => (
+                      <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.04)" strokeWidth="0.2" />
+                    ))}
 
-            {/* Chapter 4: 운(運) - 다가올 시간의 흐름 */}
-            <div className="relative scroll-reveal">
-              <div className="flex flex-col items-center mb-6">
-                <span className="text-stone-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 4: Fortune</span>
-                <h4 className="text-stone-100 font-bold text-xl flex items-center gap-2 font-serif border-b border-stone-500/10 pb-2">
-                  제 4장: 운(運) <span className="text-stone-500 font-light text-sm">- 다가올 시간의 흐름</span>
-                </h4>
-              </div>
-              <div className="bg-[#1a1a1c] border border-stone-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                    {sajuResult.careerFortune || sajuResult.detailedData?.business?.advice || "현재 당신이 지나고 있는 인생의 계절과 다가올 거대한 흐름을 관조합니다."}
-                  </p>
-                </div>
-                {!sajuResult.isPaid && <ChapterLockOverlay element="金" />}
-              </div>
-            </div>
+                    {/* 메인 경계선 (Outer Boundary at 45) */}
+                    <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.4" />
 
-            {/* Chapter 5: 비기(秘記) - 신의 한 수와 비책 */}
-            <div className="relative scroll-reveal">
-              <div className="flex flex-col items-center mb-6">
-                <span className="text-slate-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 5: Secret</span>
-                <h4 className="text-slate-300 font-bold text-xl flex items-center gap-2 font-serif border-b border-slate-500/10 pb-2">
-                  제 5장: 비기(秘記) <span className="text-stone-500 font-light text-sm">- 신의 한 수와 비책</span>
-                </h4>
-              </div>
-              <div className="bg-[#1a1a1c] border border-slate-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
-                  <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                    {(sajuResult.detailedData?.blessings?.advice || sajuResult.advice) || "부족한 기운을 채우고 과한 기운을 다스리는 개운법과, 당신의 운명을 바꿀 결정적인 조언이 기록되어 있습니다."}
-                  </p>
-                </div>
-                {!sajuResult.isPaid && <ChapterLockOverlay element="水" />}
-              </div>
-            </div>
-
-            {/* Celestial Bridge - 섹션 간의 영적 연결 */}
-            <div className="flex flex-col items-center pt-8 pb-12 opacity-60">
-              {sajuResult.isPaid && (
-                <p className="mb-12 text-amber-600/80 text-lg font-serif italic text-center animate-fade-in tracking-[0.2em] leading-relaxed">
-                  모든 기록의 끝에서,<br />
-                  당신을 수호할 단 하나의 인연을 <br />마주하십시오
-                </p>
-              )}
-              <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-amber-600/40 my-2 shadow-[0_0_8px_rgba(217,119,6,0.5)]"></div>
-            </div>
-          </div>
-
-
-
-
-          {/* Talisman Selector Modal (Tech Demo / Test) */}
-          {showTalismanSelector && (
-            <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2 backdrop-blur-sm animate-fade-in">
-              <div className="bg-[#1a1a1c] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[95vh] relative overflow-hidden">
-                {/* Decorative Background */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-indigo-500/5 rounded-full blur-3xl pointer-events-none" />
-
-                <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">📜</span>
-                    <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
-                  </div>
-                  <button
-                    onClick={() => setShowTalismanSelector(false)}
-                    className="w-8 h-8 rounded-full bg-black/20 hover:bg-white/10 flex items-center justify-center text-stone-500 hover:text-[#e8dac0] transition-colors"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-
-                <div className="flex-1 overflow-y-auto p-2 relative z-10 custom-scrollbar">
-                  <div className="grid grid-flow-col grid-rows-5 gap-1 mt-2 overflow-x-auto custom-scrollbar pb-2">
-                    {['자', '축', '인', '묘', '진', '사', '오', '미', '신', '유', '술', '해'].flatMap(animal =>
-                      Object.keys(talismanNames).filter(k => k.endsWith(animal))
-                    ).map((key) => {
-                      const gan = key[0];
-                      const { color, bg } = getGanColor(gan) || { color: 'text-stone-300', bg: 'from-slate-700 to-slate-800' };
-                      const isSelected = testTalismanKey === key;
-
+                    {/* 5행 메인 축 (Extending to 45) */}
+                    {[0, 72, 144, 216, 288].map((angle, i) => {
+                      const rad = (angle - 90) * (Math.PI / 180);
                       return (
-                        <button
-                          key={key}
-                          onClick={() => {
-                            setTestTalismanKey(key);
-                            setShowTalismanSelector(false);
-                            const talismanSection = document.querySelector('.perspective-1000');
-                            if (talismanSection) {
-                              talismanSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            }
-                          }}
-                          className={`
-                                relative p-1 rounded-md border transition-all duration-300 group overflow-hidden min-w-[45px]
-                                ${isSelected
-                              ? 'border-amber-400 bg-amber-900/40 shadow-[0_0_10px_rgba(251,191,36,0.2)] scale-105'
-                              : 'border-white/5 bg-[#252528] hover:border-white/20 hover:bg-[#2a2a2d]'
-                            }
-                                `}
-                          title={talismanNames[key].name}
-                        >
-                          <div className={`absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity bg-gradient-to-br ${bg}`} />
-
-                          <div className="relative z-10 flex flex-col items-center">
-                            <span className={`font-serif font-bold text-xs ${isSelected ? 'text-amber-200' : `${color} opacity-70 group-hover:opacity-100`}`}>
-                              {key}
-                            </span>
-                          </div>
-                        </button>
+                        <line
+                          key={i} x1="60" y1="60"
+                          x2={60 + 45 * Math.cos(rad)}
+                          y2={60 + 45 * Math.sin(rad)}
+                          stroke="rgba(217, 119, 6, 0.05)"
+                          strokeWidth="0.3"
+                        />
                       );
                     })}
+
+                    {(() => {
+                      const elements = [
+                        { key: "목", label: "木", meaning: "성장", angle: 0 },
+                        { key: "화", label: "火", meaning: "열정", angle: 72 },
+                        { key: "토", label: "土", meaning: "안정", angle: 144 },
+                        { key: "금", label: "金", meaning: "결실", angle: 216 },
+                        { key: "수", label: "水", meaning: "지혜", angle: 288 }
+                      ];
+
+                      // --- Largest Remainder Method (합계 100% 보정 로직) ---
+                      const rawData = elements.map(el => ({
+                        key: el.key,
+                        val: sajuResult.oheng?.[el.key] || 0
+                      }));
+
+                      let floorSum = 0;
+                      const processed = rawData.map(d => {
+                        const integer = Math.floor(d.val);
+                        const remainder = d.val - integer;
+                        floorSum += integer;
+                        return { ...d, integer, remainder };
+                      });
+
+                      let diff = 100 - floorSum;
+
+                      const finalOheng = {};
+                      [...processed]
+                        .sort((a, b) => b.remainder - a.remainder)
+                        .forEach((d, idx) => {
+                          finalOheng[d.key] = d.integer + (idx < diff ? 1 : 0);
+                        });
+                      // ---------------------------------------------------
+
+                      const finalVals = elements.map(el => finalOheng[el.key]);
+                      const maxFinalVal = Math.max(...finalVals);
+
+                      // --- 어댑티브 스카이 스케일링 (Adaptive Sky Scaling) ---
+                      // 사용자의 기세에 맞춰 우주의 크기를 유연하게 조절합니다.
+                      let standardMax = 50;
+                      if (maxFinalVal >= 45 && maxFinalVal <= 60) {
+                        standardMax = 60; // 강력한 주도권 사주를 위한 여백 확보
+                      } else if (maxFinalVal > 60) {
+                        standardMax = maxFinalVal + 15; // 극단적 에너지를 우아하게 담아내는 확장
+                      }
+
+                      const scaleFactor = 45 / standardMax;
+                      // ---------------------------------------------------
+
+                      const points = elements.map(el => {
+                        const r = finalOheng[el.key] * scaleFactor;
+                        const rad = (el.angle - 90) * (Math.PI / 180);
+                        return `${60 + r * Math.cos(rad)},${60 + r * Math.sin(rad)}`;
+                      }).join(" ");
+
+                      return (
+                        <g>
+                          <polygon
+                            points={points}
+                            fill="url(#poly-grad)"
+                            stroke="rgba(251, 191, 36, 0.15)"
+                            strokeWidth="0.4"
+                            strokeLinejoin="round"
+                            filter="url(#glow)"
+                            className="animate-pulse-subtle"
+                          />
+                          {elements.map((el, i) => {
+                            const val = finalOheng[el.key];
+                            const r = val * scaleFactor;
+                            const rad = (el.angle - 90) * (Math.PI / 180);
+                            const x = 60 + r * Math.cos(rad);
+                            const y = 60 + r * Math.sin(rad);
+                            const tx = 60 + 56 * Math.cos(rad);
+                            const ty = 60 + 56 * Math.sin(rad);
+
+                            const isStrongest = val === maxFinalVal && val > 0;
+
+                            return (
+                              <g key={i}>
+                                <circle cx={x} cy={y} r="0.7" fill="#fff" filter="url(#glow)" className="opacity-100" />
+                                <g className={isStrongest ? 'animate-highest-pulse' : ''}>
+                                  <text
+                                    x={tx} y={ty}
+                                    textAnchor="middle"
+                                    dominantBaseline="middle"
+                                    fill={elementColorMap[el.key] || "#d6d3d1"}
+                                    className={`text-[6.8px] font-bold ${titleFont} tracking-widest`}
+                                    style={{
+                                      color: elementColorMap[el.key],
+                                      filter: isStrongest ? undefined : 'drop-shadow(0 0 2px rgba(255,255,255,0.1))'
+                                    }}
+                                  >
+                                    {el.label}({el.meaning})
+                                  </text>
+                                  <text
+                                    x={tx} y={ty + 8}
+                                    textAnchor="middle"
+                                    className="text-[5.5px] font-mono font-bold"
+                                    fill="#a8a29e"
+                                    style={{ color: '#a8a29e' }}
+                                  >
+                                    {val}%
+                                  </text>
+                                </g>
+                              </g>
+                            );
+                          })}
+                        </g>
+                      );
+                    })()}
+
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            {/* 중간 힌트 (Sub CTA) */}
+            {!sajuResult.isPaid && (
+              <div className="flex justify-center pb-8">
+                <button
+                  onClick={handleBasicPayment}
+                  className="text-amber-600/70 hover:text-amber-500 font-serif text-sm tracking-wider transition-colors flex items-center gap-2"
+                >
+                  <Lock size={14} />
+                  <span>봉인된 천기(天機)를 지금 바로 확인하기</span>
+                </button>
+              </div>
+            )}
+          </section>
+
+          {/* Step 4: The Sealed Archive - 제 3권: 천개의 비밀 */}
+          <section className="snap-section px-6 h-auto pb-20" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            {/* Chapter 3 Heading */}
+            <div className="mb-10 z-10 relative reveal-item">
+              <div className="px-6 mb-3 flex items-end justify-between border-b border-amber-900/20 pb-2">
+                <h3 className="text-lg font-bold text-[#e8dac0] flex items-center gap-2" style={{ fontFamily: '"Gungsuh", serif' }}>
+                  第三卷: 천개의 비밀 (天機錄)
+                </h3>
+                <span className="text-[9px] text-amber-700/60 uppercase tracking-[0.2em] mb-1 font-serif font-bold">5 Secrets of Life</span>
+              </div>
+            </div>
+
+            {/* Content Chapters */}
+            <div className="flex-1 flex flex-col justify-center z-10 relative space-y-12 max-w-sm mx-auto py-10">
+              {/* Chapter 1: 명(命) */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-emerald-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 1: Life</span>
+                  <h4 className="text-emerald-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-emerald-900/10 pb-2">
+                    제 1장: 명(命) <span className="text-stone-500 font-light text-sm">- 근원과 기질</span>
+                  </h4>
+                </div>
+                <div className="bg-[#1a1a1c] border border-emerald-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {sajuResult.overallFortune || sajuResult.detailedData?.overall?.summary || "기록을 해제하면 당신의 타고난 기질과 운명의 뿌리가 담긴 분석이 펼쳐집니다."}
+                    </p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
 
-          {/* PDF Preview Modal */}
-          {showPdfPreview && pdfPreviewUrl && (
-            <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-              <div className="bg-[#1a1a1c] w-full max-w-lg rounded-lg overflow-hidden h-[80vh] flex flex-col border border-amber-900/30 shadow-2xl">
-                <div className="p-4 border-b border-amber-900/30 flex justify-between items-center bg-[#252528]">
-                  <h3 className="font-bold text-[#e8dac0] font-serif">미리보기</h3>
-                  <button onClick={handleClosePdfPreview} className="text-stone-500 hover:text-[#e8dac0]"><X /></button>
+              {/* Chapter 2: 업(業) */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-amber-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 2: Karma</span>
+                  <h4 className="text-amber-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-amber-900/10 pb-2">
+                    제 2장: 업(業) <span className="text-stone-500 font-light text-sm">- 부와 사회적 위엄</span>
+                  </h4>
                 </div>
-                <div className="flex-1 overflow-auto bg-[#101012] p-4 flex justify-center relative">
-                  {/* 배경 질감 */}
+                <div className="bg-[#1a1a1c] border border-amber-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
                   <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                  <Document file={pdfPreviewUrl} loading={<div className="text-amber-700 font-serif blink">문서를 불러오는 중...</div>}>
-                    <Page pageNumber={1} width={300} />
-                  </Document>
-                </div>
-                <div className="p-4 bg-[#1a1a1c] border-t border-amber-900/30">
-                  <button onClick={handlePdfPayment} className="w-full bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-3 rounded font-bold font-serif border border-amber-700/50 flex items-center justify-center gap-2">
-                    <span className="text-lg">🧧</span> 전체 결과 소장하기
-                  </button>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {sajuResult.wealthFortune || sajuResult.detailedData?.wealth?.description || "현세에서 당신이 거머쥘 재물의 크기와 사회적 지위의 한계를 분석합니다."}
+                    </p>
+                  </div>
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="土" />}
                 </div>
               </div>
+
+              {/* Chapter 3: 연(緣) */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-rose-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 3: Connection</span>
+                  <h4 className="text-rose-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-rose-900/10 pb-2">
+                    제 3장: 연(緣) <span className="text-stone-500 font-light text-sm">- 마음의 거울과 인연</span>
+                  </h4>
+                </div>
+                <div className="bg-[#1a1a1c] border border-rose-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {sajuResult.loveFortune || sajuResult.detailedData?.marriage?.description || "나를 완성해 줄 타자와의 연결 고리, 평생의 인연에 대한 기록입니다."}
+                    </p>
+                  </div>
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="火" />}
+                </div>
+              </div>
+
+              {/* Chapter 4: 운(運) */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-stone-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 4: Fortune</span>
+                  <h4 className="text-stone-100 font-bold text-xl flex items-center gap-2 font-serif border-b border-stone-500/10 pb-2">
+                    제 4장: 운(運) <span className="text-stone-500 font-light text-sm">- 다가올 시간의 흐름</span>
+                  </h4>
+                </div>
+                <div className="bg-[#1a1a1c] border border-stone-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {sajuResult.careerFortune || sajuResult.detailedData?.business?.advice || "현재 당신이 지나고 있는 인생의 계절과 다가올 거대한 흐름을 관조합니다."}
+                    </p>
+                  </div>
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="金" />}
+                </div>
+              </div>
+
+              {/* Chapter 5: 비기(秘記) */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-slate-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 5: Secret</span>
+                  <h4 className="text-slate-300 font-bold text-xl flex items-center gap-2 font-serif border-b border-slate-500/10 pb-2">
+                    제 5장: 비기(秘記) <span className="text-stone-500 font-light text-sm">- 신의 한 수와 비책</span>
+                  </h4>
+                </div>
+                <div className="bg-[#1a1a1c] border border-slate-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {(sajuResult.detailedData?.blessings?.advice || sajuResult.advice) || "부족한 기운을 채우고 과한 기운을 다스리는 개운법과, 당신의 운명을 바꿀 결정적인 조언이 기록되어 있습니다."}
+                    </p>
+                  </div>
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="水" />}
+                </div>
+              </div>
+
+              {/* Celestial Bridge */}
+              <div className="flex flex-col items-center pt-8 pb-4 opacity-60">
+                {sajuResult.isPaid && (
+                  <p className="mb-10 text-amber-600/80 text-lg font-serif italic text-center animate-fade-in tracking-[0.1em] leading-relaxed">
+                    모든 기록의 끝에서,<br />
+                    당신을 수호할 단 하나의 인연을 마주하십시오
+                  </p>
+                )}
+                <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
+              </div>
             </div>
-          )}
+          </section>
+
+
+
+
+          {/* Step 5: The Final Guardian - 수호신령 */}
+          <section className="snap-section px-6 pb-32" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            <div className="flex-1 flex flex-col items-center justify-center py-12 reveal-item">
+              <div className="bg-[#1a1a1c] border border-purple-900/10 rounded-sm p-6 pb-24 shadow-xl relative overflow-hidden group w-full max-w-sm">
+                <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+
+                <div className="relative z-10">
+                  {/* ... Guardian Content ... */}
+
+                  <div className="relative z-10">
+
+                    <div className="flex justify-center items-center gap-4 mb-8 relative">
+                      {/* Left Arrow (Ghost Navigation) */}
+                      {sajuResult.talisman?.reason && isTalismanFlipped && (
+                        <button
+                          onClick={() => setTalismanViewMode('image')}
+                          className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'reason' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
+                        >
+                          <ChevronLeft size={32} />
+                        </button>
+                      )}
+
+                      <div className="perspective-1000 relative">
+                        <div className={`${!sajuResult.isPaid ? 'blur-[12px] opacity-40 grayscale pointer-events-none' : ''}`}>
+                          <TalismanCard
+                            ref={talismanCardRef}
+                            type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
+                            userName={userInfo?.name || '사용자'}
+                            reason={sajuResult.talisman?.reason}
+                            activeTab={talismanViewMode}
+                            onFlip={(flipped) => setIsTalismanFlipped(flipped)}
+                            isPurchased={isTalismanPurchased}
+                            setIsPurchased={setIsTalismanPurchased}
+                            // Use selected test talisman data if available, otherwise fallback to result or default
+                            talismanData={
+                              testTalismanKey
+                                ? talismanNames[testTalismanKey]
+                                : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
+                                  ? talismanNames[sajuResult.talisman.name]
+                                  : talismanNames['갑자'])
+                            }
+                          />
+                        </div>
+
+                        {!sajuResult.isPaid && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
+                            <div className="p-8 rounded-full border-4 border-amber-600/30 text-amber-600/40 font-bold text-3xl tracking-[0.5em] font-serif rotate-12 bg-black/20 backdrop-blur-[2px]">
+                              未結 (미결)
+                            </div>
+                            <p className="text-amber-500/60 mt-6 font-serif text-sm tracking-widest animate-pulse">
+                              수호신령의 인연을 맺어주세요
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Right Arrow (Ghost Navigation) */}
+                      {sajuResult.talisman?.reason && isTalismanFlipped && (
+                        <button
+                          onClick={() => setTalismanViewMode('reason')}
+                          className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'image' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
+                        >
+                          <ChevronRight size={32} />
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Page Indicators */}
+                    {sajuResult.talisman?.reason && isTalismanFlipped && (
+                      <div className="flex justify-center gap-2 mb-10 -mt-4">
+                        <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'image' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+                        <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'reason' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+                      </div>
+                    )}
+
+                    {/* Premium Download/Purchase Button */}
+                    {isTalismanFlipped && (
+                      <div className="flex justify-center px-8 mb-8">
+                        <button
+                          onClick={() => talismanCardRef.current?.handleDownload()}
+                          className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
+                        >
+                          {/* Button Background: Deep Traditional Ink */}
+                          <div className="absolute inset-0 bg-[#0d0d0f] border border-amber-900/30 group-hover:border-amber-600/50 transition-colors" />
+                          <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent opacity-50" />
+
+                          {/* Subtle Texture Hook */}
+                          <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
+
+                          {/* Button Content */}
+                          <div className="relative flex items-center justify-center gap-3">
+                            <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
+                            <Download size={18} className="text-amber-600 group-hover:scale-110 transition-transform" />
+                            <span className="text-amber-500 font-serif font-bold tracking-[0.2em] text-sm">
+                              {isTalismanPurchased ? '護符 貯藏 (저장하기)' : '名銘 貯藏 (이름 새겨 소장하기)'}
+                            </span>
+                            <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
+                          </div>
+
+                          {/* Glossy Overlay */}
+                          <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* 마지막 섹션 인라인 CTA */}
+              {!sajuResult.isPaid && (
+                <div className="mt-12 flex justify-center">
+                  <button
+                    onClick={handleBasicPayment}
+                    className="group relative w-full max-w-[320px] overflow-hidden rounded py-5 shadow-2xl transition-all"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900" />
+                    <div className="relative flex items-center justify-center gap-4 text-amber-100 font-serif text-lg font-bold tracking-[0.3em]">
+                      <span>천기(天機) 열람하기</span>
+                    </div>
+                  </button>
+                </div>
+              )}
+            </div>
+          </section>
         </main>
 
-        {/* Final Epilogue Section: 수호신령 - 번호 없이 흐름으로 연결 */}
-        <div className="relative scroll-reveal px-6 mt-12">
-          <div className="bg-[#1a1a1c] border border-purple-900/10 rounded-sm p-6 pb-24 shadow-xl relative overflow-hidden group">
-            <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+        {/* --- Modals & Overlays (Outside main for focus) --- */}
 
-            <div className="relative z-10">
-
-              <div className="flex justify-center items-center gap-4 mb-8 relative">
-                {/* Left Arrow (Ghost Navigation) */}
-                {sajuResult.talisman?.reason && isTalismanFlipped && (
-                  <button
-                    onClick={() => setTalismanViewMode('image')}
-                    className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'reason' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
-                  >
-                    <ChevronLeft size={32} />
-                  </button>
-                )}
-
-                <div className="perspective-1000 relative">
-                  <div className={`${!sajuResult.isPaid ? 'blur-[12px] opacity-40 grayscale pointer-events-none' : ''}`}>
-                    <TalismanCard
-                      ref={talismanCardRef}
-                      type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
-                      userName={userInfo?.name || '사용자'}
-                      reason={sajuResult.talisman?.reason}
-                      activeTab={talismanViewMode}
-                      onFlip={(flipped) => setIsTalismanFlipped(flipped)}
-                      isPurchased={isTalismanPurchased}
-                      setIsPurchased={setIsTalismanPurchased}
-                      // Use selected test talisman data if available, otherwise fallback to result or default
-                      talismanData={
-                        testTalismanKey
-                          ? talismanNames[testTalismanKey]
-                          : ((sajuResult.talisman?.name && talismanNames[sajuResult.talisman.name])
-                            ? talismanNames[sajuResult.talisman.name]
-                            : talismanNames['갑자'])
-                      }
-                    />
-                  </div>
-
-                  {!sajuResult.isPaid && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center z-20">
-                      <div className="p-8 rounded-full border-4 border-amber-600/30 text-amber-600/40 font-bold text-3xl tracking-[0.5em] font-serif rotate-12 bg-black/20 backdrop-blur-[2px]">
-                        未結 (미결)
-                      </div>
-                      <p className="text-amber-500/60 mt-6 font-serif text-sm tracking-widest animate-pulse">
-                        수호신령의 인연을 맺어주세요
-                      </p>
-                    </div>
-                  )}
+        {/* Talisman Selector Modal (Tech Demo / Test) */}
+        {showTalismanSelector && (
+          <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2 backdrop-blur-sm animate-fade-in">
+            <div className="bg-[#1a1a1c] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[95vh] relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+              <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">📜</span>
+                  <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
                 </div>
-
-                {/* Right Arrow (Ghost Navigation) */}
-                {sajuResult.talisman?.reason && isTalismanFlipped && (
-                  <button
-                    onClick={() => setTalismanViewMode('reason')}
-                    className={`flex-shrink-0 w-10 h-20 flex items-center justify-center transition-all duration-500 ${talismanViewMode === 'image' ? 'opacity-30 hover:opacity-100 text-amber-600' : 'opacity-0 pointer-events-none'}`}
-                  >
-                    <ChevronRight size={32} />
-                  </button>
-                )}
+                <button onClick={() => setShowTalismanSelector(false)} className="w-8 h-8 rounded-full bg-black/20 hover:bg-white/10 flex items-center justify-center text-stone-500"><X size={18} /></button>
               </div>
-
-              {/* Page Indicators */}
-              {sajuResult.talisman?.reason && isTalismanFlipped && (
-                <div className="flex justify-center gap-2 mb-10 -mt-4">
-                  <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'image' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
-                  <div className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${talismanViewMode === 'reason' ? 'bg-amber-600 w-4' : 'bg-stone-700'}`} />
+              <div className="flex-1 overflow-y-auto p-4 relative z-10 custom-scrollbar">
+                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                  {Object.keys(talismanNames).map((key) => {
+                    const gan = key[0];
+                    const { color } = getGanColor(gan);
+                    return (
+                      <button key={key} onClick={() => { setTestTalismanKey(key); setShowTalismanSelector(false); }} className="p-2 border border-white/5 bg-[#252528] rounded hover:border-amber-500/50 transition-all">
+                        <span className={`text-[10px] font-serif ${color}`}>{key}</span>
+                      </button>
+                    );
+                  })}
                 </div>
-              )}
-
-              {/* Premium Download/Purchase Button */}
-              {isTalismanFlipped && (
-                <div className="flex justify-center px-8 mb-8">
-                  <button
-                    onClick={() => talismanCardRef.current?.handleDownload()}
-                    className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
-                  >
-                    {/* Button Background: Deep Traditional Ink */}
-                    <div className="absolute inset-0 bg-[#0d0d0f] border border-amber-900/30 group-hover:border-amber-600/50 transition-colors" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent opacity-50" />
-
-                    {/* Subtle Texture Hook */}
-                    <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
-
-                    {/* Button Content */}
-                    <div className="relative flex items-center justify-center gap-3">
-                      <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
-                      <Download size={18} className="text-amber-600 group-hover:scale-110 transition-transform" />
-                      <span className="text-amber-500 font-serif font-bold tracking-[0.2em] text-sm">
-                        {isTalismanPurchased ? '護符 貯藏 (저장하기)' : '名銘 貯藏 (이름 새겨 소장하기)'}
-                      </span>
-                      <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
-                    </div>
-
-                    {/* Glossy Overlay */}
-                    <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
-                  </button>
-                </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Floating Action Button (PDF) - 전통 목판 스타일 */}
-        {showFab && (
-          <div className="fixed bottom-6 left-0 w-full flex justify-center z-50 pointer-events-none animate-fade-in">
+        {/* PDF Preview Modal */}
+        {showPdfPreview && pdfPreviewUrl && (
+          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+            <div className="bg-[#1a1a1c] w-full max-w-lg rounded-lg overflow-hidden h-[80vh] flex flex-col border border-amber-900/30 shadow-2xl">
+              <div className="p-4 border-b border-amber-900/30 flex justify-between items-center bg-[#252528]">
+                <h3 className="font-bold text-[#e8dac0] font-serif">미리보기</h3>
+                <button onClick={handleClosePdfPreview} className="text-stone-500 hover:text-[#e8dac0]"><X /></button>
+              </div>
+              <div className="flex-1 overflow-auto bg-[#101012] p-4 flex justify-center relative">
+                <Document file={pdfPreviewUrl} loading={<div className="text-amber-700 font-serif blink">문서를 불러오는 중...</div>}>
+                  <Page pageNumber={1} width={300} />
+                </Document>
+              </div>
+              <div className="p-4 bg-[#1a1a1c] border-t border-amber-900/30">
+                <button onClick={handlePdfPayment} className="w-full bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-3 rounded font-bold font-serif border border-amber-700/50 flex justify-center gap-2">
+                  <span className="text-lg">🧧</span> 전체 결과 소장하기
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Floating Action Button (PDF) - 숨김 처리 (나중에 위치 결정 후 재활성화) */}
+        {/* FAB는 인라인 CTA로 대체되어 숨김 처리됨 */}
+        {false && showFab && (
+          <div className="fixed bottom-6 left-0 w-full flex justify-center z-40 pointer-events-none animate-fade-in">
             <div className="w-full max-w-[480px] px-6 pointer-events-auto">
               {sajuResult.isPaid ? (
                 <div className="flex gap-2">
-                  <button
-                    onClick={handlePdfPreview}
-                    className="flex-1 bg-[#2a2a2c] hover:bg-[#323235] text-stone-300 py-4 rounded font-bold shadow-lg border border-amber-900/30 flex items-center justify-center gap-2 transition-transform active:scale-95 font-serif"
-                  >
-                    <Eye size={18} /> 기록 미리보기
-                  </button>
-                  <button
-                    onClick={handlePdfPayment}
-                    className="flex-[2] bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-4 rounded font-bold shadow-lg border border-amber-700/50 flex items-center justify-center gap-2 transition-transform active:scale-95 font-serif relative overflow-hidden group"
-                  >
-                    <div className="absolute inset-0 bg-black/10 group-hover:bg-transparent transition-colors" />
-                    <Download size={18} />
-                    <span>영구 소장하기</span>
-                    <span className="text-[10px] bg-amber-900/80 px-1.5 py-0.5 rounded text-amber-200/70 border border-amber-500/20 ml-1">Archive</span>
-                  </button>
+                  <button onClick={handlePdfPreview} className="flex-1 bg-[#2a2a2c] text-stone-300 py-4 rounded font-bold border border-amber-900/30 flex items-center justify-center gap-2 font-serif"><Eye size={18} /> 미리보기</button>
+                  <button onClick={handlePdfPayment} className="flex-[2] bg-[#3f2e18] text-amber-100 py-4 rounded font-bold border border-amber-700/50 flex items-center justify-center gap-2 font-serif"><Download size={18} /> <span>영구 소장하기</span></button>
                 </div>
               ) : (
-                <button
-                  onClick={handleBasicPayment}
-                  className="group relative w-full overflow-hidden rounded py-5 shadow-2xl transition-all active:scale-[0.98]"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-900/90 via-amber-800 to-amber-900/90" />
-                  <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] opacity-20" />
-                  <div className="relative flex items-center justify-center gap-4 text-amber-100">
-                    <div className="w-8 h-[1px] bg-amber-500/30 group-hover:w-12 transition-all duration-700" />
-                    <span className="font-serif text-lg font-bold tracking-[0.3em]">천기(天機) 열람하기</span>
-                    <div className="w-8 h-[1px] bg-amber-500/30 group-hover:w-12 transition-all duration-700" />
+                <button onClick={handleBasicPayment} className="group relative w-full overflow-hidden rounded py-5 shadow-2xl transition-all">
+                  <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900" />
+                  <div className="relative flex items-center justify-center gap-4 text-amber-100 font-serif text-lg font-bold tracking-[0.3em]">
+                    <span>천기(天機) 열람하기</span>
                   </div>
                 </button>
               )}
             </div>
           </div>
         )}
+
       </div>
-    </div>
+    </div >
   );
 };
 

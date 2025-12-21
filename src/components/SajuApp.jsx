@@ -42,8 +42,8 @@ const SajuApp = () => {
     gender: 'male',
     birthDate: '',
     birthTime: '', // HH:MM 형식 (내부 로직용)
-    birthTimeLabel: '', // UI 표시용 (예: 축시 01:30~03:29)
-    timeUnknown: false,
+    birthTimeLabel: '모름', // UI 표시용 (기본값: 모름)
+    timeUnknown: true, // 기본값: true (모름 상태)
     calendarType: 'solar', // 'solar' 또는 'lunar'
     isLeap: false, // 음력일 때 윤달 여부
     phone: '', // 휴대폰 번호
@@ -1006,7 +1006,7 @@ const SajuApp = () => {
               <div className="flex justify-between items-center group cursor-pointer" onClick={() => setShowTimeModal(true)}>
                 <span className="text-stone-500 text-xs tracking-[0.1em] font-serif italic uppercase">태어난 시각</span>
                 <div className="flex items-center gap-3">
-                  <span className="text-stone-300 text-sm font-serif italic tracking-widest">{userInfo.birthTimeLabel || '미상'}</span>
+                  <span className="text-stone-300 text-sm font-serif italic tracking-widest">{userInfo.birthTimeLabel || '모름'}</span>
                   <ChevronRight size={14} className="text-amber-900 group-hover:text-amber-500 transition-colors" />
                 </div>
               </div>
@@ -1585,98 +1585,98 @@ const SajuApp = () => {
               </p>
             </div>
           </div>
-        {/* 상세 운세 카드들 */}
-        <div className="space-y-4">
-          {fortuneCards.map((card, idx) => (
-            <div
-              key={card.title}
-              className={`bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10 animate-fade-in-up ${card.delay} opacity-0-init`}
-              style={{ animationFillMode: 'forwards' }}
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="font-bold text-lg text-white flex items-center gap-2">
-                  <span className="text-2xl">{card.emoji}</span> {card.title}
-                </h4>
-                <div className="flex items-center gap-1">
-                  <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{card.score}</span>
-                  <span className="text-slate-500 text-sm">점</span>
+          {/* 상세 운세 카드들 */}
+          <div className="space-y-4">
+            {fortuneCards.map((card, idx) => (
+              <div
+                key={card.title}
+                className={`bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10 animate-fade-in-up ${card.delay} opacity-0-init`}
+                style={{ animationFillMode: 'forwards' }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-bold text-lg text-white flex items-center gap-2">
+                    <span className="text-2xl">{card.emoji}</span> {card.title}
+                  </h4>
+                  <div className="flex items-center gap-1">
+                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{card.score}</span>
+                    <span className="text-slate-500 text-sm">점</span>
+                  </div>
                 </div>
+                {/* 점수 바 */}
+                <div className="w-full bg-white/10 rounded-full h-2 mb-3 overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-grow-width"
+                    style={{ width: `${card.score}%`, animationDelay: `${(idx + 3) * 100}ms`, animationFillMode: 'forwards' }}
+                  ></div>
+                </div>
+                <p className="text-slate-300 text-sm leading-relaxed">
+                  {card.content}
+                </p>
               </div>
-              {/* 점수 바 */}
-              <div className="w-full bg-white/10 rounded-full h-2 mb-3 overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-grow-width"
-                  style={{ width: `${card.score}%`, animationDelay: `${(idx + 3) * 100}ms`, animationFillMode: 'forwards' }}
-                ></div>
-              </div>
-              <p className="text-slate-300 text-sm leading-relaxed">
-                {card.content}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        {/* 주의사항 */}
-        <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl animate-fade-in-up delay-700 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
-          <p className="text-yellow-200 text-sm leading-relaxed">
-            ⚠️ <strong>2026년 주의 시기:</strong> 3월, 7월에는 큰 결정을 피하고 신중하게 행동하세요. 특히 금전 관련 계약은 재검토가 필요합니다.
-          </p>
-        </div>
-      </div>
-
-      {/* 하단 PDF 다운로드 영역 */}
-      <div className="fixed bottom-0 left-0 w-full print:hidden">
-      {/* 그라데이션 오버레이 */}
-      <div className="bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent h-20 pointer-events-none"></div>
-      <div className="bg-slate-900 p-4 pb-6 space-y-3">
-        <div className="max-w-[480px] mx-auto space-y-3">
-          {/* PDF 프로모션 배너 */}
-          <div className="bg-gradient-to-r from-pink-600/20 to-purple-600/20 p-3 rounded-xl border border-pink-500/30 flex items-center gap-3">
-            <div className="bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded">추천</div>
-            <p className="text-slate-200 text-sm flex-1">
-              <strong>평생 소장용 PDF</strong>로 저장하세요
-            </p>
-            <span className="text-pink-400 font-bold">+3,900원</span>
+            ))}
           </div>
 
-          {/* PDF 다운로드 버튼 */}
-          <button
-            onClick={handleDownloadPDF}
-            className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-          >
-            <Download size={20} /> PDF 다운로드 (3,900원)
-          </button>
+          {/* 주의사항 */}
+          <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl animate-fade-in-up delay-700 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
+            <p className="text-yellow-200 text-sm leading-relaxed">
+              ⚠️ <strong>2026년 주의 시기:</strong> 3월, 7월에는 큰 결정을 피하고 신중하게 행동하세요. 특히 금전 관련 계약은 재검토가 필요합니다.
+            </p>
+          </div>
+        </div>
 
-          {/* 이미 결제한 것처럼 보이는 무료 버튼 */}
-          <button
-            onClick={handleDownloadPDF}
-            className="w-full bg-white/10 text-slate-400 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors text-sm"
-          >
-            웹에서 계속 보기
-          </button>
+        {/* 하단 PDF 다운로드 영역 */}
+        <div className="fixed bottom-0 left-0 w-full print:hidden">
+          {/* 그라데이션 오버레이 */}
+          <div className="bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent h-20 pointer-events-none"></div>
+          <div className="bg-slate-900 p-4 pb-6 space-y-3">
+            <div className="max-w-[480px] mx-auto space-y-3">
+              {/* PDF 프로모션 배너 */}
+              <div className="bg-gradient-to-r from-pink-600/20 to-purple-600/20 p-3 rounded-xl border border-pink-500/30 flex items-center gap-3">
+                <div className="bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded">추천</div>
+                <p className="text-slate-200 text-sm flex-1">
+                  <strong>평생 소장용 PDF</strong>로 저장하세요
+                </p>
+                <span className="text-pink-400 font-bold">+3,900원</span>
+              </div>
+
+              {/* PDF 다운로드 버튼 */}
+              <button
+                onClick={handleDownloadPDF}
+                className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+              >
+                <Download size={20} /> PDF 다운로드 (3,900원)
+              </button>
+
+              {/* 이미 결제한 것처럼 보이는 무료 버튼 */}
+              <button
+                onClick={handleDownloadPDF}
+                className="w-full bg-white/10 text-slate-400 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors text-sm"
+              >
+                웹에서 계속 보기
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    );
+  };
+
+  return (
+    <div className="min-h-screen bg-[#050505] flex items-center justify-center font-sans relative overflow-hidden">
+      {/* 고정 배경 요소: 금빛 안개 효과 */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+      {/* 메인 앱 컨테이너 - 천명록 전용 컨테이너 */}
+      <div className="w-full max-w-[480px] h-[100dvh] bg-[#0f0f10] shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col border-x border-amber-900/10">
+        {step === 'landing' && renderLandingPage()}
+        {step === 'input' && renderInputPage()}
+        {step === 'payment' && renderPaymentPage()}
+        {step === 'analyzing' && renderAnalyzingPage()}
+        {step === 'result' && renderResultPage()}
+      </div>
     </div>
   );
-};
-
-return (
-  <div className="min-h-screen bg-[#050505] flex items-center justify-center font-sans relative overflow-hidden">
-    {/* 고정 배경 요소: 금빛 안개 효과 */}
-    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
-    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
-
-    {/* 메인 앱 컨테이너 - 천명록 전용 컨테이너 */}
-    <div className="w-full max-w-[480px] h-[100dvh] bg-[#0f0f10] shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col border-x border-amber-900/10">
-      {step === 'landing' && renderLandingPage()}
-      {step === 'input' && renderInputPage()}
-      {step === 'payment' && renderPaymentPage()}
-      {step === 'analyzing' && renderAnalyzingPage()}
-      {step === 'result' && renderResultPage()}
-    </div>
-  </div>
-);
 };
 
 export default SajuApp;
