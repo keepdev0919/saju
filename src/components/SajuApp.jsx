@@ -725,7 +725,7 @@ const SajuApp = () => {
               <div className="relative flex items-center justify-center gap-6">
                 <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
                 <span className="text-amber-500/85 font-light tracking-[0.6em] text-[11px] group-active:text-amber-400 transition-colors">
-                  기록 열람하기
+                  천기(天機) 열람하기
                 </span>
                 <div className="w-6 h-px bg-amber-700/40 group-active:w-10 group-active:bg-amber-500/60 transition-all duration-500" />
               </div>
@@ -1469,16 +1469,17 @@ const SajuApp = () => {
           </div>
 
           {/* 오행 그래프 2.0 - 프리미엄 SVG 시각화 (Relative Scaling 적용) */}
-          <div className="bg-stone-900/40 backdrop-blur-xl p-8 rounded-sm border border-amber-900/20 animate-fade-in-up delay-200 opacity-0-init relative overflow-hidden" style={{ animationFillMode: 'forwards' }}>
-            <div className="flex justify-between items-center mb-8">
-              <h3 className={`font-bold text-lg flex items-center gap-2 text-stone-100 ${titleFont}`}>
-                <Scroll size={18} className="text-amber-700" /> 오행 분포(五行分布)
-              </h3>
-              {/* 중화도(Harmony) 배지 */}
+          <div className="bg-stone-900/60 backdrop-blur-2xl p-10 rounded-sm border border-amber-900/30 animate-fade-in-up delay-200 opacity-0-init relative overflow-hidden group shadow-2xl" style={{ animationFillMode: 'forwards' }}>
+            <div className="flex justify-between items-end mb-12 relative z-10">
+              <div>
+                <span className="text-amber-600/60 text-[10px] uppercase tracking-[0.3em] font-medium block mb-2">Five Elements Balance</span>
+                <h3 className={`font-bold text-2xl flex items-center gap-3 text-stone-100 ${titleFont}`}>
+                  五行調和 <span className="text-stone-500 font-light text-base">(오행 조화)</span>
+                </h3>
+              </div>
               <div className="flex flex-col items-end">
-                <span className="text-[10px] text-stone-500 uppercase tracking-widest mb-1">Harmony</span>
-                <div className="px-3 py-1 bg-amber-900/20 border border-amber-500/30 rounded-full">
-                  <span className="text-amber-500 text-xs font-bold font-serif">
+                <div className="px-4 py-1.5 bg-amber-900/30 border border-amber-500/40 rounded-sm shadow-[0_0_15px_rgba(180,83,9,0.2)]">
+                  <span className="text-amber-400 text-xs font-bold tracking-widest font-serif">
                     {(() => {
                       const vals = Object.values(result.oheng || { 목: 20, 화: 20, 토: 20, 금: 20, 수: 20 });
                       const mean = 20;
@@ -1493,58 +1494,43 @@ const SajuApp = () => {
               </div>
             </div>
 
-            <div className="relative flex justify-center py-4">
-              {/* SVG 레이더 차트 (Dynamic Scaling) */}
-              <svg width="280" height="280" viewBox="0 0 100 100" className="overflow-visible">
+            <div className="relative flex justify-center py-6">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[320px] h-[320px] bg-amber-900/5 blur-[100px] rounded-full group-hover:bg-amber-800/10 transition-colors duration-1000"></div>
+
+              <svg width="340" height="340" viewBox="0 0 100 100" className="overflow-visible relative z-10 scale-110 sm:scale-125">
                 <defs>
-                  {/* 오행별 프리미엄 그라데이션 정의 */}
-                  <radialGradient id="grad-wood" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#064e3b" stopOpacity="0.2" />
-                  </radialGradient>
-                  <radialGradient id="grad-fire" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0.2" />
-                  </radialGradient>
-                  <radialGradient id="grad-earth" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#eab308" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#713f12" stopOpacity="0.2" />
-                  </radialGradient>
-                  <radialGradient id="grad-metal" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#1e293b" stopOpacity="0.2" />
-                  </radialGradient>
-                  <radialGradient id="grad-water" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
-                    <stop offset="100%" stopColor="#1e3a8a" stopOpacity="0.2" />
-                  </radialGradient>
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="1.5" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <linearGradient id="poly-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.7" />
+                    <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#78350f" stopOpacity="0.6" />
+                  </linearGradient>
                 </defs>
 
-                {/* 배경 가이드 원 (4단계) */}
-                {[20, 40, 60, 80].map((r, i) => (
-                  <circle key={i} cx="50" cy="50" r={r / 2} fill="none" stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.5" strokeDasharray="1,1" />
+                {[15, 30, 45].map((r, i) => (
+                  <circle key={i} cx="50" cy="50" r={r} fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.3" />
                 ))}
+                <circle cx="50" cy="50" r={45} fill="none" stroke="rgba(217, 119, 6, 0.15)" strokeWidth="0.8" />
 
-                {/* 방사형 가이드 라인 */}
                 {[0, 72, 144, 216, 288].map((angle, i) => {
                   const rad = (angle - 90) * (Math.PI / 180);
-                  return <line key={i} x1="50" y1="50" x2={50 + 40 * Math.cos(rad)} y2={50 + 40 * Math.sin(rad)} stroke="rgba(217, 119, 6, 0.15)" strokeWidth="0.5" />;
+                  return <line key={i} x1="50" y1="50" x2={50 + 45 * Math.cos(rad)} y2={50 + 45 * Math.sin(rad)} stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.4" />;
                 })}
 
-                {/* 오행 폴리곤 (Dynamic Scaling) */}
                 {(() => {
                   const elements = [
-                    { key: '목', label: '木', angle: 0 },
-                    { key: '화', label: '火', angle: 72 },
-                    { key: '토', label: '土', angle: 144 },
-                    { key: '금', label: '金', angle: 216 },
-                    { key: '수', label: '水', angle: 288 }
+                    { key: '목', label: '木', meaning: '성장', angle: 0 },
+                    { key: '화', label: '火', meaning: '열정', angle: 72 },
+                    { key: '토', label: '土', meaning: '안정', angle: 144 },
+                    { key: '금', label: '金', meaning: '결실', angle: 216 },
+                    { key: '수', label: '水', meaning: '지혜', angle: 288 }
                   ];
                   const rawVals = elements.map(el => result.oheng?.[el.key] || 0);
-                  const maxVal = Math.max(...rawVals, 20); // 최소 20기준으로 스케일링
-
-                  // 스케일링 계수: 최대값이 80% 지점에 오도록 설정 (여백 확보)
-                  const scaleFactor = 40 / maxVal;
+                  const maxVal = Math.max(...rawVals, 20);
+                  const scaleFactor = 42 / maxVal;
 
                   const points = elements.map(el => {
                     const r = (result.oheng?.[el.key] || 0) * scaleFactor;
@@ -1554,43 +1540,22 @@ const SajuApp = () => {
 
                   return (
                     <g>
-                      <polygon
-                        points={points}
-                        fill="rgba(180, 83, 9, 0.2)"
-                        stroke="#d97706"
-                        strokeWidth="1.5"
-                        strokeLinejoin="round"
-                        className="animate-pulse-subtle"
-                      />
-                      {/* 꼭짓점 글로우 및 레이블 */}
+                      <polygon points={points} fill="url(#poly-grad)" stroke="#fbbf24" strokeWidth="1.2" strokeLinejoin="round" filter="url(#glow)" className="animate-pulse-subtle" />
                       {elements.map((el, i) => {
                         const r = (result.oheng?.[el.key] || 0) * scaleFactor;
                         const rad = (el.angle - 90) * (Math.PI / 180);
                         const x = 50 + r * Math.cos(rad);
                         const y = 50 + r * Math.sin(rad);
-
-                        // 텍스트 위치 (꼭짓점보다 약간 바깥쪽)
-                        const tx = 50 + 48 * Math.cos(rad);
-                        const ty = 50 + 48 * Math.sin(rad);
+                        const tx = 50 + 56 * Math.cos(rad);
+                        const ty = 50 + 56 * Math.sin(rad);
 
                         return (
                           <g key={i}>
-                            <circle cx={x} cy={y} r="1" fill="#fbbf24" className="filter blur-[1px]" />
-                            <text
-                              x={tx} y={ty}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              className={`text-[5px] font-bold ${titleFont}`}
-                              fill={r > 5 ? "#d97706" : "#444"}
-                            >
-                              {el.label}
+                            <circle cx={x} cy={y} r="1.2" fill="#fff" className="shadow-lg blur-[0.5px]" />
+                            <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill="#a8a29e" className={`text-[5.5px] font-bold ${titleFont} tracking-widest`}>
+                              {el.label}({el.meaning})
                             </text>
-                            <text
-                              x={tx} y={ty + 5}
-                              textAnchor="middle"
-                              className="text-[4px] font-mono"
-                              fill="#666"
-                            >
+                            <text x={tx} y={ty + 5.5} textAnchor="middle" className="text-[4.5px] font-mono font-medium" fill="#78716c">
                               {result.oheng?.[el.key] || 0}%
                             </text>
                           </g>
@@ -1602,14 +1567,16 @@ const SajuApp = () => {
               </svg>
             </div>
 
-            <div className="mt-8 p-5 bg-amber-900/10 rounded-sm border border-amber-900/20">
-              <p className="text-[13px] text-stone-300 leading-relaxed font-light italic">
+            <div className="mt-14 p-6 bg-gradient-to-br from-amber-950/20 to-stone-950/40 rounded-sm border border-orange-950/50 relative">
+              <div className="absolute -top-3 left-6 px-3 bg-[#1c1c1e] border border-orange-950/50">
+                <span className="text-amber-700 text-[9px] font-bold uppercase tracking-[0.2em]">Fate Signal</span>
+              </div>
+              <p className="text-[14px] text-stone-300 leading-[1.8] font-serif italic tracking-tight">
                 {(() => {
                   const oheng = result.oheng || {};
                   const sorted = Object.entries(oheng).sort((a, b) => b[1] - a[1]);
                   const strongest = sorted[0][0];
                   const weakest = sorted[sorted.length - 1][0];
-
                   if (sorted[0][1] >= 50) {
                     return `귀하의 명식은 ${strongest}의 기운이 압도적으로 순수한 광채를 발하고 있습니다. 이는 남다른 추진력의 근원이 되나, ${weakest}의 기운을 보강하여 조화를 이루는 인장의 힘이 필요합니다.`;
                   }
@@ -1618,99 +1585,98 @@ const SajuApp = () => {
               </p>
             </div>
           </div>
-
-          {/* 상세 운세 카드들 */}
-          <div className="space-y-4">
-            {fortuneCards.map((card, idx) => (
-              <div
-                key={card.title}
-                className={`bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10 animate-fade-in-up ${card.delay} opacity-0-init`}
-                style={{ animationFillMode: 'forwards' }}
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-bold text-lg text-white flex items-center gap-2">
-                    <span className="text-2xl">{card.emoji}</span> {card.title}
-                  </h4>
-                  <div className="flex items-center gap-1">
-                    <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{card.score}</span>
-                    <span className="text-slate-500 text-sm">점</span>
-                  </div>
+        {/* 상세 운세 카드들 */}
+        <div className="space-y-4">
+          {fortuneCards.map((card, idx) => (
+            <div
+              key={card.title}
+              className={`bg-white/5 backdrop-blur-sm p-5 rounded-2xl border border-white/10 animate-fade-in-up ${card.delay} opacity-0-init`}
+              style={{ animationFillMode: 'forwards' }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-lg text-white flex items-center gap-2">
+                  <span className="text-2xl">{card.emoji}</span> {card.title}
+                </h4>
+                <div className="flex items-center gap-1">
+                  <span className="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">{card.score}</span>
+                  <span className="text-slate-500 text-sm">점</span>
                 </div>
-                {/* 점수 바 */}
-                <div className="w-full bg-white/10 rounded-full h-2 mb-3 overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-grow-width"
-                    style={{ width: `${card.score}%`, animationDelay: `${(idx + 3) * 100}ms`, animationFillMode: 'forwards' }}
-                  ></div>
-                </div>
-                <p className="text-slate-300 text-sm leading-relaxed">
-                  {card.content}
-                </p>
               </div>
-            ))}
-          </div>
-
-          {/* 주의사항 */}
-          <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl animate-fade-in-up delay-700 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
-            <p className="text-yellow-200 text-sm leading-relaxed">
-              ⚠️ <strong>2026년 주의 시기:</strong> 3월, 7월에는 큰 결정을 피하고 신중하게 행동하세요. 특히 금전 관련 계약은 재검토가 필요합니다.
-            </p>
-          </div>
+              {/* 점수 바 */}
+              <div className="w-full bg-white/10 rounded-full h-2 mb-3 overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-yellow-400 to-orange-500 rounded-full animate-grow-width"
+                  style={{ width: `${card.score}%`, animationDelay: `${(idx + 3) * 100}ms`, animationFillMode: 'forwards' }}
+                ></div>
+              </div>
+              <p className="text-slate-300 text-sm leading-relaxed">
+                {card.content}
+              </p>
+            </div>
+          ))}
         </div>
 
-        {/* 하단 PDF 다운로드 영역 */}
-        <div className="fixed bottom-0 left-0 w-full print:hidden">
-          {/* 그라데이션 오버레이 */}
-          <div className="bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent h-20 pointer-events-none"></div>
-          <div className="bg-slate-900 p-4 pb-6 space-y-3">
-            <div className="max-w-[480px] mx-auto space-y-3">
-              {/* PDF 프로모션 배너 */}
-              <div className="bg-gradient-to-r from-pink-600/20 to-purple-600/20 p-3 rounded-xl border border-pink-500/30 flex items-center gap-3">
-                <div className="bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded">추천</div>
-                <p className="text-slate-200 text-sm flex-1">
-                  <strong>평생 소장용 PDF</strong>로 저장하세요
-                </p>
-                <span className="text-pink-400 font-bold">+3,900원</span>
-              </div>
-
-              {/* PDF 다운로드 버튼 */}
-              <button
-                onClick={handleDownloadPDF}
-                className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
-              >
-                <Download size={20} /> PDF 다운로드 (3,900원)
-              </button>
-
-              {/* 이미 결제한 것처럼 보이는 무료 버튼 */}
-              <button
-                onClick={handleDownloadPDF}
-                className="w-full bg-white/10 text-slate-400 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors text-sm"
-              >
-                웹에서 계속 보기
-              </button>
-            </div>
-          </div>
+        {/* 주의사항 */}
+        <div className="bg-yellow-500/10 border border-yellow-500/30 p-4 rounded-xl animate-fade-in-up delay-700 opacity-0-init" style={{ animationFillMode: 'forwards' }}>
+          <p className="text-yellow-200 text-sm leading-relaxed">
+            ⚠️ <strong>2026년 주의 시기:</strong> 3월, 7월에는 큰 결정을 피하고 신중하게 행동하세요. 특히 금전 관련 계약은 재검토가 필요합니다.
+          </p>
         </div>
       </div>
-    );
-  };
 
-  return (
-    <div className="min-h-screen bg-[#050505] flex items-center justify-center font-sans relative overflow-hidden">
-      {/* 고정 배경 요소: 금빛 안개 효과 */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
+      {/* 하단 PDF 다운로드 영역 */}
+      <div className="fixed bottom-0 left-0 w-full print:hidden">
+      {/* 그라데이션 오버레이 */}
+      <div className="bg-gradient-to-t from-slate-900 via-slate-900/95 to-transparent h-20 pointer-events-none"></div>
+      <div className="bg-slate-900 p-4 pb-6 space-y-3">
+        <div className="max-w-[480px] mx-auto space-y-3">
+          {/* PDF 프로모션 배너 */}
+          <div className="bg-gradient-to-r from-pink-600/20 to-purple-600/20 p-3 rounded-xl border border-pink-500/30 flex items-center gap-3">
+            <div className="bg-pink-500 text-white text-xs font-bold px-2 py-1 rounded">추천</div>
+            <p className="text-slate-200 text-sm flex-1">
+              <strong>평생 소장용 PDF</strong>로 저장하세요
+            </p>
+            <span className="text-pink-400 font-bold">+3,900원</span>
+          </div>
 
-      {/* 메인 앱 컨테이너 - 천명록 전용 컨테이너 */}
-      <div className="w-full max-w-[480px] h-[100dvh] bg-[#0f0f10] shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col border-x border-amber-900/10">
-        {step === 'landing' && renderLandingPage()}
-        {step === 'input' && renderInputPage()}
-        {step === 'payment' && renderPaymentPage()}
-        {step === 'analyzing' && renderAnalyzingPage()}
-        {step === 'result' && renderResultPage()}
+          {/* PDF 다운로드 버튼 */}
+          <button
+            onClick={handleDownloadPDF}
+            className="w-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-pink-500/30 flex items-center justify-center gap-2 hover:opacity-90 transition-opacity"
+          >
+            <Download size={20} /> PDF 다운로드 (3,900원)
+          </button>
+
+          {/* 이미 결제한 것처럼 보이는 무료 버튼 */}
+          <button
+            onClick={handleDownloadPDF}
+            className="w-full bg-white/10 text-slate-400 font-medium py-3 rounded-xl flex items-center justify-center gap-2 hover:bg-white/20 transition-colors text-sm"
+          >
+            웹에서 계속 보기
+          </button>
+        </div>
       </div>
     </div>
+    </div>
   );
+};
+
+return (
+  <div className="min-h-screen bg-[#050505] flex items-center justify-center font-sans relative overflow-hidden">
+    {/* 고정 배경 요소: 금빛 안개 효과 */}
+    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
+    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full pointer-events-none"></div>
+
+    {/* 메인 앱 컨테이너 - 천명록 전용 컨테이너 */}
+    <div className="w-full max-w-[480px] h-[100dvh] bg-[#0f0f10] shadow-[0_0_60px_rgba(0,0,0,0.8)] relative overflow-hidden flex flex-col border-x border-amber-900/10">
+      {step === 'landing' && renderLandingPage()}
+      {step === 'input' && renderInputPage()}
+      {step === 'payment' && renderPaymentPage()}
+      {step === 'analyzing' && renderAnalyzingPage()}
+      {step === 'result' && renderResultPage()}
+    </div>
+  </div>
+);
 };
 
 export default SajuApp;

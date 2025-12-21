@@ -224,7 +224,7 @@ function calculateWuXing(eightChar, hourGanZhi) {
   const total = Object.values(wuxing).reduce((sum, val) => sum + val, 0);
   if (total > 0) {
     Object.keys(wuxing).forEach(key => {
-      wuxing[key] = Math.round((wuxing[key] / total) * 100);
+      wuxing[key] = (wuxing[key] / total) * 100;
     });
   } else {
     Object.keys(wuxing).forEach(key => (wuxing[key] = 20));

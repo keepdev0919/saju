@@ -167,6 +167,27 @@
   }
 }
 
+/* 천명의 고동 (Celestial Heartbeat) - 가장 강한 기운의 맥동 */
+@keyframes celestial-heartbeat {
+
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.1));
+  }
+
+  50% {
+    transform: scale(1.12);
+    filter: drop-shadow(0 0 10px currentColor);
+  }
+}
+
+.animate-highest-pulse {
+  animation: celestial-heartbeat 3s ease-in-out infinite;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
 /* 영혼의 호흡 (Soul Breathing) - 부드러운 맥동 */
 @keyframes soul-breathing {
 

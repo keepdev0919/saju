@@ -25,13 +25,13 @@ const pdfjsOptions = {
 
 // --- Constants for UI ---
 
-// 전통 오방색 피그먼트 맵 (Premium Pigments)
+// 전통 오방색 피그먼트 맵 (Celestial Archive Consistency)
 const elementColorMap = {
-  목: '#3F6212', // Faded Pine
-  화: '#991B1B', // Cinnabar (Jusa)
-  토: '#B45309', // Yellow Earth
-  금: '#D1D5DB', // Aged Silver
-  수: '#1E3A8A'  // Indigo Ink
+  목: '#059669', // Emerald (청색)
+  화: '#e11d48', // Rose (적색)
+  토: '#d97706', // Amber (황색)
+  금: '#d6d3d1', // Stone (백색)
+  수: '#94a3b8'  // Slate (흑색 - 차가운 먹색)
 };
 
 // 오행별 광휘(Aura) 맵
@@ -71,6 +71,53 @@ const ResultPage = () => {
   const { token } = useParams();
   const navigate = useNavigate();
 
+  // 유틸리티 함수
+  const formatPhoneNumber = (value) => {
+    if (!value) return value;
+    const phoneNumber = value.replace(/[^\d]/g, '');
+    const phoneNumberLength = phoneNumber.length;
+    if (phoneNumberLength <= 3) return phoneNumber;
+    if (phoneNumberLength <= 7) {
+      return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3)}`;
+    }
+    return `${phoneNumber.slice(0, 3)}-${phoneNumber.slice(3, 7)}-${phoneNumber.slice(7, 11)}`;
+  };
+
+  const isPhoneValid = (phone) => {
+    const regex = /^010-\d{4}-\d{4}$/;
+    return regex.test(phone);
+  };
+
+  const isBirthDateValid = (date) => {
+    if (!date) return false;
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+    const [year, month, day] = date.split('-').map(Number);
+    if (year < 1900 || year > todayYear || String(year).length !== 4) return false;
+    if (year === todayYear) {
+      if (month > todayMonth) return false;
+      if (month === todayMonth && day > todayDay) return false;
+    }
+    return true;
+  };
+
+  const getBirthDateError = (date) => {
+    if (!date) return null;
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = today.getMonth() + 1;
+    const todayDay = today.getDate();
+    const [year, month, day] = date.split('-').map(Number);
+    if (String(year).length !== 4) return "연도는 4자리로 입력해 주세요.";
+    if (year < 1900) return "1900년 이후의 날짜를 입력해 주세요.";
+    if (year > todayYear || (year === todayYear && (month > todayMonth || (month === todayMonth && day > todayDay)))) {
+      return "미래의 날짜는 입력할 수 없습니다.";
+    }
+    return null;
+  };
+
   // 상태 관리
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -86,6 +133,7 @@ const ResultPage = () => {
   const [authData, setAuthData] = useState({ phone: '', birthDate: '' });
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState(null);
+  const [authFieldErrors, setAuthFieldErrors] = useState({ phone: null, birthDate: null });
   const [pdfPaymentStatus, setPdfPaymentStatus] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [pdfError, setPdfError] = useState(null);
@@ -177,10 +225,65 @@ const ResultPage = () => {
   }, [mounted, sajuResult]);
 
   // --- 기존 핸들러들 (Auth, PDF) 유지 ---
+  const handleAuthInputChange = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'phone') {
+      const formattedValue = formatPhoneNumber(value);
+      setAuthData(prev => ({ ...prev, [name]: formattedValue }));
+    } else {
+      setAuthData(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleAuthInputBlur = (e) => {
+    const { name, value } = e.target;
+
+    if (name === 'phone') {
+      if (value) {
+        setAuthFieldErrors(prev => ({
+          ...prev,
+          phone: isPhoneValid(value) ? null : '올바른 연락처 형식이 아닙니다.'
+        }));
+      } else {
+        setAuthFieldErrors(prev => ({ ...prev, phone: null }));
+      }
+    } else if (name === 'birthDate') {
+      if (value) {
+        setAuthFieldErrors(prev => ({
+          ...prev,
+          birthDate: getBirthDateError(value)
+        }));
+      } else {
+        setAuthFieldErrors(prev => ({ ...prev, birthDate: null }));
+      }
+    }
+  };
+
   const handleAuth = async (e) => {
     e.preventDefault();
-    if (!authData.phone || !authData.birthDate) { setAuthError('정보를 입력해주세요.'); return; }
-    setAuthLoading(true); setAuthError(null);
+
+    // 필드 존재 여부 체크
+    if (!authData.phone || !authData.birthDate) {
+      setAuthError('모든 정보를 입력해주세요.');
+      return;
+    }
+
+    // 유효성 검사
+    const phoneError = isPhoneValid(authData.phone) ? null : '올바른 연락처 형식이 아닙니다.';
+    const birthDateError = getBirthDateError(authData.birthDate);
+
+    if (phoneError || birthDateError) {
+      setAuthFieldErrors({ phone: phoneError, birthDate: birthDateError });
+      setAuthError('입력 정보를 확인해 주세요.');
+      return;
+    }
+
+    // 제출 진행
+    setAuthLoading(true);
+    setAuthError(null);
+    setAuthFieldErrors({ phone: null, birthDate: null });
+
     try {
       const response = await verifyUser(authData);
       if (response.user?.accessToken) {
@@ -189,7 +292,11 @@ const ResultPage = () => {
         setUserInfo(response.user);
         setShowAuth(false);
       }
-    } catch (err) { setAuthError(err.message); } finally { setAuthLoading(false); }
+    } catch (err) {
+      setAuthError(err.message);
+    } finally {
+      setAuthLoading(false);
+    }
   };
 
   const checkPdfPaymentStatus = async (userId) => {
@@ -314,36 +421,75 @@ const ResultPage = () => {
 
       <div className="bg-stone-900/40 backdrop-blur-xl p-10 rounded-sm w-full max-w-md text-stone-200 border border-amber-900/20 shadow-2xl relative z-10">
         <div className="text-center mb-10">
-          <h2 className={`text-2xl font-bold text-amber-500/90 mb-2 ${titleFont}`}>本人確認</h2>
-          <p className="text-stone-500 text-xs font-light tracking-widest uppercase">Identity Verification</p>
+          <h2 className={`text-2xl font-bold text-amber-500/90 mb-2 italic ${titleFont}`}>본인인증</h2>
+          <p className="text-stone-500 text-xs font-light tracking-widest italic">本人確認</p>
         </div>
 
         <form onSubmit={handleAuth} className="space-y-8">
           <div className="space-y-2">
-            <label className="text-[10px] text-stone-600 uppercase tracking-widest ml-1">Phone Number</label>
+            <label className="text-[10px] text-stone-600 tracking-widest ml-1 italic">전화번호</label>
             <input
               type="tel"
+              name="phone"
               placeholder="010-0000-0000"
-              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all tracking-widest"
+              className={`w-full bg-transparent border-b py-3 text-amber-500 outline-none transition-all tracking-widest italic ${authFieldErrors.phone
+                ? 'border-red-900/50 focus:border-red-700/50'
+                : 'border-amber-900/30 focus:border-amber-500/50'
+                }`}
               value={authData.phone}
-              onChange={e => setAuthData({ ...authData, phone: e.target.value })}
+              onChange={handleAuthInputChange}
+              onBlur={handleAuthInputBlur}
+              autoComplete="tel"
             />
+            {authFieldErrors.phone && (
+              <p className="text-amber-900/80 text-[10px] tracking-tighter italic">
+                {authFieldErrors.phone}
+              </p>
+            )}
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] text-stone-600 uppercase tracking-widest ml-1">Birth Date</label>
+            <label className="text-[10px] text-stone-600 tracking-widest ml-1 italic">생년월일</label>
             <input
               type="date"
-              className="w-full bg-transparent border-b border-amber-900/30 py-3 text-amber-500 outline-none focus:border-amber-500/50 transition-all [color-scheme:dark]"
+              name="birthDate"
+              className={`w-full bg-transparent border-b py-3 text-amber-500 outline-none transition-all italic [color-scheme:dark] ${authFieldErrors.birthDate
+                ? 'border-red-900/50 focus:border-red-700/50'
+                : 'border-amber-900/30 focus:border-amber-500/50'
+                }`}
               value={authData.birthDate}
-              onChange={e => setAuthData({ ...authData, birthDate: e.target.value })}
+              onChange={handleAuthInputChange}
+              onBlur={handleAuthInputBlur}
+              autoComplete="bday"
             />
+            {authFieldErrors.birthDate && (
+              <p className="text-red-900/80 text-[10px] tracking-tighter italic">
+                {authFieldErrors.birthDate}
+              </p>
+            )}
           </div>
 
-          {authError && <p className="text-red-900/80 text-[10px] text-center uppercase tracking-tighter">{authError}</p>}
+          {authError && <p className="text-red-900/80 text-[10px] text-center tracking-tighter italic">{authError}</p>}
 
-          <button className="w-full bg-amber-800/80 hover:bg-amber-700 text-amber-100 py-4 rounded-sm font-medium tracking-[0.3em] transition-all border border-amber-600/30">
-            確認 (확인)
+          <button
+            type="submit"
+            disabled={
+              !authData.phone ||
+              !authData.birthDate ||
+              !isPhoneValid(authData.phone) ||
+              !!getBirthDateError(authData.birthDate) ||
+              authLoading
+            }
+            className={`w-full py-4 rounded-sm font-medium tracking-[0.3em] transition-all border italic ${!authData.phone ||
+              !authData.birthDate ||
+              !isPhoneValid(authData.phone) ||
+              !!getBirthDateError(authData.birthDate) ||
+              authLoading
+              ? 'bg-stone-800 text-stone-600 cursor-not-allowed border-stone-700/30'
+              : 'bg-amber-800/80 hover:bg-amber-700 text-amber-100 border-amber-600/30'
+              }`}
+          >
+            {authLoading ? '천명록(天命錄) 열람 중...' : '천명록(天命錄) 열람하기'}
           </button>
         </form>
       </div>
@@ -577,26 +723,180 @@ const ResultPage = () => {
             </div>
           )}
 
-          {/* Section 1: Visual Dashboard (Radar) - 톤다운 및 한글화 */}
-          <div className="px-6 mb-8 z-10 relative">
-            <div className="bg-[#1a1a1c] border border-amber-900/20 rounded-lg p-6 shadow-lg relative overflow-hidden">
-              <h3 className="text-xs font-bold text-stone-500 mb-4 flex items-center gap-2 tracking-widest justify-center">
-                <span className="text-amber-700">五行調和</span> (오행 조화)
+          {/* 오행 그래프 2.5 - 최적화된 스케일 및 가독성 버전 */}
+          <div className="bg-stone-900/60 backdrop-blur-2xl p-6 pt-12 pb-14 rounded-sm border border-amber-900/30 animate-fade-in-up delay-200 opacity-0-init relative overflow-hidden group shadow-2xl" style={{ animationFillMode: "forwards" }}>
+            <div className="flex flex-col items-center mb-16 relative z-10 text-center">
+              <span className="text-amber-600/40 text-[9px] uppercase tracking-[0.4em] font-medium block mb-2">Five Elements Balance</span>
+              <h3 className={`font-bold text-2xl text-stone-100 ${titleFont}`}>
+                五行調和 <span className="text-stone-500 font-light text-base">(오행 조화)</span>
               </h3>
-
-              <div className="h-48 w-full flex items-center justify-center relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
-                    <PolarGrid stroke="rgba(120, 113, 108, 0.2)" />
-                    <PolarAngleAxis dataKey="subject" tick={{ fill: '#78716c', fontSize: 11, fontFamily: 'serif' }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
-                    <Radar name="My Saju" dataKey="A" stroke="#d97706" strokeWidth={1} fill="#d97706" fillOpacity={0.3} />
-                  </RadarChart>
-                </ResponsiveContainer>
+              <div className="mt-4 px-4 py-1 bg-amber-900/40 border border-amber-600/40 rounded-full shadow-[0_0_20px_rgba(180,83,9,0.3)]">
+                <span className="text-amber-400 text-[10px] font-bold tracking-widest font-serif leading-none">
+                  {(() => {
+                    const vals = Object.values(sajuResult.oheng || { 목: 20, 화: 20, 토: 20, 금: 20, 수: 20 });
+                    const mean = 20;
+                    const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / 5;
+                    const stdDev = Math.sqrt(variance);
+                    if (stdDev < 5) return "천상중화 (極美)";
+                    if (stdDev < 15) return "안정적 조화 (良)";
+                    return "강렬한 개성 (氣)";
+                  })()}
+                </span>
               </div>
             </div>
-          </div>
 
+            <div className="relative flex flex-col items-center py-6">
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] bg-amber-800/5 blur-[100px] rounded-full group-hover:bg-amber-700/10 transition-colors duration-1000"></div>
+
+              {/* SVG 레이더 차트 (Safe Scaling for Mobile) */}
+              <svg width="310" height="310" viewBox="0 0 120 120" className="overflow-visible relative z-10">
+                <defs>
+                  <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+                    <feGaussianBlur stdDeviation="1.5" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                  <linearGradient id="poly-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+                    <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#78350f" stopOpacity="0.7" />
+                  </linearGradient>
+                  {/* 심해 우주 네뷸라 그라데이션 */}
+                  <radialGradient id="nebula-grad" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="rgba(217, 119, 6, 0.15)" />
+                    <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
+                  </radialGradient>
+                </defs>
+                {/* 가이드 라인 시스템 (Reverted to Classic Style from Photo) */}
+                {[15, 30].map((r, i) => (
+                  <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.4" />
+                ))}
+
+                {/* 메인 경계선 (Outer Boundary at 45) */}
+                <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(217, 119, 6, 0.15)" strokeWidth="0.8" />
+
+                {/* 5행 메인 축 (Extending to 45) */}
+                {[0, 72, 144, 216, 288].map((angle, i) => {
+                  const rad = (angle - 90) * (Math.PI / 180);
+                  return (
+                    <line
+                      key={i} x1="60" y1="60"
+                      x2={60 + 45 * Math.cos(rad)}
+                      y2={60 + 45 * Math.sin(rad)}
+                      stroke="rgba(217, 119, 6, 0.12)"
+                      strokeWidth="0.5"
+                    />
+                  );
+                })}
+
+                {(() => {
+                  const elements = [
+                    { key: "목", label: "木", meaning: "성장", angle: 0 },
+                    { key: "화", label: "火", meaning: "열정", angle: 72 },
+                    { key: "토", label: "土", meaning: "안정", angle: 144 },
+                    { key: "금", label: "金", meaning: "결실", angle: 216 },
+                    { key: "수", label: "水", meaning: "지혜", angle: 288 }
+                  ];
+
+                  // --- Largest Remainder Method (합계 100% 보정 로직) ---
+                  const rawData = elements.map(el => ({
+                    key: el.key,
+                    val: sajuResult.oheng?.[el.key] || 0
+                  }));
+
+                  let floorSum = 0;
+                  const processed = rawData.map(d => {
+                    const integer = Math.floor(d.val);
+                    const remainder = d.val - integer;
+                    floorSum += integer;
+                    return { ...d, integer, remainder };
+                  });
+
+                  let diff = 100 - floorSum;
+
+                  const finalOheng = {};
+                  [...processed]
+                    .sort((a, b) => b.remainder - a.remainder)
+                    .forEach((d, idx) => {
+                      finalOheng[d.key] = d.integer + (idx < diff ? 1 : 0);
+                    });
+                  // ---------------------------------------------------
+
+                  const finalVals = elements.map(el => finalOheng[el.key]);
+                  const maxFinalVal = Math.max(...finalVals);
+                  const maxVal = Math.max(maxFinalVal, 20);
+                  const scaleFactor = 45 / maxVal;
+
+                  const points = elements.map(el => {
+                    const r = finalOheng[el.key] * scaleFactor;
+                    const rad = (el.angle - 90) * (Math.PI / 180);
+                    return `${60 + r * Math.cos(rad)},${60 + r * Math.sin(rad)}`;
+                  }).join(" ");
+
+                  return (
+                    <g>
+                      <polygon points={points} fill="url(#poly-grad)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round" filter="url(#glow)" className="animate-pulse-subtle" />
+                      {elements.map((el, i) => {
+                        const val = finalOheng[el.key];
+                        const r = val * scaleFactor;
+                        const rad = (el.angle - 90) * (Math.PI / 180);
+                        const x = 60 + r * Math.cos(rad);
+                        const y = 60 + r * Math.sin(rad);
+                        const tx = 60 + 56 * Math.cos(rad);
+                        const ty = 60 + 56 * Math.sin(rad);
+
+                        const isStrongest = val === maxFinalVal && val > 0;
+
+                        return (
+                          <g key={i}>
+                            <circle cx={x} cy={y} r="1.4" fill="#fff" className="shadow-2xl" />
+                            <text
+                              x={tx} y={ty}
+                              textAnchor="middle"
+                              dominantBaseline="middle"
+                              fill={elementColorMap[el.key] || "#d6d3d1"}
+                              className={`text-[6.8px] font-bold ${titleFont} tracking-widest ${isStrongest ? 'animate-highest-pulse' : ''}`}
+                              style={{
+                                color: elementColorMap[el.key],
+                                filter: isStrongest ? undefined : 'drop-shadow(0 0 2px rgba(255,255,255,0.1))'
+                              }}
+                            >
+                              {el.label}({el.meaning})
+                            </text>
+                            <text
+                              x={tx} y={ty + 8}
+                              textAnchor="middle"
+                              className={`text-[5.5px] font-mono font-bold ${isStrongest ? 'animate-highest-pulse' : ''}`}
+                              fill="#a8a29e"
+                              style={{ color: '#a8a29e' }}
+                            >
+                              {val}%
+                            </text>
+                          </g>
+                        );
+                      })}
+                    </g>
+                  );
+                })()}
+
+              </svg>
+            </div>
+
+            <div className="mt-16 p-7 bg-gradient-to-br from-amber-950/30 to-stone-950/50 rounded-sm border border-orange-950/60 relative">
+              <div className="absolute -top-3.5 left-6 px-4 py-0.5 bg-[#1c1c1e] border border-orange-950/60">
+                <span className="text-amber-600 text-[10px] font-bold uppercase tracking-[0.3em]">Fate Signal</span>
+              </div>
+              <p className="text-[14.5px] text-stone-200 leading-[1.9] font-serif italic tracking-tight text-justify">
+                {(() => {
+                  const oheng = sajuResult.oheng || {};
+                  const sorted = Object.entries(oheng).sort((a, b) => b[1] - a[1]);
+                  const strongest = sorted[0][0];
+                  const weakest = sorted[sorted.length - 1][0];
+                  if (sorted[0][1] >= 50) return `귀하의 명식은 ${strongest}의 기운이 압도적으로 순수한 광채를 발하고 있습니다. 이는 남다른 추진력의 근원이 되나, ${weakest}의 기운을 보강하여 조화를 이루는 인장의 힘이 필요합니다.`;
+                  return `귀하의 명식은 오행이 고르게 분포되어 사계절의 정기를 두루 갖추었습니다. ${strongest}의 강점을 살리되, 부족한 ${weakest}의 기운을 갈무리하여 운세의 흐름을 더욱 단단하게 굳힐 시기입니다.`;
+                })()}
+              </p>
+            </div>
+          </div>
           {/* Section 2: Card Navigation (Horizontal Scroll) - 인장/패 스타일 */}
           <div className="mb-6 z-10 relative">
             <div className="px-6 mb-3 flex items-end justify-between border-b border-amber-900/20 pb-2 mx-6">
