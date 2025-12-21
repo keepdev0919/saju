@@ -19,7 +19,10 @@ const PORT = process.env.PORT || 3000;
 
 // 미들웨어 설정
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    'http://localhost:5173',
+    'http://192.168.0.11:5173'
+  ],
   credentials: true
 }));
 app.use(express.json());

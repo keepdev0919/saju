@@ -762,11 +762,11 @@ const ResultPage = () => {
                 </defs>
                 {/* 가이드 라인 시스템 (Reverted to Classic Style from Photo) */}
                 {[15, 30].map((r, i) => (
-                  <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.4" />
+                  <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.04)" strokeWidth="0.2" />
                 ))}
 
                 {/* 메인 경계선 (Outer Boundary at 45) */}
-                <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(217, 119, 6, 0.15)" strokeWidth="0.8" />
+                <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.4" />
 
                 {/* 5행 메인 축 (Extending to 45) */}
                 {[0, 72, 144, 216, 288].map((angle, i) => {
@@ -776,8 +776,8 @@ const ResultPage = () => {
                       key={i} x1="60" y1="60"
                       x2={60 + 45 * Math.cos(rad)}
                       y2={60 + 45 * Math.sin(rad)}
-                      stroke="rgba(217, 119, 6, 0.12)"
-                      strokeWidth="0.5"
+                      stroke="rgba(217, 119, 6, 0.05)"
+                      strokeWidth="0.3"
                     />
                   );
                 })}
@@ -838,7 +838,15 @@ const ResultPage = () => {
 
                   return (
                     <g>
-                      <polygon points={points} fill="url(#poly-grad)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round" filter="url(#glow)" className="animate-pulse-subtle" />
+                      <polygon
+                        points={points}
+                        fill="url(#poly-grad)"
+                        stroke="rgba(251, 191, 36, 0.15)"
+                        strokeWidth="0.4"
+                        strokeLinejoin="round"
+                        filter="url(#glow)"
+                        className="animate-pulse-subtle"
+                      />
                       {elements.map((el, i) => {
                         const val = finalOheng[el.key];
                         const r = val * scaleFactor;
@@ -852,29 +860,31 @@ const ResultPage = () => {
 
                         return (
                           <g key={i}>
-                            <circle cx={x} cy={y} r="1.4" fill="#fff" className="shadow-2xl" />
-                            <text
-                              x={tx} y={ty}
-                              textAnchor="middle"
-                              dominantBaseline="middle"
-                              fill={elementColorMap[el.key] || "#d6d3d1"}
-                              className={`text-[6.8px] font-bold ${titleFont} tracking-widest ${isStrongest ? 'animate-highest-pulse' : ''}`}
-                              style={{
-                                color: elementColorMap[el.key],
-                                filter: isStrongest ? undefined : 'drop-shadow(0 0 2px rgba(255,255,255,0.1))'
-                              }}
-                            >
-                              {el.label}({el.meaning})
-                            </text>
-                            <text
-                              x={tx} y={ty + 8}
-                              textAnchor="middle"
-                              className={`text-[5.5px] font-mono font-bold ${isStrongest ? 'animate-highest-pulse' : ''}`}
-                              fill="#a8a29e"
-                              style={{ color: '#a8a29e' }}
-                            >
-                              {val}%
-                            </text>
+                            <circle cx={x} cy={y} r="0.7" fill="#fff" filter="url(#glow)" className="opacity-100" />
+                            <g className={isStrongest ? 'animate-highest-pulse' : ''}>
+                              <text
+                                x={tx} y={ty}
+                                textAnchor="middle"
+                                dominantBaseline="middle"
+                                fill={elementColorMap[el.key] || "#d6d3d1"}
+                                className={`text-[6.8px] font-bold ${titleFont} tracking-widest`}
+                                style={{
+                                  color: elementColorMap[el.key],
+                                  filter: isStrongest ? undefined : 'drop-shadow(0 0 2px rgba(255,255,255,0.1))'
+                                }}
+                              >
+                                {el.label}({el.meaning})
+                              </text>
+                              <text
+                                x={tx} y={ty + 8}
+                                textAnchor="middle"
+                                className="text-[5.5px] font-mono font-bold"
+                                fill="#a8a29e"
+                                style={{ color: '#a8a29e' }}
+                              >
+                                {val}%
+                              </text>
+                            </g>
                           </g>
                         );
                       })}

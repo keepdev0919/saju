@@ -334,14 +334,14 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                             <div className="relative mb-8 transform hover:scale-105 transition-transform duration-700 ease-out">
                                 <div className="absolute inset-0 bg-amber-600/20 blur-[30px] rounded-full animate-pulse-slow" />
                                 <span className="relative text-[5rem] text-amber-500/90 font-serif font-black tracking-widest leading-none drop-shadow-[0_0_15px_rgba(217,119,6,0.5)] select-none"
-                                    style={{ fontFamily: '"Gungsuh", serif' }}>
+                                    style={{ fontFamily: '"Song Myung", "Noto Serif KR", "Nanum Myeongjo", serif' }}>
                                     天命
                                 </span>
 
                                 {/* Red Stamp - Top Right (Diamond Shape) */}
                                 <div className="absolute -top-4 -right-4 opacity-80 mix-blend-screen">
-                                    <div className="w-8 h-8 border border-red-400/50 bg-red-500/10 flex items-center justify-center transform rotate-45 shadow-[0_0_10px_rgba(248,113,113,0.3)] backdrop-blur-[1px]">
-                                        <span className="text-[12px] text-red-300 font-bold transform -rotate-45 block drop-shadow-[0_0_5px_rgba(248,113,113,0.8)]">
+                                    <div className="w-8 h-8 border-2 border-red-700/65 bg-red-700/18 flex items-center justify-center transform rotate-45 shadow-[0_0_12px_rgba(185,28,28,0.4)] backdrop-blur-[1px]">
+                                        <span className="text-[12px] text-red-700/85 font-bold transform -rotate-45 block drop-shadow-[0_0_6px_rgba(185,28,28,0.7)]">
                                             運
                                         </span>
                                     </div>
