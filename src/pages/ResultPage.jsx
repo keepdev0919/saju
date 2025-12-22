@@ -916,8 +916,8 @@ const ResultPage = () => {
                 <div className="relative py-3">
                   <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
                   <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif italic tracking-wider leading-relaxed text-center px-4">
-                    오행의 조화는 당신만의 고유한 빛깔입니다<br />
-                    그 흐름 속에서 균형을 찾는 지도를 펼칩니다
+                    오행은 좋고 나쁨이 아닌 당신이 타고난 재료입니다<br />
+                    이를 깊이 이해할 때, 비로소 당신은 운명의 주인이 됩니다
                   </p>
                   <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
                 </div>
@@ -1026,14 +1026,13 @@ const ResultPage = () => {
                               />
                             ))}
 
-                            {/* Labels - 최강 오행에 발광 효과 */}
+                            {/* Labels */}
                             {pointsData.map((p, i) => {
-                              const isStrongest = p.key === strongest;
                               const rad = (p.angle - 90) * (Math.PI / 180);
                               const tx = 60 + 55 * Math.cos(rad);
                               const ty = 60 + 55 * Math.sin(rad);
                               return (
-                                <g key={i} className={isStrongest ? 'animate-strongest-glow' : ''}>
+                                <g key={i}>
                                   <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill={elementColorMap[p.key]} className="text-[7px] font-bold font-serif">
                                     {p.label}
                                   </text>

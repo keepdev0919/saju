@@ -117,7 +117,7 @@
   animation: svg-vertex-glow 2.5s ease-in-out infinite;
 }
 
-/* 최강 오행 강조 발광 (Strongest Oheng Glow) */
+/* 최강 오행 강조 발광 (Strongest Oheng Glow) - 기존 유지 (다른 곳에서 사용 가능) */
 @keyframes svg-strongest-glow {
 
   0%,
