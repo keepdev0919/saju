@@ -81,6 +81,53 @@ const dayMasterDescriptions = {
   '계': { hanja: '癸', desc: '은밀히 스며들어 적시는 빗물' }
 };
 
+// 오행 해석용 데이터 맵
+const ohengLabels = { 목: '木', 화: '火', 토: '土', 금: '金', 수: '水' };
+
+const 강할때특성 = {
+  목: '성장과 도전을 추구하며 창의적입니다. 다만 때로는 산만하거나 고집이 셀 수 있습니다.',
+  화: '열정적이고 표현력이 뛰어납니다. 다만 급하거나 감정 기복이 클 수 있습니다.',
+  토: '안정적이고 신뢰감을 줍니다. 다만 변화에 둔하거나 완고해 보일 수 있습니다.',
+  금: '결단력이 있고 목표 지향적입니다. 다만 융통성이 부족하거나 냉정해 보일 수 있습니다.',
+  수: '지혜롭고 유연합니다. 다만 우유부단하거나 감정을 숨기기 쉽습니다.'
+};
+
+const 약할때특성 = {
+  목: '새로운 시작에서 막힘을 느낄 수 있으나, 운에서 木이 찾아올 때 큰 변화의 기회가 됩니다.',
+  화: '추진력이 조심스러울 수 있으나, 운에서 火가 찾아올 때 열정이 폭발합니다.',
+  토: '중심을 잡기 흔들릴 수 있으나, 운에서 土가 찾아올 때 안정의 기반이 마련됩니다.',
+  금: '결단에 주저할 수 있으나, 운에서 金이 찾아올 때 큰 결실을 맺습니다.',
+  수: '깊은 사고에서 답답함을 느낄 수 있으나, 운에서 水가 찾아올 때 지혜가 빛납니다.'
+};
+
+// 상생/상극 관계
+const 상극관계 = { 목: '토', 토: '수', 수: '화', 화: '금', 금: '목' };
+const 상생관계 = { 목: '화', 화: '토', 토: '금', 금: '수', 수: '목' };
+
+// 균형 지수 계산
+const calculateBalanceScore = (oheng) => {
+  const ideal = 20;
+  const elements = ['목', '화', '토', '금', '수'];
+  const values = elements.map(el => oheng[el] || 0);
+  const variance = values.reduce((sum, v) => sum + Math.pow(v - ideal, 2), 0) / 5;
+  const stdDev = Math.sqrt(variance);
+  return Math.max(0, Math.min(100, Math.round(100 - stdDev * 3)));
+};
+
+// 상생/상극 관계 텍스트 생성
+const generateRelationText = (strongest, weakest) => {
+  if (상극관계[strongest] === weakest) {
+    return `${ohengLabels[strongest]}과 ${ohengLabels[weakest]}는 상극(相剋), 즉 조율 관계입니다. ${ohengLabels[strongest]}이 강하면 ${ohengLabels[weakest]}의 발현이 줄어들 수 있습니다.`;
+  } else if (상극관계[weakest] === strongest) {
+    return `${ohengLabels[weakest]}는 본래 ${ohengLabels[strongest]}을 제어하는 역할이지만, 현재 힘이 미약하여 ${ohengLabels[strongest]}이 자유롭게 발현됩니다.`;
+  } else if (상생관계[strongest] === weakest) {
+    return `${ohengLabels[strongest]}은 ${ohengLabels[weakest]}를 낳는 상생(相生) 관계입니다. 다만 ${ohengLabels[weakest]}가 여려 에너지 전달이 원활하지 않을 수 있습니다.`;
+  } else if (상생관계[weakest] === strongest) {
+    return `${ohengLabels[weakest]}가 ${ohengLabels[strongest]}의 근원이 되는 관계입니다. 뿌리가 여리면 결실도 쉽게 흔들릴 수 있습니다.`;
+  }
+  return `${ohengLabels[strongest]}과 ${ohengLabels[weakest]}는 직접적 상생/상극 관계가 아니어서 독립적으로 작용합니다.`;
+};
+
 // --- Sub-components for Archive Style ---
 
 const ChapterLockOverlay = ({ element }) => (
@@ -823,16 +870,20 @@ const ResultPage = () => {
                 {/* 일간 설명 및 관계 안내 */}
                 <div className="mt-10 text-center space-y-3 relative z-10">
                   {dayMasterDescriptions[sajuResult?.sajuData?.day?.gan] && (
-                    <p className="text-stone-300 font-serif text-[14px] leading-relaxed">
-                      당신의 정신적 근간은<br />
-                      <span className="font-bold text-[#e8dac0] italic">
-                        {dayMasterDescriptions[sajuResult.sajuData.day.gan].desc}, {sajuResult.sajuData.day.gan}({dayMasterDescriptions[sajuResult.sajuData.day.gan].hanja})의 기운
-                      </span>
-                      {' '}입니다.
-                    </p>
+                    <div className="relative py-3 max-w-sm mx-auto">
+                      <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
+                      <p className="text-stone-300 font-serif text-[14px] leading-relaxed px-4">
+                        {userInfo?.name || '사용자'}님의 정신적 근간은<br />
+                        <span className="font-bold text-[#e8dac0] italic">
+                          {dayMasterDescriptions[sajuResult.sajuData.day.gan].desc}, {sajuResult.sajuData.day.gan}({dayMasterDescriptions[sajuResult.sajuData.day.gan].hanja})의 기운
+                        </span>
+                        {' '}입니다.
+                      </p>
+                      <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
+                    </div>
                   )}
-                  <p className="text-stone-500 font-serif text-[12px] italic">
-                    나머지 일곱 기운이 이 중심과 얽히며 당신만의 서사를 완성합니다.
+                  <p className="text-stone-500 font-serif text-[12px] italic mt-4">
+                    나머지 일곱 기운이 이 중심과 얽히며 {userInfo?.name || '당신'}님만의 서사를 완성합니다.
                   </p>
                 </div>
               </div>
@@ -848,70 +899,29 @@ const ResultPage = () => {
             </div>
           )}
 
-          {/* Step 3: The Energy Balance - 제 2권: 기운의 조화 */}
+          {/* Step 3: The Energy Balance - 제 2서: 오행의 조화 */}
           <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
             {console.log('[제2서 렌더링 시작]', { oheng: sajuResult?.oheng, sajuData: sajuResult?.sajuData })}
             <div className="flex-1 flex flex-col items-center justify-center py-12">
-              <div className="flex flex-col items-center mb-10 reveal-item">
+              <div className="flex flex-col items-center mb-6 reveal-item">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-px bg-amber-600/30" />
-                  <span className="text-[#e8dac0] text-sm sm:tracking-[0.5em] tracking-[0.2em] font-serif font-bold uppercase whitespace-nowrap">제2서 : 기운의 조화 (五行分析)</span>
+                  <span className="text-[#e8dac0] text-sm sm:tracking-[0.5em] tracking-[0.2em] font-serif font-bold uppercase whitespace-nowrap">제2서 : 오행의 조화 (五行分析)</span>
                   <div className="w-8 h-px bg-amber-600/30" />
                 </div>
               </div>
 
-              {/* [FIX] 제2서 서사: 텍스트 압축 및 그래프 가시성 확보 */}
-              {(() => {
-                try {
-                  const ohengData = sajuResult?.oheng;
-                  if (!ohengData) {
-                    console.warn('[오행 서사] sajuResult.oheng 데이터 없음');
-                    return null;
-                  }
-
-                  const elements = ['목', '화', '토', '금', '수'];
-                  let strongest = '목', weakest = '수';
-                  let maxVal = -1, minVal = 101;
-
-                  elements.forEach(el => {
-                    const val = ohengData[el] || 0;
-                    if (val > maxVal) { maxVal = val; strongest = el; }
-                    if (val < minVal) { minVal = val; weakest = el; }
-                  });
-
-                  const ohengMeaning = { '목': '성장(木)', '화': '열정(火)', '토': '안정(土)', '금': '결실(金)', '수': '지혜(水)' };
-                  const dayMasterInfo = dayMasterDescriptions[sajuResult?.sajuData?.day?.gan] || { desc: '신비한 기운' };
-
-                  return (
-                    <div className="w-full max-w-sm px-4 mb-4 reveal-item">
-                      {/* 1단계: 일반론 - 더욱 압축하여 2줄 고정 */}
-                      <div className="relative py-3 mb-6 border-y border-amber-900/15">
-                        <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
-                        <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif italic tracking-wider leading-relaxed text-center px-4">
-                          오행의 조화는 당신만의 고유한 빛깔입니다<br />
-                          그 흐름 속에서 균형을 찾는 지도를 펼칩니다
-                        </p>
-                        <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
-                      </div>
-
-                      {/* 2단계: 데이터 진단 - 가독성 중심 */}
-                      <div className="text-center px-2 mb-4">
-                        <p className="text-stone-300 font-serif text-[14px] sm:text-[15px] leading-relaxed">
-                          <span className="text-[#e8dac0] font-bold border-b border-amber-600/30 pb-0.5">{dayMasterInfo.desc}</span>인 당신은,<br />
-                          <span className="text-amber-500 font-bold">{ohengMeaning[strongest]}</span>이 주도하고 <span className="text-stone-500 font-bold">{ohengMeaning[weakest]}</span>이 보완이 필요한 형국입니다.
-                        </p>
-                      </div>
-                    </div>
-                  );
-                } catch (error) {
-                  console.error('[오행 서사 에러]', error);
-                  return (
-                    <div className="text-red-500 p-4 text-sm">
-                      오행 데이터 로딩 중 오류 발생
-                    </div>
-                  );
-                }
-              })()}
+              {/* 일반론 서문 */}
+              <div className="w-full max-w-sm px-4 mb-8 reveal-item">
+                <div className="relative py-3">
+                  <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
+                  <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif italic tracking-wider leading-relaxed text-center px-4">
+                    오행의 조화는 당신만의 고유한 빛깔입니다<br />
+                    그 흐름 속에서 균형을 찾는 지도를 펼칩니다
+                  </p>
+                  <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
+                </div>
+              </div>
 
               {/* 오행 차트 - 가시성 복구 및 패딩 최적화 */}
               <div className="w-full max-w-xs relative reveal-item delay-100 min-h-[300px] flex items-center justify-center">
@@ -1043,7 +1053,124 @@ const ResultPage = () => {
                   </svg>
                 </div>
               </div>
+
+              {/* 스크롤 안내 (천상기록보관소와 통일) */}
+              <div className="pt-10 flex flex-col items-center gap-4 animate-bounce-gentle opacity-70">
+                <span className="text-[10px] text-amber-500 tracking-[0.4em] font-serif">{userInfo?.name || '당신'}님의 형국을 읽습니다</span>
+                <div className="w-px h-12 bg-gradient-to-b from-amber-500/80 to-transparent mx-auto" />
+              </div>
             </div>
+          </section>
+
+          {/* Step 3-B: 오행 해석 페이지 */}
+          <section className="snap-section px-6 pb-12" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            {(() => {
+              try {
+                const ohengData = sajuResult?.oheng;
+                if (!ohengData) return null;
+
+                const elements = ['목', '화', '토', '금', '수'];
+
+                // 최강/최약 계산
+                let strongest = '목', weakest = '수';
+                let maxVal = -1, minVal = 101;
+                elements.forEach(el => {
+                  const val = ohengData[el] || 0;
+                  if (val > maxVal) { maxVal = val; strongest = el; }
+                  if (val < minVal) { minVal = val; weakest = el; }
+                });
+
+                // 균형 지수
+                const balanceScore = calculateBalanceScore(ohengData);
+
+                // 관계 텍스트
+                const relationText = generateRelationText(strongest, weakest);
+
+                return (
+                  <div className="flex-1 flex flex-col items-center justify-start py-12">
+                    {/* 오행 미니 바 */}
+                    <div className="w-full max-w-sm mb-8 reveal-item">
+                      <div className="flex justify-between items-center px-2 py-3 bg-[#1a1a1c]/50 rounded border border-amber-900/10">
+                        {elements.map(el => {
+                          const val = Math.round(ohengData[el] || 0);
+                          const isMax = el === strongest;
+                          const isMin = el === weakest;
+                          return (
+                            <div key={el} className="flex flex-col items-center">
+                              <span className={`text-xs font-bold font-serif`} style={{ color: isMax ? '#f59e0b' : isMin ? '#57534e' : elementColorMap[el] }}>
+                                {ohengLabels[el]}
+                              </span>
+                              <span className={`text-[10px] font-mono mt-0.5 ${isMax ? 'text-amber-500' : isMin ? 'text-stone-600' : 'text-stone-400'}`}>
+                                {val}%
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* 균형 지수 */}
+                    <div className="w-full max-w-sm mb-8 reveal-item delay-100">
+                      <div className="text-center mb-3">
+                        <span className="text-stone-500 text-xs font-serif tracking-wider">⚖️ 기운 분포 지수</span>
+                      </div>
+                      <div className="flex items-center gap-3 px-4">
+                        <div className="flex-1 h-2 bg-stone-800 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-gradient-to-r from-amber-700 to-amber-500 rounded-full transition-all duration-1000"
+                            style={{ width: `${balanceScore}%` }}
+                          ></div>
+                        </div>
+                        <span className="text-amber-500 font-bold font-mono text-sm">{balanceScore}</span>
+                      </div>
+                      <p className="text-stone-600 text-[10px] font-serif text-center mt-2 px-4">
+                        오행이 고르게 분포할수록 높은 수치입니다. 높다고 좋거나 낮다고 나쁜 것은 아닙니다.
+                      </p>
+                    </div>
+
+                    {/* 오행 분석 텍스트 */}
+                    <div className="w-full max-w-sm px-4 reveal-item delay-200">
+                      <div className="space-y-6">
+                        {/* 최강 기운 */}
+                        <div className="p-4 bg-[#1a1a1c]/30 rounded border-l-2 border-amber-600/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-amber-500 font-bold font-serif">{ohengLabels[strongest]}</span>
+                            <span className="text-stone-500 text-xs">({Math.round(maxVal)}%) - 가장 두드러진 기운</span>
+                          </div>
+                          <p className="text-stone-300 text-[13px] font-serif leading-relaxed">
+                            {강할때특성[strongest]}
+                          </p>
+                        </div>
+
+                        {/* 최약 기운 */}
+                        <div className="p-4 bg-[#1a1a1c]/30 rounded border-l-2 border-stone-700/50">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-stone-500 font-bold font-serif">{ohengLabels[weakest]}</span>
+                            <span className="text-stone-600 text-xs">({Math.round(minVal)}%) - 상대적으로 여린 기운</span>
+                          </div>
+                          <p className="text-stone-400 text-[13px] font-serif leading-relaxed">
+                            {약할때특성[weakest]}
+                          </p>
+                        </div>
+
+                        {/* 상생/상극 관계 */}
+                        <div className="pt-4 border-t border-amber-900/10">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-stone-500 text-xs font-serif">🔗 기운의 관계</span>
+                          </div>
+                          <p className="text-stone-400 text-[12px] font-serif leading-relaxed italic">
+                            {relationText}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              } catch (error) {
+                console.error('[오행 해석 에러]', error);
+                return null;
+              }
+            })()}
           </section>
 
           {/* 중간 힌트 (Sub CTA) */}
