@@ -98,6 +98,44 @@
   animation: day-master-glow 2.5s ease-in-out infinite;
 }
 
+/* SVG 정점 발광 효과 (Vertex Glow for SVG) */
+@keyframes svg-vertex-glow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 0 rgba(232, 218, 192, 0));
+    opacity: 0.6;
+  }
+
+  50% {
+    filter: drop-shadow(0 0 4px rgba(232, 218, 192, 0.8));
+    opacity: 1;
+  }
+}
+
+.animate-vertex-glow {
+  animation: svg-vertex-glow 2.5s ease-in-out infinite;
+}
+
+/* 최강 오행 강조 발광 (Strongest Oheng Glow) */
+@keyframes svg-strongest-glow {
+
+  0%,
+  100% {
+    filter: drop-shadow(0 0 1px currentColor);
+    opacity: 0.8;
+  }
+
+  50% {
+    filter: drop-shadow(0 0 6px currentColor);
+    opacity: 1;
+  }
+}
+
+.animate-strongest-glow {
+  animation: svg-strongest-glow 2.5s ease-in-out infinite;
+}
+
 @keyframes shimmer {
   0% {
     background-position: -200% 0;

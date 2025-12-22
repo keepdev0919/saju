@@ -135,14 +135,14 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
         shinmyo: '/images/talisman/shinmyo.png',
         shinchuk: '/images/talisman/shinchuk.png',
         shinhae: '/images/talisman/shinhae.png',
-        shinyu: '/images/talisman/shinyu.jpg',
+        shinyu: '/images/talisman/shinyu.png',
         // Korean Mappings (Shin)
         '신미': '/images/talisman/shinmi.png',
         '신사': '/images/talisman/shinsa.png',
         '신묘': '/images/talisman/shinmyo.png',
         '신축': '/images/talisman/shinchuk.png',
         '신해': '/images/talisman/shinhae.png',
-        '신유': '/images/talisman/shinyu.jpg',
+        '신유': '/images/talisman/shinyu.png',
 
         // 9. Im (Water) Series
         imin: '/images/talisman/imin.png',

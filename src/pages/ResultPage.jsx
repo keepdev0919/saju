@@ -850,6 +850,7 @@ const ResultPage = () => {
 
           {/* Step 3: The Energy Balance - 제 2권: 기운의 조화 */}
           <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            {console.log('[제2서 렌더링 시작]', { oheng: sajuResult?.oheng, sajuData: sajuResult?.sajuData })}
             <div className="flex-1 flex flex-col items-center justify-center py-12">
               <div className="flex flex-col items-center mb-10 reveal-item">
                 <div className="flex items-center gap-4">
@@ -859,15 +860,65 @@ const ResultPage = () => {
                 </div>
               </div>
 
-              {/* 오행 차트 메인 카드 - 박스 제거 테스트 */}
-              <div className="w-full max-w-sm p-6 pt-12 pb-14 relative overflow-hidden group reveal-item delay-100">
+              {/* [FIX] 제2서 서사: 텍스트 압축 및 그래프 가시성 확보 */}
+              {(() => {
+                try {
+                  const ohengData = sajuResult?.oheng;
+                  if (!ohengData) {
+                    console.warn('[오행 서사] sajuResult.oheng 데이터 없음');
+                    return null;
+                  }
 
-                <div className="relative flex flex-col items-center py-6">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[280px] h-[280px] bg-amber-800/5 blur-[100px] rounded-full group-hover:bg-amber-700/10 transition-colors duration-1000"></div>
+                  const elements = ['목', '화', '토', '금', '수'];
+                  let strongest = '목', weakest = '수';
+                  let maxVal = -1, minVal = 101;
 
-                  {/* SVG 레이더 차트 (기존 로직 유지) */}
-                  <svg width="280" height="280" viewBox="0 0 120 120" className="overflow-visible relative z-10">
-                    {/* ... (기존 SVG 코드는 그대로 유지됨) ... */}
+                  elements.forEach(el => {
+                    const val = ohengData[el] || 0;
+                    if (val > maxVal) { maxVal = val; strongest = el; }
+                    if (val < minVal) { minVal = val; weakest = el; }
+                  });
+
+                  const ohengMeaning = { '목': '성장(木)', '화': '열정(火)', '토': '안정(土)', '금': '결실(金)', '수': '지혜(水)' };
+                  const dayMasterInfo = dayMasterDescriptions[sajuResult?.sajuData?.day?.gan] || { desc: '신비한 기운' };
+
+                  return (
+                    <div className="w-full max-w-sm px-4 mb-4 reveal-item">
+                      {/* 1단계: 일반론 - 더욱 압축하여 2줄 고정 */}
+                      <div className="relative py-3 mb-6 border-y border-amber-900/15">
+                        <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
+                        <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif italic tracking-wider leading-relaxed text-center px-4">
+                          오행의 조화는 당신만의 고유한 빛깔입니다<br />
+                          그 흐름 속에서 균형을 찾는 지도를 펼칩니다
+                        </p>
+                        <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
+                      </div>
+
+                      {/* 2단계: 데이터 진단 - 가독성 중심 */}
+                      <div className="text-center px-2 mb-4">
+                        <p className="text-stone-300 font-serif text-[14px] sm:text-[15px] leading-relaxed">
+                          <span className="text-[#e8dac0] font-bold border-b border-amber-600/30 pb-0.5">{dayMasterInfo.desc}</span>인 당신은,<br />
+                          <span className="text-amber-500 font-bold">{ohengMeaning[strongest]}</span>이 주도하고 <span className="text-stone-500 font-bold">{ohengMeaning[weakest]}</span>이 보완이 필요한 형국입니다.
+                        </p>
+                      </div>
+                    </div>
+                  );
+                } catch (error) {
+                  console.error('[오행 서사 에러]', error);
+                  return (
+                    <div className="text-red-500 p-4 text-sm">
+                      오행 데이터 로딩 중 오류 발생
+                    </div>
+                  );
+                }
+              })()}
+
+              {/* 오행 차트 - 가시성 복구 및 패딩 최적화 */}
+              <div className="w-full max-w-xs relative reveal-item delay-100 min-h-[300px] flex items-center justify-center">
+                <div className="relative flex flex-col items-center">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] h-[240px] bg-amber-800/10 blur-[80px] rounded-full"></div>
+
+                  <svg width="260" height="260" viewBox="0 0 120 120" className="overflow-visible relative z-10 scale-110 sm:scale-125">
                     <defs>
                       <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
                         <feGaussianBlur stdDeviation="1.5" result="blur" />
@@ -878,151 +929,126 @@ const ResultPage = () => {
                         <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
                         <stop offset="100%" stopColor="#78350f" stopOpacity="0.7" />
                       </linearGradient>
-                      {/* 심해 우주 네뷸라 그라데이션 */}
-                      <radialGradient id="nebula-grad" cx="50%" cy="50%" r="50%">
-                        <stop offset="0%" stopColor="rgba(217, 119, 6, 0.15)" />
-                        <stop offset="100%" stopColor="rgba(0, 0, 0, 0)" />
-                      </radialGradient>
                     </defs>
-                    {/* 가이드 라인 시스템 (Reverted to Classic Style from Photo) */}
-                    {[15, 30].map((r, i) => (
-                      <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.04)" strokeWidth="0.2" />
+
+                    {[15, 30, 45].map((r, i) => (
+                      <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.2" />
                     ))}
 
-                    {/* 메인 경계선 (Outer Boundary at 45) */}
-                    <circle cx="60" cy="60" r="45" fill="none" stroke="rgba(217, 119, 6, 0.08)" strokeWidth="0.4" />
-
-                    {/* 5행 메인 축 (Extending to 45) */}
                     {[0, 72, 144, 216, 288].map((angle, i) => {
                       const rad = (angle - 90) * (Math.PI / 180);
                       return (
-                        <line
-                          key={i} x1="60" y1="60"
-                          x2={60 + 45 * Math.cos(rad)}
-                          y2={60 + 45 * Math.sin(rad)}
-                          stroke="rgba(217, 119, 6, 0.05)"
-                          strokeWidth="0.3"
-                        />
+                        <line key={i} x1="60" y1="60" x2={60 + 45 * Math.cos(rad)} y2={60 + 45 * Math.sin(rad)} stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.3" />
                       );
                     })}
 
                     {(() => {
-                      const elements = [
-                        { key: "목", label: "木", meaning: "성장", angle: 0 },
-                        { key: "화", label: "火", meaning: "열정", angle: 72 },
-                        { key: "토", label: "土", meaning: "안정", angle: 144 },
-                        { key: "금", label: "金", meaning: "결실", angle: 216 },
-                        { key: "수", label: "水", meaning: "지혜", angle: 288 }
-                      ];
+                      try {
+                        if (!sajuResult?.oheng) {
+                          console.warn('[오행 SVG] 데이터 없음');
+                          return null;
+                        }
 
-                      // --- Largest Remainder Method (합계 100% 보정 로직) ---
-                      const rawData = elements.map(el => ({
-                        key: el.key,
-                        val: sajuResult.oheng?.[el.key] || 0
-                      }));
+                        const elements = [
+                          { key: "목", label: "木", meaning: "성장", angle: 0 },
+                          { key: "화", label: "火", meaning: "열정", angle: 72 },
+                          { key: "토", label: "土", meaning: "안정", angle: 144 },
+                          { key: "금", label: "金", meaning: "결실", angle: 216 },
+                          { key: "수", label: "水", meaning: "지혜", angle: 288 }
+                        ];
 
-                      let floorSum = 0;
-                      const processed = rawData.map(d => {
-                        const integer = Math.floor(d.val);
-                        const remainder = d.val - integer;
-                        floorSum += integer;
-                        return { ...d, integer, remainder };
-                      });
-
-                      let diff = 100 - floorSum;
-
-                      const finalOheng = {};
-                      [...processed]
-                        .sort((a, b) => b.remainder - a.remainder)
-                        .forEach((d, idx) => {
+                        const rawData = elements.map(el => ({
+                          key: el.key,
+                          val: sajuResult.oheng[el.key] || 0
+                        }));
+                        let floorSum = 0;
+                        const processed = rawData.map(d => {
+                          const integer = Math.floor(d.val);
+                          floorSum += integer;
+                          return { ...d, integer, remainder: d.val - integer };
+                        });
+                        let diff = 100 - floorSum;
+                        const finalOheng = {};
+                        [...processed].sort((a, b) => b.remainder - a.remainder).forEach((d, idx) => {
                           finalOheng[d.key] = d.integer + (idx < diff ? 1 : 0);
                         });
-                      // ---------------------------------------------------
 
-                      const finalVals = elements.map(el => finalOheng[el.key]);
-                      const maxFinalVal = Math.max(...finalVals);
+                        const finalVals = elements.map(el => finalOheng[el.key]);
+                        const maxFinalVal = Math.max(...finalVals);
 
-                      // --- 어댑티브 스카이 스케일링 (Adaptive Sky Scaling) ---
-                      // 사용자의 기세에 맞춰 우주의 크기를 유연하게 조절합니다.
-                      let standardMax = 50;
-                      if (maxFinalVal >= 45 && maxFinalVal <= 60) {
-                        standardMax = 60; // 강력한 주도권 사주를 위한 여백 확보
-                      } else if (maxFinalVal > 60) {
-                        standardMax = maxFinalVal + 15; // 극단적 에너지를 우아하게 담아내는 확장
-                      }
+                        // 최강 오행 계산
+                        let strongest = elements[0].key;
+                        elements.forEach(el => {
+                          if (finalOheng[el.key] === maxFinalVal) {
+                            strongest = el.key;
+                          }
+                        });
 
-                      const scaleFactor = 45 / standardMax;
-                      // ---------------------------------------------------
+                        let standardMax = maxFinalVal > 50 ? maxFinalVal + 10 : 50;
+                        const scaleFactor = 45 / standardMax;
 
-                      const points = elements.map(el => {
-                        const r = finalOheng[el.key] * scaleFactor;
-                        const rad = (el.angle - 90) * (Math.PI / 180);
-                        return `${60 + r * Math.cos(rad)},${60 + r * Math.sin(rad)}`;
-                      }).join(" ");
+                        const pointsData = elements.map(el => {
+                          const val = finalOheng[el.key];
+                          const r = val * scaleFactor;
+                          const rad = (el.angle - 90) * (Math.PI / 180);
+                          return {
+                            ...el,
+                            val,
+                            x: 60 + r * Math.cos(rad),
+                            y: 60 + r * Math.sin(rad)
+                          };
+                        });
 
-                      return (
-                        <g>
-                          <polygon
-                            points={points}
-                            fill="url(#poly-grad)"
-                            stroke="rgba(251, 191, 36, 0.15)"
-                            strokeWidth="0.4"
-                            strokeLinejoin="round"
-                            filter="url(#glow)"
-                            className="animate-pulse-subtle"
-                          />
-                          {elements.map((el, i) => {
-                            const val = finalOheng[el.key];
-                            const r = val * scaleFactor;
-                            const rad = (el.angle - 90) * (Math.PI / 180);
-                            const x = 60 + r * Math.cos(rad);
-                            const y = 60 + r * Math.sin(rad);
-                            const tx = 60 + 56 * Math.cos(rad);
-                            const ty = 60 + 56 * Math.sin(rad);
+                        const pointsString = pointsData.map(p => `${p.x},${p.y}`).join(" ");
 
-                            const isStrongest = val === maxFinalVal && val > 0;
+                        return (
+                          <g>
+                            <polygon points={pointsString} fill="url(#poly-grad)" stroke="rgba(251, 191, 36, 0.3)" strokeWidth="0.5" filter="url(#glow)" />
 
-                            return (
-                              <g key={i}>
-                                <circle cx={x} cy={y} r="0.7" fill="#fff" filter="url(#glow)" className="opacity-100" />
-                                <g className={isStrongest ? 'animate-highest-pulse' : ''}>
-                                  <text
-                                    x={tx} y={ty}
-                                    textAnchor="middle"
-                                    dominantBaseline="middle"
-                                    fill={elementColorMap[el.key] || "#d6d3d1"}
-                                    className={`text-[6.8px] font-bold ${titleFont} tracking-widest`}
-                                    style={{
-                                      color: elementColorMap[el.key],
-                                      filter: isStrongest ? undefined : 'drop-shadow(0 0 2px rgba(255,255,255,0.1))'
-                                    }}
-                                  >
-                                    {el.label}({el.meaning})
+                            {/* Vertex Glow Points - 크림색 통일 + 맥동 효과 */}
+                            {pointsData.map((p, i) => (
+                              <circle
+                                key={`glow-${i}`}
+                                cx={p.x} cy={p.y}
+                                r={1.2}
+                                fill="#e8dac0"
+                                className="animate-vertex-glow"
+                              />
+                            ))}
+
+                            {/* Labels - 최강 오행에 발광 효과 */}
+                            {pointsData.map((p, i) => {
+                              const isStrongest = p.key === strongest;
+                              const rad = (p.angle - 90) * (Math.PI / 180);
+                              const tx = 60 + 55 * Math.cos(rad);
+                              const ty = 60 + 55 * Math.sin(rad);
+                              return (
+                                <g key={i} className={isStrongest ? 'animate-strongest-glow' : ''}>
+                                  <text x={tx} y={ty} textAnchor="middle" dominantBaseline="middle" fill={elementColorMap[p.key]} className="text-[7px] font-bold font-serif">
+                                    {p.label}
                                   </text>
-                                  <text
-                                    x={tx} y={ty + 8}
-                                    textAnchor="middle"
-                                    className="text-[5.5px] font-mono font-bold"
-                                    fill="#a8a29e"
-                                    style={{ color: '#a8a29e' }}
-                                  >
-                                    {val}%
+                                  <text x={tx} y={ty + 7} textAnchor="middle" fill="#a8a29e" className="text-[5px] font-mono">
+                                    {p.val}%
                                   </text>
                                 </g>
-                              </g>
-                            );
-                          })}
-                        </g>
-                      );
+                              );
+                            })}
+                          </g>
+                        );
+                      } catch (error) {
+                        console.error('[오행 SVG 렌더링 에러]', error);
+                        return null;
+                      }
                     })()}
-
                   </svg>
                 </div>
               </div>
             </div>
+          </section>
 
-            {/* 중간 힌트 (Sub CTA) */}
-            {!sajuResult.isPaid && (
+          {/* 중간 힌트 (Sub CTA) */}
+          {
+            !sajuResult.isPaid && (
               <div className="flex justify-center pb-8">
                 <button
                   onClick={handleBasicPayment}
@@ -1032,8 +1058,8 @@ const ResultPage = () => {
                   <span>봉인된 천기(天機)를 지금 바로 확인하기</span>
                 </button>
               </div>
-            )}
-          </section>
+            )
+          }
 
           {/* Step 4: The Sealed Archive - 제 3권: 천개의 비밀 */}
           <section className="snap-section px-6 h-auto pb-20" style={{ paddingTop: 'var(--safe-area-top)' }}>
@@ -1267,102 +1293,108 @@ const ResultPage = () => {
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* 마지막 섹션 인라인 CTA */}
-              {!sajuResult.isPaid && (
-                <div className="mt-12 flex justify-center">
-                  <button
-                    onClick={handleBasicPayment}
-                    className="group relative w-full max-w-[320px] overflow-hidden rounded py-5 shadow-2xl transition-all"
-                  >
+                {/* 마지막 섹션 인라인 CTA */}
+                {!sajuResult.isPaid && (
+                  <div className="mt-12 flex justify-center">
+                    <button
+                      onClick={handleBasicPayment}
+                      className="group relative w-full max-w-[320px] overflow-hidden rounded py-5 shadow-2xl transition-all"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900" />
+                      <div className="relative flex items-center justify-center gap-4 text-amber-100 font-serif text-lg font-bold tracking-[0.3em]">
+                        <span>천기(天機) 열람하기</span>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+        </main >
+
+        {/* --- Modals & Overlays (Outside main for focus) --- */}
+
+        {/* Talisman Selector Modal (Tech Demo / Test) */}
+        {
+          showTalismanSelector && (
+            <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2 backdrop-blur-sm animate-fade-in">
+              <div className="bg-[#1a1a1c] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[95vh] relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">📜</span>
+                    <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
+                  </div>
+                  <button onClick={() => setShowTalismanSelector(false)} className="w-8 h-8 rounded-full bg-black/20 hover:bg-white/10 flex items-center justify-center text-stone-500"><X size={18} /></button>
+                </div>
+                <div className="flex-1 overflow-y-auto p-4 relative z-10 custom-scrollbar">
+                  <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
+                    {Object.keys(talismanNames).map((key) => {
+                      const gan = key[0];
+                      const { color } = getGanColor(gan);
+                      return (
+                        <button key={key} onClick={() => { setTestTalismanKey(key); setShowTalismanSelector(false); }} className="p-2 border border-white/5 bg-[#252528] rounded hover:border-amber-500/50 transition-all">
+                          <span className={`text-[10px] font-serif ${color}`}>{key}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* PDF Preview Modal */}
+        {
+          showPdfPreview && pdfPreviewUrl && (
+            <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
+              <div className="bg-[#1a1a1c] w-full max-w-lg rounded-lg overflow-hidden h-[80vh] flex flex-col border border-amber-900/30 shadow-2xl">
+                <div className="p-4 border-b border-amber-900/30 flex justify-between items-center bg-[#252528]">
+                  <h3 className="font-bold text-[#e8dac0] font-serif">미리보기</h3>
+                  <button onClick={handleClosePdfPreview} className="text-stone-500 hover:text-[#e8dac0]"><X /></button>
+                </div>
+                <div className="flex-1 overflow-auto bg-[#101012] p-4 flex justify-center relative">
+                  <Document file={pdfPreviewUrl} loading={<div className="text-amber-700 font-serif blink">문서를 불러오는 중...</div>}>
+                    <Page pageNumber={1} width={300} />
+                  </Document>
+                </div>
+                <div className="p-4 bg-[#1a1a1c] border-t border-amber-900/30">
+                  <button onClick={handlePdfPayment} className="w-full bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-3 rounded font-bold font-serif border border-amber-700/50 flex justify-center gap-2">
+                    <span className="text-lg">🧧</span> 전체 결과 소장하기
+                  </button>
+                </div>
+              </div>
+            </div>
+          )
+        }
+
+        {/* Floating Action Button (PDF) - 숨김 처리 (나중에 위치 결정 후 재활성화) */}
+        {/* FAB는 인라인 CTA로 대체되어 숨김 처리됨 */}
+        {
+          false && showFab && (
+            <div className="fixed bottom-6 left-0 w-full flex justify-center z-40 pointer-events-none animate-fade-in">
+              <div className="w-full max-w-[480px] px-6 pointer-events-auto">
+                {sajuResult.isPaid ? (
+                  <div className="flex gap-2">
+                    <button onClick={handlePdfPreview} className="flex-1 bg-[#2a2a2c] text-stone-300 py-4 rounded font-bold border border-amber-900/30 flex items-center justify-center gap-2 font-serif"><Eye size={18} /> 미리보기</button>
+                    <button onClick={handlePdfPayment} className="flex-[2] bg-[#3f2e18] text-amber-100 py-4 rounded font-bold border border-amber-700/50 flex items-center justify-center gap-2 font-serif"><Download size={18} /> <span>영구 소장하기</span></button>
+                  </div>
+                ) : (
+                  <button onClick={handleBasicPayment} className="group relative w-full overflow-hidden rounded py-5 shadow-2xl transition-all">
                     <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900" />
                     <div className="relative flex items-center justify-center gap-4 text-amber-100 font-serif text-lg font-bold tracking-[0.3em]">
                       <span>천기(天機) 열람하기</span>
                     </div>
                   </button>
-                </div>
-              )}
-            </div>
-          </section>
-        </main>
-
-        {/* --- Modals & Overlays (Outside main for focus) --- */}
-
-        {/* Talisman Selector Modal (Tech Demo / Test) */}
-        {showTalismanSelector && (
-          <div className="fixed inset-0 bg-black/95 z-[60] flex items-center justify-center p-2 backdrop-blur-sm animate-fade-in">
-            <div className="bg-[#1a1a1c] w-full max-w-4xl rounded-xl border border-amber-900/40 shadow-2xl flex flex-col max-h-[95vh] relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/5 rounded-full blur-3xl pointer-events-none" />
-              <div className="p-5 border-b border-amber-900/30 flex justify-between items-center bg-[#202022] relative z-10">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">📜</span>
-                  <h3 className="font-bold text-[#e8dac0] font-serif text-xl tracking-wide">60갑자 수호신 도감</h3>
-                </div>
-                <button onClick={() => setShowTalismanSelector(false)} className="w-8 h-8 rounded-full bg-black/20 hover:bg-white/10 flex items-center justify-center text-stone-500"><X size={18} /></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-4 relative z-10 custom-scrollbar">
-                <div className="grid grid-cols-4 sm:grid-cols-6 lg:grid-cols-8 gap-2">
-                  {Object.keys(talismanNames).map((key) => {
-                    const gan = key[0];
-                    const { color } = getGanColor(gan);
-                    return (
-                      <button key={key} onClick={() => { setTestTalismanKey(key); setShowTalismanSelector(false); }} className="p-2 border border-white/5 bg-[#252528] rounded hover:border-amber-500/50 transition-all">
-                        <span className={`text-[10px] font-serif ${color}`}>{key}</span>
-                      </button>
-                    );
-                  })}
-                </div>
+                )}
               </div>
             </div>
-          </div>
-        )}
+          )
+        }
 
-        {/* PDF Preview Modal */}
-        {showPdfPreview && pdfPreviewUrl && (
-          <div className="fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
-            <div className="bg-[#1a1a1c] w-full max-w-lg rounded-lg overflow-hidden h-[80vh] flex flex-col border border-amber-900/30 shadow-2xl">
-              <div className="p-4 border-b border-amber-900/30 flex justify-between items-center bg-[#252528]">
-                <h3 className="font-bold text-[#e8dac0] font-serif">미리보기</h3>
-                <button onClick={handleClosePdfPreview} className="text-stone-500 hover:text-[#e8dac0]"><X /></button>
-              </div>
-              <div className="flex-1 overflow-auto bg-[#101012] p-4 flex justify-center relative">
-                <Document file={pdfPreviewUrl} loading={<div className="text-amber-700 font-serif blink">문서를 불러오는 중...</div>}>
-                  <Page pageNumber={1} width={300} />
-                </Document>
-              </div>
-              <div className="p-4 bg-[#1a1a1c] border-t border-amber-900/30">
-                <button onClick={handlePdfPayment} className="w-full bg-[#3f2e18] hover:bg-[#4a361e] text-amber-100 py-3 rounded font-bold font-serif border border-amber-700/50 flex justify-center gap-2">
-                  <span className="text-lg">🧧</span> 전체 결과 소장하기
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Floating Action Button (PDF) - 숨김 처리 (나중에 위치 결정 후 재활성화) */}
-        {/* FAB는 인라인 CTA로 대체되어 숨김 처리됨 */}
-        {false && showFab && (
-          <div className="fixed bottom-6 left-0 w-full flex justify-center z-40 pointer-events-none animate-fade-in">
-            <div className="w-full max-w-[480px] px-6 pointer-events-auto">
-              {sajuResult.isPaid ? (
-                <div className="flex gap-2">
-                  <button onClick={handlePdfPreview} className="flex-1 bg-[#2a2a2c] text-stone-300 py-4 rounded font-bold border border-amber-900/30 flex items-center justify-center gap-2 font-serif"><Eye size={18} /> 미리보기</button>
-                  <button onClick={handlePdfPayment} className="flex-[2] bg-[#3f2e18] text-amber-100 py-4 rounded font-bold border border-amber-700/50 flex items-center justify-center gap-2 font-serif"><Download size={18} /> <span>영구 소장하기</span></button>
-                </div>
-              ) : (
-                <button onClick={handleBasicPayment} className="group relative w-full overflow-hidden rounded py-5 shadow-2xl transition-all">
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900" />
-                  <div className="relative flex items-center justify-center gap-4 text-amber-100 font-serif text-lg font-bold tracking-[0.3em]">
-                    <span>천기(天機) 열람하기</span>
-                  </div>
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-      </div>
+      </div >
     </div >
   );
 };
