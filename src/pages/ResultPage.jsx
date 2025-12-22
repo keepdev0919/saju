@@ -104,16 +104,6 @@ const 약할때특성 = {
 const 상극관계 = { 목: '토', 토: '수', 수: '화', 화: '금', 금: '목' };
 const 상생관계 = { 목: '화', 화: '토', 토: '금', 금: '수', 수: '목' };
 
-// 균형 지수 계산
-const calculateBalanceScore = (oheng) => {
-  const ideal = 20;
-  const elements = ['목', '화', '토', '금', '수'];
-  const values = elements.map(el => oheng[el] || 0);
-  const variance = values.reduce((sum, v) => sum + Math.pow(v - ideal, 2), 0) / 5;
-  const stdDev = Math.sqrt(variance);
-  return Math.max(0, Math.min(100, Math.round(100 - stdDev * 3)));
-};
-
 // 상생/상극 관계 텍스트 생성
 const generateRelationText = (strongest, weakest) => {
   if (상극관계[strongest] === weakest) {
@@ -126,6 +116,140 @@ const generateRelationText = (strongest, weakest) => {
     return `${ohengLabels[weakest]}가 ${ohengLabels[strongest]}의 근원이 되는 관계입니다. 뿌리가 여리면 결실도 쉽게 흔들릴 수 있습니다.`;
   }
   return `${ohengLabels[strongest]}과 ${ohengLabels[weakest]}는 직접적 상생/상극 관계가 아니어서 독립적으로 작용합니다.`;
+};
+
+// 계절 정보 가져오기
+const getSeasonInfo = (monthJi) => {
+  if (!monthJi) return null;
+  const seasonMap = {
+    '寅': { season: '초봄', element: '목' },
+    '卯': { season: '한봄', element: '목' },
+    '辰': { season: '늦봄', element: '토' },
+    '巳': { season: '초여름', element: '화' },
+    '午': { season: '한여름', element: '화' },
+    '未': { season: '늦여름', element: '토' },
+    '申': { season: '초가을', element: '금' },
+    '酉': { season: '한가을', element: '금' },
+    '戌': { season: '늦가을', element: '토' },
+    '亥': { season: '초겨울', element: '수' },
+    '子': { season: '한겨울', element: '수' },
+    '丑': { season: '늦겨울', element: '토' }
+  };
+  return seasonMap[monthJi] || null;
+};
+
+// 오행이 강한/약한 원인을 8자에서 찾는 함수 (구조적 설명만)
+const analyzeElementSource = (element, ohengValue, sajuData) => {
+  if (!sajuData) return { reasons: [] };
+  
+  const reasons = [];
+  const sources = [];
+  
+  // 1. 천간에서 찾기
+  const gans = [
+    { gan: sajuData.year?.gan, pillar: '년주', meaning: '조상' },
+    { gan: sajuData.month?.gan, pillar: '월주', meaning: '부모/사회' },
+    { gan: sajuData.day?.gan, pillar: '일주', meaning: '나' },
+    { gan: sajuData.hour?.gan, pillar: '시주', meaning: '자식/말년' }
+  ];
+  
+  gans.forEach(({ gan, pillar, meaning }) => {
+    if (gan && getElementFromGan(gan) === element) {
+      sources.push({ type: 'gan', pillar, gan });
+      if (pillar === '일주') {
+        reasons.push(`일간(日干)이 ${element} 기운이어서 근본 기운이 강하게 발현됩니다.`);
+      } else {
+        reasons.push(`${pillar}의 천간에 ${element} 기운이 있습니다.`);
+      }
+    }
+  });
+  
+  // 2. 지지에서 찾기
+  const jis = [
+    { ji: sajuData.year?.ji, pillar: '년주', meaning: '조상' },
+    { ji: sajuData.month?.ji, pillar: '월주', meaning: '부모/사회' },
+    { ji: sajuData.day?.ji, pillar: '일주', meaning: '나' },
+    { ji: sajuData.hour?.ji, pillar: '시주', meaning: '자식/말년' }
+  ];
+  
+  jis.forEach(({ ji, pillar, meaning }) => {
+    if (ji && getElementFromJi(ji) === element) {
+      sources.push({ type: 'ji', pillar, ji });
+      if (pillar === '월주') {
+        reasons.push(`월지(月支)에 ${element} 기운이 있어 계절의 도움을 받고 있습니다.`);
+      } else {
+        reasons.push(`${pillar}의 지지에 ${element} 기운이 있습니다.`);
+      }
+    }
+  });
+  
+  // 3. 계절(득시) 확인
+  const monthJi = sajuData.month?.ji;
+  const seasonInfo = getSeasonInfo(monthJi);
+  if (seasonInfo && seasonInfo.element === element && ohengValue >= 20) {
+    reasons.push(`${seasonInfo.season}에 태어나 ${element} 기운이 계절의 도움을 받고 있습니다.`);
+  }
+  
+  // 4. 통근 확인 (일간과 같은 오행이 지지에 있는지)
+  const dayMaster = sajuData.day?.gan;
+  const dayMasterElement = getElementFromGan(dayMaster);
+  if (dayMasterElement === element) {
+    const hasTonggen = jis.some(({ ji }) => ji && getElementFromJi(ji) === element);
+    if (hasTonggen) {
+      reasons.push(`일간 ${element} 기운이 지지에 뿌리를 내려 실질적인 힘이 강합니다.`);
+    }
+  }
+  
+  return {
+    element,
+    value: ohengValue,
+    sources,
+    reasons: reasons.length > 0 ? reasons : [`${element} 기운이 지장간(地藏干)에 숨어 있거나 다른 경로로 작용하고 있습니다.`]
+  };
+};
+
+// 일간과 오행의 관계 해석 (구조적 설명만)
+const analyzeDayMasterRelation = (dayMaster, element, ohengValue) => {
+  if (!dayMaster) return null;
+  
+  const dayMasterElement = getElementFromGan(dayMaster);
+  if (!dayMasterElement) return null;
+  
+  if (dayMasterElement === element) {
+    // 일간과 같은 오행
+    if (ohengValue >= 30) {
+      return `일간(日干)이 ${element} 기운인데 ${element} 기운이 매우 강합니다. 근본 기운이 뚜렷하게 발현되는 구조입니다.`;
+    } else if (ohengValue >= 20) {
+      return `일간(日干)이 ${element} 기운이고 ${element} 기운이 적절합니다.`;
+    } else {
+      return `일간(日干)이 ${element} 기운인데 ${element} 기운이 상대적으로 약합니다. 같은 기운을 보강할 기회를 찾는 것이 도움이 될 수 있습니다.`;
+    }
+  } else {
+    // 일간과 다른 오행 - 상극/상생 관계 확인
+    if (상극관계[element] === dayMasterElement) {
+      // 오행이 일간을 극함
+      if (ohengValue >= 30) {
+        return `${element} 기운이 강하여 일간 ${dayMasterElement} 기운을 극하는 구조입니다.`;
+      }
+    } else if (상극관계[dayMasterElement] === element) {
+      // 일간이 오행을 극함
+      if (ohengValue >= 30) {
+        return `일간 ${dayMasterElement} 기운이 ${element} 기운을 제어하는 구조입니다.`;
+      }
+    } else if (상생관계[element] === dayMasterElement) {
+      // 오행이 일간을 생함
+      if (ohengValue >= 25) {
+        return `${element} 기운이 강하여 일간 ${dayMasterElement} 기운을 도와주는 구조입니다.`;
+      }
+    } else if (상생관계[dayMasterElement] === element) {
+      // 일간이 오행을 생함
+      if (ohengValue >= 25) {
+        return `일간 ${dayMasterElement} 기운이 ${element} 기운을 낳아주는 구조입니다.`;
+      }
+    }
+  }
+  
+  return null; // 특별한 관계 없음
 };
 
 // --- Sub-components for Archive Style ---
@@ -897,8 +1021,8 @@ const ResultPage = () => {
                 <div className="relative py-3">
                   <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
                   <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif tracking-wider leading-relaxed text-center px-4">
-                    오행은 좋고 나쁨이 아닌 <span className="text-[#e8dac0]">당신이 타고난 재료</span>입니다<br />
-                    이를 깊이 이해할 때, 비로소 당신은 <span className="text-[#e8dac0]">운명의 주인</span>이 됩니다
+                    오행은 좋고 나쁨이 아닌 <span className="text-[#e8dac0] italic">당신이 타고난 재료</span> 입니다<br />
+                    이를 깊이 이해할 때, 비로소 당신은 <span className="text-[#e8dac0] italic">운명의 주인</span> 이 됩니다
                   </p>
                   <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
                 </div>
@@ -1063,11 +1187,22 @@ const ResultPage = () => {
                   if (val < minVal) { minVal = val; weakest = el; }
                 });
 
-                // 균형 지수
-                const balanceScore = calculateBalanceScore(ohengData);
-
                 // 관계 텍스트
                 const relationText = generateRelationText(strongest, weakest);
+
+                // 구조적 분석 (8자-오행 연결)
+                const strongestAnalysis = analyzeElementSource(strongest, maxVal, sajuResult?.sajuData);
+                const weakestAnalysis = analyzeElementSource(weakest, minVal, sajuResult?.sajuData);
+                const dayMasterRelationStrongest = analyzeDayMasterRelation(
+                  sajuResult?.sajuData?.day?.gan,
+                  strongest,
+                  maxVal
+                );
+                const dayMasterRelationWeakest = analyzeDayMasterRelation(
+                  sajuResult?.sajuData?.day?.gan,
+                  weakest,
+                  minVal
+                );
 
                 return (
                   <div className="flex-1 flex flex-col items-center justify-start py-12">
@@ -1092,25 +1227,6 @@ const ResultPage = () => {
                       </div>
                     </div>
 
-                    {/* 균형 지수 */}
-                    <div className="w-full max-w-sm mb-8 reveal-item delay-100">
-                      <div className="text-center mb-3">
-                        <span className="text-stone-500 text-xs font-serif tracking-wider">기운 분포 지수</span>
-                      </div>
-                      <div className="flex items-center gap-3 px-4">
-                        <div className="flex-1 h-2 bg-stone-800 rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-gradient-to-r from-amber-700 to-amber-500 rounded-full transition-all duration-1000"
-                            style={{ width: `${balanceScore}%` }}
-                          ></div>
-                        </div>
-                        <span className="text-amber-500 font-bold font-mono text-sm">{balanceScore}</span>
-                      </div>
-                      <p className="text-stone-600 text-[10px] font-serif text-center mt-2 px-4">
-                        오행이 고르게 분포할수록 높은 수치입니다. 높다고 좋거나 낮다고 나쁜 것은 아닙니다.
-                      </p>
-                    </div>
-
                     {/* 오행 분석 텍스트 */}
                     <div className="w-full max-w-sm px-4 reveal-item delay-200">
                       <div className="space-y-6">
@@ -1120,6 +1236,26 @@ const ResultPage = () => {
                             <span className="text-amber-500 font-bold font-serif">{ohengLabels[strongest]}</span>
                             <span className="text-stone-500 text-xs">({Math.round(maxVal)}%) - 가장 두드러진 기운</span>
                           </div>
+                          
+                          {/* 구조적 설명 (8자-오행 연결) */}
+                          {strongestAnalysis.reasons.length > 0 && (
+                            <div className="mb-3 space-y-1">
+                              {strongestAnalysis.reasons.map((reason, idx) => (
+                                <p key={idx} className="text-stone-400 text-[11px] font-serif leading-relaxed">
+                                  {reason}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* 일간-오행 관계 */}
+                          {dayMasterRelationStrongest && (
+                            <p className="text-amber-400/80 text-[11px] font-serif leading-relaxed italic mb-3">
+                              {dayMasterRelationStrongest}
+                            </p>
+                          )}
+                          
+                          {/* 일반적 특성 */}
                           <p className="text-stone-300 text-[13px] font-serif leading-relaxed">
                             {강할때특성[strongest]}
                           </p>
@@ -1131,6 +1267,26 @@ const ResultPage = () => {
                             <span className="text-stone-500 font-bold font-serif">{ohengLabels[weakest]}</span>
                             <span className="text-stone-600 text-xs">({Math.round(minVal)}%) - 상대적으로 여린 기운</span>
                           </div>
+                          
+                          {/* 구조적 설명 (8자-오행 연결) */}
+                          {weakestAnalysis.reasons.length > 0 && (
+                            <div className="mb-3 space-y-1">
+                              {weakestAnalysis.reasons.map((reason, idx) => (
+                                <p key={idx} className="text-stone-500 text-[11px] font-serif leading-relaxed">
+                                  {reason}
+                                </p>
+                              ))}
+                            </div>
+                          )}
+                          
+                          {/* 일간-오행 관계 */}
+                          {dayMasterRelationWeakest && (
+                            <p className="text-stone-400/80 text-[11px] font-serif leading-relaxed italic mb-3">
+                              {dayMasterRelationWeakest}
+                            </p>
+                          )}
+                          
+                          {/* 일반적 특성 */}
                           <p className="text-stone-400 text-[13px] font-serif leading-relaxed">
                             {약할때특성[weakest]}
                           </p>
@@ -1143,6 +1299,14 @@ const ResultPage = () => {
                           </div>
                           <p className="text-stone-400 text-[12px] font-serif leading-relaxed italic">
                             {relationText}
+                          </p>
+                        </div>
+
+                        {/* 안내 문구 */}
+                        <div className="pt-4 border-t border-amber-900/10">
+                          <p className="text-stone-500 text-[10px] font-serif text-center leading-relaxed italic">
+                            이 정보는 사주팔자의 구조적 분석입니다.<br />
+                            오행의 의미와 운세 해석은 제3서 천개의 비밀에서 확인하실 수 있습니다.
                           </p>
                         </div>
                       </div>

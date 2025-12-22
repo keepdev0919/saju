@@ -36,9 +36,15 @@ export async function interpretSajuWithAI(sajuData, userData) {
 해석은 긍정적이면서도 현실적이어야 하며, 실질적인 조언을 포함해야 합니다.
 반드시 유효한 JSON 형식으로만 응답하세요.
 
-**중요: 현재 날짜는 ${currentDate} (${currentYear}년)입니다. 
-timing 필드(business.timing, marriage.timing)는 미래 예측이므로 반드시 ${currentYear}년 이후의 날짜만 언급하세요.
-description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 언급해도 되지만, 과거 날짜를 미래처럼 표현하지 마세요.**`;
+**중요 제약사항:**
+1. 현재 날짜는 ${currentDate} (${currentYear}년)입니다. 
+   timing 필드(business.timing, marriage.timing)는 미래 예측이므로 반드시 ${currentYear}년 이후의 날짜만 언급하세요.
+   description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 언급해도 되지만, 과거 날짜를 미래처럼 표현하지 마세요.
+
+2. **구조적 설명 제외**: 제2서(오행의 조화)에서 이미 오행 구조와 원인을 설명했으므로, 
+   오행이 "왜" 강한지/약한지에 대한 구조적 설명(예: "월지에 금이 있어서", "일간이 금이어서")은 생략하고,
+   오행이 "무엇을 의미하는지", "어떻게 활용해야 하는지"에 집중하세요.
+   예시: "금 기운이 강하여 결단력이 있다" (O) / "월지에 금이 있어서 강하다" (X - 구조 설명은 제2서에서 다룸)`;
 
     // User prompt (사주 데이터 전달 - JSON 형식)
     const userPrompt = `다음은 ${name}님의 사주팔자 정보입니다:
