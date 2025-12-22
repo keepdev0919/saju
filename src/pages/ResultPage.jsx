@@ -138,7 +138,7 @@ const getSeasonInfo = (monthJi) => {
   return seasonMap[monthJi] || null;
 };
 
-// 오행이 강한/약한 원인을 8자에서 찾는 함수 (구조적 설명만)
+// 오행이 강한/약한 원인을 8자에서 찾는 함수 (구조적 설명만) - 리팩토링: 문장 통합 및 우선순위 적용
 const analyzeElementSource = (element, ohengValue, sajuData) => {
   if (!sajuData) return { reasons: [] };
   
@@ -153,14 +153,9 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
     { gan: sajuData.hour?.gan, pillar: '시주', meaning: '자식/말년' }
   ];
   
-  gans.forEach(({ gan, pillar, meaning }) => {
+  gans.forEach(({ gan, pillar }) => {
     if (gan && getElementFromGan(gan) === element) {
       sources.push({ type: 'gan', pillar, gan });
-      if (pillar === '일주') {
-        reasons.push(`일간(日干)이 ${element} 기운이어서 근본 기운이 강하게 발현됩니다.`);
-      } else {
-        reasons.push(`${pillar}의 천간에 ${element} 기운이 있습니다.`);
-      }
     }
   });
   
@@ -172,39 +167,83 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
     { ji: sajuData.hour?.ji, pillar: '시주', meaning: '자식/말년' }
   ];
   
-  jis.forEach(({ ji, pillar, meaning }) => {
+  jis.forEach(({ ji, pillar }) => {
     if (ji && getElementFromJi(ji) === element) {
       sources.push({ type: 'ji', pillar, ji });
-      if (pillar === '월주') {
-        reasons.push(`월지(月支)에 ${element} 기운이 있어 계절의 도움을 받고 있습니다.`);
-      } else {
-        reasons.push(`${pillar}의 지지에 ${element} 기운이 있습니다.`);
-      }
     }
   });
   
   // 3. 계절(득시) 확인
   const monthJi = sajuData.month?.ji;
   const seasonInfo = getSeasonInfo(monthJi);
-  if (seasonInfo && seasonInfo.element === element && ohengValue >= 20) {
-    reasons.push(`${seasonInfo.season}에 태어나 ${element} 기운이 계절의 도움을 받고 있습니다.`);
-  }
+  const hasSeasonSupport = seasonInfo && seasonInfo.element === element && ohengValue >= 20;
   
   // 4. 통근 확인 (일간과 같은 오행이 지지에 있는지)
   const dayMaster = sajuData.day?.gan;
   const dayMasterElement = getElementFromGan(dayMaster);
-  if (dayMasterElement === element) {
-    const hasTonggen = jis.some(({ ji }) => ji && getElementFromJi(ji) === element);
+  const isDayMaster = dayMasterElement === element;
+  const hasTonggen = isDayMaster && jis.some(({ ji }) => ji && getElementFromJi(ji) === element);
+  
+  // 우선순위 기반 문장 생성 (중복 제거 및 통합)
+  
+  // 우선순위 1: 일간 정보 (가장 중요)
+  if (isDayMaster) {
     if (hasTonggen) {
-      reasons.push(`일간 ${element} 기운이 지지에 뿌리를 내려 실질적인 힘이 강합니다.`);
+      // 일간 + 통근 통합 문장
+      reasons.push(`일간(日干)이 ${element} 기운이고, 지지에 뿌리를 내려 근본 기운이 뚜렷하게 발현됩니다.`);
+    } else {
+      reasons.push(`일간(日干)이 ${element} 기운이어서 근본 기운이 강하게 발현됩니다.`);
     }
+  }
+  
+  // 우선순위 2: 계절 정보 (월지와 계절 통합)
+  if (hasSeasonSupport) {
+    const hasMonthJi = sources.some(s => s.pillar === '월주' && s.type === 'ji');
+    if (hasMonthJi) {
+      // 월지와 계절 정보 통합
+      reasons.push(`월지(月支)에 ${element} 기운이 있어 ${seasonInfo.season}의 도움을 받고 있습니다.`);
+    } else {
+      reasons.push(`${seasonInfo.season}에 태어나 ${element} 기운이 계절의 도움을 받고 있습니다.`);
+    }
+  } else {
+    // 계절 도움은 없지만 월지에 있는 경우
+    const hasMonthJi = sources.some(s => s.pillar === '월주' && s.type === 'ji');
+    if (hasMonthJi) {
+      reasons.push(`월지(月支)에 ${element} 기운이 있습니다.`);
+    }
+  }
+  
+  // 우선순위 3: 다른 위치의 천간/지지 (일간, 월지 제외)
+  const otherGans = sources.filter(s => s.type === 'gan' && s.pillar !== '일주');
+  const otherJis = sources.filter(s => s.type === 'ji' && s.pillar !== '월주');
+  
+  if (otherGans.length > 0 || otherJis.length > 0) {
+    const locations = [];
+    otherGans.forEach(s => {
+      if (!locations.includes(s.pillar)) locations.push(s.pillar);
+    });
+    otherJis.forEach(s => {
+      if (!locations.includes(s.pillar)) locations.push(s.pillar);
+    });
+    
+    if (locations.length > 0) {
+      const locationText = locations.length === 1 
+        ? `${locations[0]}에`
+        : `${locations.join(', ')}에`;
+      reasons.push(`${locationText} ${element} 기운이 있습니다.`);
+    }
+  }
+  
+  // 정보가 없을 경우
+  if (reasons.length === 0) {
+    reasons.push(`${element} 기운이 지장간(地藏干)에 숨어 있거나 다른 경로로 작용하고 있습니다.`);
   }
   
   return {
     element,
     value: ohengValue,
     sources,
-    reasons: reasons.length > 0 ? reasons : [`${element} 기운이 지장간(地藏干)에 숨어 있거나 다른 경로로 작용하고 있습니다.`]
+    reasons
   };
 };
 
@@ -1005,9 +1044,9 @@ const ResultPage = () => {
           )}
 
           {/* Step 3: The Energy Balance - 제 2서: 오행의 조화 */}
-          <section className="snap-section px-6" style={{ paddingTop: 'var(--safe-area-top)' }}>
+          <section className="snap-section px-6 h-auto" style={{ paddingTop: 'var(--safe-area-top)', justifyContent: 'flex-start' }}>
             {console.log('[제2서 렌더링 시작]', { oheng: sajuResult?.oheng, sajuData: sajuResult?.sajuData })}
-            <div className="flex-1 flex flex-col items-center py-12">
+            <div className="flex flex-col items-center py-12 min-h-screen">
               <div className="flex flex-col items-center mb-6 reveal-item">
                 <div className="flex items-center gap-4">
                   <div className="w-8 h-px bg-amber-600/30" />
@@ -1170,7 +1209,7 @@ const ResultPage = () => {
           </section>
 
           {/* Step 3-B: 오행 해석 페이지 */}
-          <section className="snap-section px-6 pb-12" style={{ paddingTop: 'var(--safe-area-top)' }}>
+          <section className="snap-section px-6 pb-12 h-auto" style={{ paddingTop: 'var(--safe-area-top)', justifyContent: 'flex-start' }}>
             {(() => {
               try {
                 const ohengData = sajuResult?.oheng;
@@ -1204,10 +1243,77 @@ const ResultPage = () => {
                   minVal
                 );
 
+                // 사주팔자 미니 그리드용 하이라이트 정보
+                const highlightElement = strongest;
+                const getPillarHighlight = (gan, ji) => {
+                  const ganElem = getElementFromGan(gan);
+                  const jiElem = getElementFromJi(ji);
+                  return {
+                    gan: ganElem === highlightElement,
+                    ji: jiElem === highlightElement
+                  };
+                };
+
                 return (
-                  <div className="flex-1 flex flex-col items-center justify-start py-12">
+                  <div className="flex flex-col items-center justify-start py-12 min-h-screen">
+                    {/* 사주팔자 미니 그리드 */}
+                    <div className="w-full max-w-sm mb-6 reveal-item">
+                      <div className="text-center mb-3">
+                        <span className="text-stone-500 text-[10px] font-serif tracking-wider">사주팔자</span>
+                      </div>
+                      <div className="flex gap-1.5 justify-center">
+                        {[
+                          { pillar: '시주', gan: sajuResult?.sajuData?.hour?.gan, ji: sajuResult?.sajuData?.hour?.ji },
+                          { pillar: '일주', gan: sajuResult?.sajuData?.day?.gan, ji: sajuResult?.sajuData?.day?.ji, isDay: true },
+                          { pillar: '월주', gan: sajuResult?.sajuData?.month?.gan, ji: sajuResult?.sajuData?.month?.ji },
+                          { pillar: '연주', gan: sajuResult?.sajuData?.year?.gan, ji: sajuResult?.sajuData?.year?.ji }
+                        ].map(({ pillar, gan, ji, isDay }, idx) => {
+                          const highlight = getPillarHighlight(gan, ji);
+                          const ganElem = getElementFromGan(gan);
+                          const jiElem = getElementFromJi(ji);
+                          const ganColor = getElementColor(ganElem);
+                          const jiColor = getElementColor(jiElem);
+
+                          return (
+                            <div key={idx} className="flex flex-col gap-1">
+                              <div className="text-center">
+                                <div className={`text-[8px] font-serif tracking-[0.05em] ${isDay ? 'text-stone-300' : 'text-stone-500/50'}`}>
+                                  {pillar}
+                                </div>
+                              </div>
+                              {/* 천간 */}
+                              <div 
+                                className={`relative w-8 h-8 flex items-center justify-center rounded-sm bg-[#121214] transition-all duration-300 ${
+                                  highlight.gan ? 'ring-2 ring-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : ''
+                                }`}
+                                style={{ border: `1px solid ${highlight.gan ? '#f59e0b' : `${ganColor}60`}` }}
+                              >
+                                <span className="text-[14px] font-bold font-serif text-stone-300/80">
+                                  {ganHanjaMap[gan] || gan}
+                                </span>
+                              </div>
+                              {/* 지지 */}
+                              <div 
+                                className={`relative w-8 h-8 flex items-center justify-center rounded-sm bg-[#121214] transition-all duration-300 ${
+                                  highlight.ji ? 'ring-2 ring-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : ''
+                                }`}
+                                style={{ border: `1px solid ${highlight.ji ? '#f59e0b' : `${jiColor}60`}` }}
+                              >
+                                <span className="text-[14px] font-bold font-serif text-stone-300/80">
+                                  {jiHanjaMap[ji] || ji}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <p className="text-stone-500 text-[9px] font-serif text-center mt-2">
+                        <span className="text-amber-500">●</span> 표시된 위치에 {ohengLabels[strongest]} 기운이 있습니다
+                      </p>
+                    </div>
+
                     {/* 오행 미니 바 */}
-                    <div className="w-full max-w-sm mb-8 reveal-item">
+                    <div className="w-full max-w-sm mb-8 reveal-item delay-100">
                       <div className="flex justify-between items-center px-2 py-3 bg-[#1a1a1c]/50 rounded border border-amber-900/10">
                         {elements.map(el => {
                           const val = Math.round(ohengData[el] || 0);
@@ -1232,64 +1338,68 @@ const ResultPage = () => {
                       <div className="space-y-6">
                         {/* 최강 기운 */}
                         <div className="p-4 bg-[#1a1a1c]/30 rounded border-l-2 border-amber-600/50">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-3">
                             <span className="text-amber-500 font-bold font-serif">{ohengLabels[strongest]}</span>
                             <span className="text-stone-500 text-xs">({Math.round(maxVal)}%) - 가장 두드러진 기운</span>
                           </div>
                           
-                          {/* 구조적 설명 (8자-오행 연결) */}
+                          {/* 구조적 설명 - 통합 버전 */}
                           {strongestAnalysis.reasons.length > 0 && (
-                            <div className="mb-3 space-y-1">
-                              {strongestAnalysis.reasons.map((reason, idx) => (
-                                <p key={idx} className="text-stone-400 text-[11px] font-serif leading-relaxed">
-                                  {reason}
-                                </p>
-                              ))}
+                            <div className="mb-4">
+                              <p className="text-stone-300 text-[12px] font-serif leading-relaxed">
+                                {strongestAnalysis.reasons.join(' ')}
+                              </p>
                             </div>
                           )}
                           
                           {/* 일간-오행 관계 */}
                           {dayMasterRelationStrongest && (
-                            <p className="text-amber-400/80 text-[11px] font-serif leading-relaxed italic mb-3">
-                              {dayMasterRelationStrongest}
-                            </p>
+                            <div className="mb-4 pt-3 border-t border-amber-900/20">
+                              <p className="text-amber-400/90 text-[11px] font-serif leading-relaxed italic">
+                                {dayMasterRelationStrongest}
+                              </p>
+                            </div>
                           )}
                           
                           {/* 일반적 특성 */}
-                          <p className="text-stone-300 text-[13px] font-serif leading-relaxed">
-                            {강할때특성[strongest]}
-                          </p>
+                          <div className="pt-3 border-t border-amber-900/20">
+                            <p className="text-stone-300 text-[13px] font-serif leading-relaxed">
+                              {강할때특성[strongest]}
+                            </p>
+                          </div>
                         </div>
 
                         {/* 최약 기운 */}
                         <div className="p-4 bg-[#1a1a1c]/30 rounded border-l-2 border-stone-700/50">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center gap-2 mb-3">
                             <span className="text-stone-500 font-bold font-serif">{ohengLabels[weakest]}</span>
                             <span className="text-stone-600 text-xs">({Math.round(minVal)}%) - 상대적으로 여린 기운</span>
                           </div>
                           
-                          {/* 구조적 설명 (8자-오행 연결) */}
+                          {/* 구조적 설명 - 통합 버전 */}
                           {weakestAnalysis.reasons.length > 0 && (
-                            <div className="mb-3 space-y-1">
-                              {weakestAnalysis.reasons.map((reason, idx) => (
-                                <p key={idx} className="text-stone-500 text-[11px] font-serif leading-relaxed">
-                                  {reason}
-                                </p>
-                              ))}
+                            <div className="mb-4">
+                              <p className="text-stone-400 text-[12px] font-serif leading-relaxed">
+                                {weakestAnalysis.reasons.join(' ')}
+                              </p>
                             </div>
                           )}
                           
                           {/* 일간-오행 관계 */}
                           {dayMasterRelationWeakest && (
-                            <p className="text-stone-400/80 text-[11px] font-serif leading-relaxed italic mb-3">
-                              {dayMasterRelationWeakest}
-                            </p>
+                            <div className="mb-4 pt-3 border-t border-stone-800/20">
+                              <p className="text-stone-400/90 text-[11px] font-serif leading-relaxed italic">
+                                {dayMasterRelationWeakest}
+                              </p>
+                            </div>
                           )}
                           
                           {/* 일반적 특성 */}
-                          <p className="text-stone-400 text-[13px] font-serif leading-relaxed">
-                            {약할때특성[weakest]}
-                          </p>
+                          <div className="pt-3 border-t border-stone-800/20">
+                            <p className="text-stone-400 text-[13px] font-serif leading-relaxed">
+                              {약할때특성[weakest]}
+                            </p>
+                          </div>
                         </div>
 
                         {/* 상생/상극 관계 */}

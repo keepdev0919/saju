@@ -55,8 +55,20 @@ apiClient.interceptors.response.use(
  * @returns {Promise} 사용자 생성 결과
  */
 export const createUser = async (userData) => {
-  const response = await apiClient.post('/user/create', userData);
-  return response.data;
+  console.log('[API] createUser 요청:', { url: `${API_BASE_URL}/user/create`, data: userData });
+  try {
+    const response = await apiClient.post('/user/create', userData);
+    console.log('[API] createUser 성공:', response.data);
+    return response.data;
+  } catch (error) {
+    console.error('[API] createUser 실패:', {
+      message: error.message,
+      status: error.status,
+      response: error.response?.data,
+      requestUrl: `${API_BASE_URL}/user/create`
+    });
+    throw error;
+  }
 };
 
 /**

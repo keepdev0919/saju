@@ -28,6 +28,15 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// 요청 로깅 미들웨어 (디버깅용)
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`, {
+    query: req.query,
+    body: req.body ? Object.keys(req.body) : null
+  });
+  next();
+});
+
 // 헬스 체크 엔드포인트
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: '서버가 정상적으로 실행 중입니다.' });
