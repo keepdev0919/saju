@@ -28,6 +28,7 @@
     "lunar-javascript": "^1.7.7",
     "mysql2": "^3.6.5",
     "openai": "^6.10.0",
+    "p-queue": "^9.0.1",
     "puppeteer": "^24.15.0"
   },
   "devDependencies": {
