@@ -18,6 +18,15 @@ const ArchivePage = () => {
     const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
     const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
     const [activeChapter, setActiveChapter] = useState(null);
+
+    // --- [NEW] 무료 열람 제한 로직 (Local Storage) ---
+    const FREE_VIEW_LIMIT = 5;
+    const [viewedTalismans, setViewedTalismans] = useState(() => {
+        const saved = localStorage.getItem('saju_archive_history');
+        return saved ? JSON.parse(saved) : [];
+    });
+    const [showLimitModal, setShowLimitModal] = useState(false);
+
     const touchStartY = useRef(null);
 
     const talismanCardRef = useRef(null);
@@ -229,6 +238,28 @@ const ArchivePage = () => {
                 >
                     <ChevronLeft size={24} strokeWidth={2} className="group-hover:-translate-x-1 transition-transform" />
                 </button>
+
+            </div>
+
+            {/* [NEW] 영혼의 구슬 (잔여 횟수 카운터) - 화면 고정 (Fixed) */}
+            <div className="fixed top-6 right-4 z-[100] flex items-center gap-2 pointer-events-auto bg-black/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/5 shadow-lg animate-fade-in">
+                <span className="text-[10px] text-stone-400 font-serif mr-1 tracking-wider">열람권</span>
+                <div className="flex gap-1.5">
+                    {[...Array(FREE_VIEW_LIMIT)].map((_, i) => {
+                        const remaining = FREE_VIEW_LIMIT - viewedTalismans.length;
+                        const isActive = i < remaining;
+
+                        return (
+                            <div
+                                key={i}
+                                className={`w-2 h-2 rounded-full transition-all duration-500 ${isActive
+                                    ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.6)] scale-100'
+                                    : 'bg-stone-800 shadow-none scale-75'
+                                    }`}
+                            />
+                        );
+                    })}
+                </div>
             </div>
 
             {/* [전략 1] 몰입형 히어로 게이트 (완전한 시선 분리: 100vh) */}
@@ -245,7 +276,10 @@ const ArchivePage = () => {
                     <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mb-8"></div>
                     <p className="text-stone-400/80 text-[max(13px,3.5vw)] sm:text-sm md:text-base tracking-[0.15em] font-serif italic leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
                         천기(天機)의 흐름 속에 나열된<br />
-                        <span className="text-amber-800/60 font-bold">60甲子 수호신</span>들을 관조하십시오.
+                        <span className="text-amber-500 font-bold">60甲子 수호신</span>들을 관조하십시오.
+                    </p>
+                    <p className="mt-6 text-amber-900/50 text-[10px] sm:text-xs tracking-widest font-serif opacity-80">
+                        ※ 영혼의 기운으로 5개의 기록만 열람할 수 있습니다.
                     </p>
                 </div>
 
@@ -300,6 +334,24 @@ const ArchivePage = () => {
                                     <div
                                         key={key}
                                         onClick={() => {
+                                            // 이미 본 카드인지 확인
+                                            if (viewedTalismans.includes(key)) {
+                                                setSelectedTalismanKey(key);
+                                                setShowTalismanDetail(true);
+                                                return;
+                                            }
+
+                                            // 안 본 카드라면 제한 확인
+                                            if (viewedTalismans.length >= FREE_VIEW_LIMIT) {
+                                                setShowLimitModal(true);
+                                                return;
+                                            }
+
+                                            // 제한 안 넘었으면 기록 후 열람
+                                            const newHistory = [...viewedTalismans, key];
+                                            setViewedTalismans(newHistory);
+                                            localStorage.setItem('saju_archive_history', JSON.stringify(newHistory));
+
                                             setSelectedTalismanKey(key);
                                             setShowTalismanDetail(true);
                                         }}
@@ -399,7 +451,53 @@ const ArchivePage = () => {
             </div>
 
             {showTalismanDetail && renderTalismanPreviewModal()}
-        </div>
+
+            {/* 열람 제한 모달 */}
+            {
+                showLimitModal && (
+                    <div
+                        className="fixed inset-0 z-[250] flex items-center justify-center p-6 bg-black/95 backdrop-blur-md animate-fade-in"
+                        onClick={() => setShowLimitModal(false)}
+                    >
+                        <div
+                            className="bg-[#1a1a1c] border border-amber-900/40 rounded-sm p-8 max-w-sm w-full text-center relative shadow-2xl"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl filter drop-shadow-[0_0_10px_rgba(217,119,6,0.5)]">🔒</div>
+
+                            <h3 className="text-amber-500 font-serif text-xl tracking-widest mb-4 mt-2">
+                                열람 한도 도달
+                            </h3>
+
+                            <div className="w-8 h-px bg-amber-900/40 mx-auto mb-6"></div>
+
+                            <p className="text-stone-400 text-sm font-serif leading-relaxed mb-8 break-keep">
+                                무료 열람 횟수 <span className="text-amber-500 font-bold">5회</span>를 모두 소진하였습니다.<br />
+                                천명록을 소장하여 모든 수호신을 제한 없이 확인하세요.
+                            </p>
+
+                            <div className="flex flex-col gap-3">
+                                <button
+                                    onClick={() => {
+                                        setShowLimitModal(false);
+                                        navigate('/'); // 메인으로 보내서 결제 유도
+                                    }}
+                                    className="w-full py-3 bg-amber-800/80 hover:bg-amber-700 text-amber-100 font-serif tracking-widest text-sm rounded-sm transition-all border border-amber-600/30"
+                                >
+                                    천명록 소장하러 가기
+                                </button>
+                                <button
+                                    onClick={() => setShowLimitModal(false)}
+                                    className="w-full py-3 text-stone-600 hover:text-stone-400 font-serif tracking-widest text-xs transition-colors"
+                                >
+                                    둘러보기 계속
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+        </div >
     );
 };
 
