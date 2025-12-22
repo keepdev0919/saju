@@ -250,7 +250,7 @@ const ArchivePage = () => {
                 </div>
 
                 {/* 하단 스크롤 안내 (정적이면서 은은한 디자인) */}
-                <div className="absolute bottom-12 flex flex-col items-center gap-5 opacity-40">
+                <div className="absolute bottom-12 flex flex-col items-center gap-5 opacity-40 animate-bounce-gentle">
                     <span className="text-[max(9px,2.5vw)] sm:text-[11px] tracking-[0.4em] text-amber-600 uppercase font-serif">Scroll to Unfold</span>
                     <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
                 </div>

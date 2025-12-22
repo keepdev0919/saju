@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getSajuResult, verifyUser, createPayment, verifyPayment, generatePDF, getPdfDownloadUrl, checkPdfPayment } from '../utils/api';
-import { RefreshCw, Download, Lock, X, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Sparkles, TrendingUp, Heart, Briefcase, Activity, Zap, Compass, MapPin, Search } from 'lucide-react';
+import { RefreshCw, Download, Lock, X, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Sparkles, TrendingUp, Heart, Briefcase, Activity, Zap, Compass, MapPin, Search, Scroll } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, RadialBarChart, RadialBar } from 'recharts';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -732,11 +732,17 @@ const ResultPage = () => {
                 {/* 제안 3. [구조적 여백] : 고서의 '판심(版心)' 스타일 */}
                 <div className="w-80 mx-auto mt-16 relative">
                   <div className="absolute -top-4 left-0 text-stone-700 text-lg">「</div>
-                  <p className="text-stone-400 text-sm font-serif italic tracking-[0.2em] leading-relaxed px-6">
-                    태어난 순간 새겨진 당신의 무늬,<br />
+                  <p className="text-stone-400 text-sm font-serif tracking-[0.2em] leading-relaxed px-6">
+                    태어난 순간 새겨진 <span className="text-[#e8dac0] italic">당신의 무늬</span>,<br />
                     그 서사의 첫 문을 엽니다
                   </p>
                   <div className="absolute -bottom-4 right-0 text-stone-700 text-lg">」</div>
+                </div>
+
+                {/* 하단 스크롤 안내 */}
+                <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex flex-col items-center gap-5 opacity-40 animate-bounce-gentle">
+                  <span className="text-[10px] sm:text-[11px] tracking-[0.4em] text-amber-600 uppercase font-serif">열람하기</span>
+                  <div className="w-px h-8 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
                 </div>
 
 
@@ -890,9 +896,9 @@ const ResultPage = () => {
               <div className="w-full max-w-sm px-4 mb-8 reveal-item">
                 <div className="relative py-3">
                   <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
-                  <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif italic tracking-wider leading-relaxed text-center px-4">
-                    오행은 좋고 나쁨이 아닌 당신이 타고난 재료입니다<br />
-                    이를 깊이 이해할 때, 비로소 당신은 운명의 주인이 됩니다
+                  <p className="text-stone-400 text-[12px] sm:text-[13px] font-serif tracking-wider leading-relaxed text-center px-4">
+                    오행은 좋고 나쁨이 아닌 <span className="text-[#e8dac0]">당신이 타고난 재료</span>입니다<br />
+                    이를 깊이 이해할 때, 비로소 당신은 <span className="text-[#e8dac0]">운명의 주인</span>이 됩니다
                   </p>
                   <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
                 </div>
