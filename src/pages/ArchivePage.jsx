@@ -19,6 +19,9 @@ const ArchivePage = () => {
     const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
     const [activeChapter, setActiveChapter] = useState(null);
 
+    // [NEW] 재열람 여부 확인 (모달 제어용)
+    const [isRevisit, setIsRevisit] = useState(false);
+
     // --- [NEW] 무료 열람 제한 로직 (Local Storage) ---
     const FREE_VIEW_LIMIT = 5;
     const [viewedTalismans, setViewedTalismans] = useState(() => {
@@ -35,6 +38,12 @@ const ArchivePage = () => {
         setShowTalismanDetail(false);
         setIsTalismanFlipped(false);
         setTalismanViewMode('image');
+
+        // [NEW] 5회 열람을 마친 직후 (닫을 때) Sales CTA 모달 노출
+        // 단, '새로운 카드'를 열었다가 닫을 때만 노출 (재열람 시에는 안 뜨게)
+        if (!isRevisit && viewedTalismans.length >= FREE_VIEW_LIMIT) {
+            setShowLimitModal(true);
+        }
     };
 
     // 오행별 챕터 정보 (고증 컬러 명시 및 테두리/라인 컬러 고정)
@@ -334,24 +343,42 @@ const ArchivePage = () => {
                                     <div
                                         key={key}
                                         onClick={() => {
-                                            // 이미 본 카드인지 확인
+                                            // 1. 이미 본 카드인지 확인 (재열람 허용)
                                             if (isViewed) {
+                                                setIsRevisit(true); // 재열람 상태 설정
                                                 setSelectedTalismanKey(key);
                                                 setShowTalismanDetail(true);
                                                 return;
                                             }
 
-                                            // 안 본 카드라면 제한 확인
+                                            // 2. 전체 5회 제한 확인 (최우선: 다 썼으면 무조건 Sales 모달)
                                             if (viewedTalismans.length >= FREE_VIEW_LIMIT) {
                                                 setShowLimitModal(true);
                                                 return;
                                             }
 
-                                            // 제한 안 넘었으면 기록 후 열람
+                                            // 3. 해당 오행(Chapter)에서 이미 선택한 카드가 있는지 확인 (낙장불입 규칙)
+                                            // 현재 챕터의 오행: chapter.id ('wood', 'fire', 'earth', 'metal', 'water')
+                                            const currentChapterGans = elementGans[chapter.id]; // 예: ['갑', '을']
+
+                                            // 이미 열람한 목록 중에, 현재 챕터의 오행에 속하는 카드가 있는지 검사
+                                            const hasAlreadyChosenInThisElement = viewedTalismans.some(viewedKey => {
+                                                const viewedGan = viewedKey[0]; // 첫 글자(천간)
+                                                return currentChapterGans.includes(viewedGan);
+                                            });
+
+                                            if (hasAlreadyChosenInThisElement) {
+                                                // 명확한 규칙 전달 (Option 3 - User Preferred)
+                                                alert("해당 기운(五行)의 열람은 완료되었습니다.\n오행의 순환을 위해, 각 장마다 하나씩만 살펴볼 수 있습니다.");
+                                                return;
+                                            }
+
+                                            // 4. 기록 후 열람 (영혼구슬 차감 - 낙장불입)
                                             const newHistory = [...viewedTalismans, key];
                                             setViewedTalismans(newHistory);
                                             localStorage.setItem('saju_archive_history', JSON.stringify(newHistory));
 
+                                            setIsRevisit(false); // 신규 열람
                                             setSelectedTalismanKey(key);
                                             setShowTalismanDetail(true);
                                         }}
@@ -487,28 +514,30 @@ const ArchivePage = () => {
                             className="bg-[#1a1a1c] border border-amber-900/40 rounded-sm p-8 max-w-sm w-full text-center relative shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl filter drop-shadow-[0_0_10px_rgba(217,119,6,0.5)]">🔒</div>
+                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl filter drop-shadow-[0_0_10px_rgba(217,119,6,0.5)]">🔮</div>
 
                             <h3 className="text-amber-500 font-serif text-xl tracking-widest mb-4 mt-2">
-                                열람 한도 도달
+                                천명의 기운을 확인하셨습니까?
                             </h3>
 
                             <div className="w-8 h-px bg-amber-900/40 mx-auto mb-6"></div>
 
                             <p className="text-stone-400 text-sm font-serif leading-relaxed mb-8 break-keep">
-                                무료 열람 횟수 <span className="text-amber-500 font-bold">5회</span>를 모두 소진하였습니다.<br />
-                                천명록을 소장하여 모든 수호신을 제한 없이 확인하세요.
+                                지금 보신 수호신들은 예시에 불과합니다.<br />
+                                당신의 사주팔자에 새겨진 <span className="text-amber-500 font-bold">진짜 수호신</span>은<br />
+                                단 하나뿐, 아직 드러나지 않았습니다.
                             </p>
 
                             <div className="flex flex-col gap-3">
                                 <button
                                     onClick={() => {
                                         setShowLimitModal(false);
-                                        navigate('/'); // 메인으로 보내서 결제 유도
+                                        // TODO: 실제 수호신 확인 페이지/결제 페이지 경로로 변경 필요
+                                        navigate('/');
                                     }}
                                     className="w-full py-3 bg-amber-800/80 hover:bg-amber-700 text-amber-100 font-serif tracking-widest text-sm rounded-sm transition-all border border-amber-600/30"
                                 >
-                                    천명록 소장하러 가기
+                                    나의 수호신 확인하러 가기
                                 </button>
                                 <button
                                     onClick={() => setShowLimitModal(false)}
