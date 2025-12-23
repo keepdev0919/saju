@@ -30,3 +30,41 @@ export const jiHanjaMap = {
     '자': '子', '축': '丑', '인': '寅', '묘': '卯', '진': '辰', '사': '巳',
     '오': '午', '미': '未', '신': '申', '유': '酉', '술': '戌', '해': '亥'
 };
+
+// [NEW] 한글 -> 영문 파일명 변환 맵 (이미지 로딩용)
+const ganRomanMap = {
+    '갑': 'gap', '을': 'eul', '병': 'byeong', '정': 'jeong', '무': 'mu',
+    '기': 'gi', '경': 'gyeong', '신': 'shin', '임': 'im', '계': 'gye'
+};
+
+const jiRomanMap = {
+    '자': 'ja', '축': 'chuk', '인': 'in', '묘': 'myo', '진': 'jin', '사': 'sa',
+    '오': 'o', '미': 'mi', '신': 'shin', '유': 'yu', '술': 'sul', '해': 'hae'
+};
+
+/**
+ * 한글 키(예: '갑자')를 영문 파일명(예: 'gapja')으로 변환합니다.
+ * 파일명 불일치 예외 케이스(gapsin)를 처리합니다.
+ */
+export const getTalismanFileName = (key) => {
+    if (!key || key.length < 2) return uniqueStr(); // Fallback
+
+    const gan = key[0];
+    const ji = key[1];
+
+    const romanGan = ganRomanMap[gan] || '';
+    const romanJi = jiRomanMap[ji] || '';
+
+    let fileName = `${romanGan}${romanJi}`;
+
+    // 파일명 예외 처리 ('갑신' -> 'gapshin' X -> 'gapsin' O)
+    if (key === '갑신') {
+        fileName = 'gapsin';
+    }
+
+    return fileName;
+};
+
+function uniqueStr() {
+    return Math.random().toString(36).substring(7);
+}

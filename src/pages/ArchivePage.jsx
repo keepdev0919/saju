@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, X, Scroll, ChevronLeft } from 'lucide-react';
-import { getGanColor, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
+import { Sparkles, X, Scroll, ChevronLeft, Lock } from 'lucide-react';
+import { getGanColor, ganHanjaMap, jiHanjaMap, getTalismanFileName } from '../utils/sajuHelpers';
 import { talismanNames } from '../data/talismanData';
 import TalismanCard from '../components/TalismanCard';
 
@@ -213,10 +213,7 @@ const ArchivePage = () => {
                                 isArchiveMode={true}
                             />
                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-50">
-                                <div className="sacred-seal-large flex flex-col items-center justify-center gap-2">
-                                    <span className="text-6xl font-bold tracking-tighter leading-none select-none">天命錄</span>
-                                    <span className="text-[10px] tracking-[0.3em] opacity-80 uppercase font-sans">Sacred Archive</span>
-                                </div>
+                                {/* 중복 인장 코드 제거됨: TalismanCard 내부에서 렌더링 */}
                             </div>
                         </div>
                     </div>
@@ -331,13 +328,14 @@ const ArchivePage = () => {
                                 const cardFontColor = chapter.isDarkElement ? 'text-slate-400' : chapter.color;
                                 const cardBgColor = chapter.isDarkElement ? 'bg-stone-800/30' : 'bg-stone-900/40';
                                 const cardBorderColor = chapter.isDarkElement ? 'border-stone-400/20' : 'border-orange-950/20';
+                                const isViewed = viewedTalismans.includes(key);
 
                                 return (
                                     <div
                                         key={key}
                                         onClick={() => {
                                             // 이미 본 카드인지 확인
-                                            if (viewedTalismans.includes(key)) {
+                                            if (isViewed) {
                                                 setSelectedTalismanKey(key);
                                                 setShowTalismanDetail(true);
                                                 return;
@@ -357,29 +355,53 @@ const ArchivePage = () => {
                                             setSelectedTalismanKey(key);
                                             setShowTalismanDetail(true);
                                         }}
-                                        className={`reveal-item relative p-2 rounded-sm border ${cardBorderColor} ${cardBgColor} flex flex-col items-center justify-center group aspect-[3/4] active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.02),0_10px_20px_rgba(0,0,0,0.4)]`}
+                                        className={`reveal-item relative rounded-sm border ${cardBorderColor} ${cardBgColor} flex flex-col items-center justify-center group aspect-[3/4] active:scale-95 transition-all duration-700 cursor-pointer overflow-hidden shadow-[inset_0_1px_1px_rgba(255,255,255,0.02),0_10px_20px_rgba(0,0,0,0.4)]`}
                                         style={{ transitionDelay: `${idx * 50}ms` }}
                                     >
                                         <div className="absolute inset-0 bg-hanji-refined opacity-[0.02] pointer-events-none z-10"></div>
 
-                                        {/* 수기운 특별 효과: 은은한 은빛 광채 */}
-                                        {chapter.isDarkElement && (
-                                            <div className="absolute inset-0 bg-gradient-to-br from-slate-400/5 to-transparent z-0 opacity-50"></div>
+                                        {/* [상태 분기] 열람 완료(앞면) vs 미열람(뒷면/봉인) */}
+                                        {isViewed ? (
+                                            <div className="w-full h-full flex items-center justify-center overflow-hidden">
+                                                <div className="transform scale-[0.38] md:scale-[0.45] origin-center pointer-events-none">
+                                                    <TalismanCard
+                                                        type={key}
+                                                        talismanData={talismanNames[key]}
+                                                        userName="天命錄"
+                                                        isArchiveMode={true} // 도감 모드 레이아웃 적용
+                                                        isPurchased={false}
+                                                    />
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <>
+                                                {/* 2. 미열람: 60갑자 한자 (신비주의) */}
+                                                {/* 수기운 특별 효과: 은은한 은빛 광채 */}
+                                                {chapter.isDarkElement && (
+                                                    <div className="absolute inset-0 bg-gradient-to-br from-slate-400/5 to-transparent z-0 opacity-50"></div>
+                                                )}
+
+                                                <div className="relative z-10 flex flex-col items-center justify-center gap-1.5 opacity-60 group-hover:opacity-100 transition-all duration-500">
+                                                    <div className="flex flex-col items-center leading-[1.1] select-none scale-90 group-hover:scale-100 transition-transform duration-500">
+                                                        <span className={`font-serif font-black ${cardFontColor} text-[30px] ${chapter.isDarkElement ? 'drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : ''}`}>
+                                                            {ganHanjaMap[key[0]]}
+                                                        </span>
+                                                        <span className={`font-serif font-black ${cardFontColor} text-[30px] ${chapter.isDarkElement ? 'drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : ''}`}>
+                                                            {jiHanjaMap[key[1]]}
+                                                        </span>
+                                                    </div>
+                                                    <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} text-[10px] mt-1 group-hover:tracking-[0.3em] transition-all duration-500`}>
+                                                        {key}
+                                                    </span>
+                                                </div>
+
+                                                {/* 잠금 표시 (Hover 시 살짝 드러남) */}
+                                                <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-40 transition-opacity duration-300">
+                                                    <Lock size={12} className={cardFontColor} />
+                                                </div>
+                                            </>
                                         )}
 
-                                        <div className="relative z-10 flex flex-col items-center justify-center gap-1.5">
-                                            <div className="flex flex-col items-center leading-[1.1] select-none scale-90">
-                                                <span className={`font-serif font-black ${cardFontColor} text-[30px] ${chapter.isDarkElement ? 'drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : ''} transition-all duration-700`}>
-                                                    {ganHanjaMap[key[0]]}
-                                                </span>
-                                                <span className={`font-serif font-black ${cardFontColor} text-[30px] ${chapter.isDarkElement ? 'drop-shadow-[0_0_1px_rgba(255,255,255,0.1)]' : ''} transition-all duration-700`}>
-                                                    {jiHanjaMap[key[1]]}
-                                                </span>
-                                            </div>
-                                            <span className={`font-sans font-black tracking-[0.1em] ${cardFontColor} text-[10px] ${chapter.isDarkElement ? 'opacity-100' : 'opacity-80'}`}>
-                                                {key}
-                                            </span>
-                                        </div>
                                         <div className={`absolute inset-[1px] border ${chapter.isDarkElement ? 'border-stone-400/10' : 'border-orange-950/10'} rounded-sm pointer-events-none`} />
                                     </div>
                                 );

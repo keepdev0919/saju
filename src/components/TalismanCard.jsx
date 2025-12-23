@@ -267,25 +267,49 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                         </p>
                     </div>
 
-                    {/* 우측 하단 도장은 도감 모드에서 제외 */}
+                    {/* [Archive Mode Only] 중앙 거대 천명록(天命錄) 공식 인장 (Sacred Seal) */}
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none mix-blend-hard-light opacity-90">
+                        <div className="relative transform rotate-[-15deg] scale-125">
+                            {/* Outer Border */}
+                            <div className="w-56 h-32 border-[4px] border-red-600 rounded-lg flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.4)]">
+                                {/* Inner Border */}
+                                <div className="w-[94%] h-[90%] border-[1px] border-red-600 rounded-md flex flex-col items-center justify-center gap-0.5">
+                                    {/* Main Hanja Text */}
+                                    <span className="text-5xl text-red-600 font-serif font-black tracking-[0.1em] leading-none ml-2"
+                                        style={{ fontFamily: '"Song Myung", serif' }}>
+                                        天命錄
+                                    </span>
+                                    {/* English Subtitle */}
+                                    <span className="text-[10px] text-red-600 font-serif font-bold tracking-[0.6em] uppercase mt-1">
+                                        Sacred Archive
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-                    {/* 설명 텍스트 (하단) - A/B 테스트용 다양한 가리기 효과 */}
+                    {/* 설명 텍스트 (하단) */}
                     <div className="absolute bottom-8 left-6 right-6 text-center z-20">
                         <div className="relative">
                             <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep whitespace-pre-wrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
                                 {info.desc}
                             </p>
 
-                            {/* 가리기 효과 레이어 (배경 흐림) */}
-                            <div className={`absolute inset-0 z-10 ${getBlurEffectClass()}`} />
+                            {/* 미구매(잠금) 상태일 때만 가리기 효과 적용 */}
+                            {!isPurchased && (
+                                <>
+                                    {/* 가리기 효과 레이어 (배경 흐림) */}
+                                    <div className={`absolute inset-0 z-10 ${getBlurEffectClass()}`} />
 
-                            {/* 안내 문구 레이어 (위에 배치하여 선명도 유지) */}
-                            <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 animate-pulse-slow pointer-events-none">
-                                <Lock size={12} className="text-amber-600/80" />
-                                <span className="text-[10px] text-amber-500/90 font-serif tracking-tighter whitespace-nowrap">
-                                    수호신의 신묘한 효험(效驗)은 인연 확인 시 열람 가능합니다
-                                </span>
-                            </div>
+                                    {/* 안내 문구 레이어 (위에 배치하여 선명도 유지) */}
+                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 animate-pulse-slow pointer-events-none">
+                                        <Lock size={12} className="text-amber-600/80" />
+                                        <span className="text-[10px] text-amber-500/90 font-serif tracking-tighter whitespace-nowrap">
+                                            수호신의 신묘한 효험(效驗)은 인연 확인 시 열람 가능합니다
+                                        </span>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     </div>
 
