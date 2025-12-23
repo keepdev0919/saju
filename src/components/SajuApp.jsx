@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { CreditCard, Download, ChevronRight, ChevronDown, CheckCircle, Smartphone, User, Star, RefreshCw, Sparkles, Moon, Scroll, Hand, ArrowRight, Timer, Eye, X, Lock, ChevronLeft } from 'lucide-react';
 import { createUser, createPayment, verifyPayment, calculateSaju, getFreeResult, getSajuResult } from '../utils/api';
 import { getGanColor, getJiAnimal, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
@@ -33,8 +33,19 @@ const SAJU_TIMES = [
 const SajuApp = () => {
   const navigate = useNavigate();
 
+  const location = useLocation(); // [NEW] Get location state
+
   // 현재 화면 단계 상태 (landing, input, payment, analyzing, result)
   const [step, setStep] = useState('landing');
+
+  // [NEW] 외부에서 특정 단계로 바로 진입 요청 시 처리 (Archive -> Input)
+  useEffect(() => {
+    if (location.state?.targetStep) {
+      setStep(location.state.targetStep);
+      // state 소비 후 클리어 (새로고침 시 재진입 방지)
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location, navigate]);
 
   // 사용자 정보 상태
   const [userInfo, setUserInfo] = useState({

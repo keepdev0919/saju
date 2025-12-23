@@ -502,7 +502,7 @@ const ArchivePage = () => {
                 {/* [NEW] The Seal CTA Button (낙관 컨셉) */}
                 <div className="mt-16 w-full flex flex-col items-center">
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate('/', { state: { targetStep: 'input' } })}
                         className="relative group w-16 h-36 bg-[#1a1a1c] border-4 border-double border-amber-700/60 rounded-sm flex flex-col items-center justify-center shadow-[0_0_20px_rgba(180,83,9,0.2)] animate-pulse-gentle active:scale-95 transition-transform duration-200 overflow-hidden"
                     >
                         {/* 붉은 기운 (Red Aura) - Hover 시 강해짐 */}
@@ -510,16 +510,16 @@ const ArchivePage = () => {
 
                         {/* 텍스트 (세로쓰기 - 天命확인) */}
                         <div className="relative z-10 flex flex-col items-center gap-1.5 pt-1">
-                            {/* 위쪽: 天命 (무게감 있는 금색, 한자) */}
-                            <span className="font-serif text-amber-600/90 text-xl font-bold leading-none transform group-hover:scale-105 transition-transform">天</span>
-                            <span className="font-serif text-amber-600/90 text-xl font-bold leading-none transform group-hover:scale-105 transition-transform">命</span>
+                            {/* 위쪽: 天命 (사이즈 축소: text-base) */}
+                            <span className="font-serif text-amber-700/60 text-base font-bold leading-none transform group-hover:scale-105 transition-transform">天</span>
+                            <span className="font-serif text-amber-700/60 text-base font-bold leading-none transform group-hover:scale-105 transition-transform">命</span>
 
                             {/* 약간의 간격 */}
                             <div className="h-1"></div>
 
-                            {/* 아래쪽: 확인 (천명과 동일 색상) */}
-                            <span className="font-serif text-amber-600/90 text-lg font-bold leading-none transform group-hover:scale-105 transition-transform">확</span>
-                            <span className="font-serif text-amber-600/90 text-lg font-bold leading-none transform group-hover:scale-105 transition-transform">인</span>
+                            {/* 아래쪽: 확인 (사이즈 축소: text-base) */}
+                            <span className="font-serif text-amber-700/60 text-base font-bold leading-none transform group-hover:scale-105 transition-transform">확</span>
+                            <span className="font-serif text-amber-700/60 text-base font-bold leading-none transform group-hover:scale-105 transition-transform">인</span>
                         </div>
 
                         {/* 모서리 장식 (동양적 디테일) */}
@@ -551,10 +551,10 @@ const ArchivePage = () => {
                             className="bg-[#1a1a1c] border border-amber-900/40 rounded-sm p-8 max-w-sm w-full text-center relative shadow-2xl"
                             onClick={e => e.stopPropagation()}
                         >
-                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 text-4xl filter drop-shadow-[0_0_10px_rgba(217,119,6,0.5)]">🔮</div>
 
-                            <h3 className="text-amber-500 font-serif text-xl tracking-widest mb-4 mt-2">
-                                천명의 기운을 확인하셨습니까?
+
+                            <h3 className="text-amber-500 font-serif text-3xl font-bold tracking-[0.5em] pl-[0.5em] mb-6 mt-4">
+                                天 命 錄
                             </h3>
 
                             <div className="w-8 h-px bg-amber-900/40 mx-auto mb-6"></div>
@@ -570,11 +570,11 @@ const ArchivePage = () => {
                                     onClick={() => {
                                         setShowLimitModal(false);
                                         // TODO: 실제 수호신 확인 페이지/결제 페이지 경로로 변경 필요
-                                        navigate('/');
+                                        navigate('/', { state: { targetStep: 'input' } });
                                     }}
                                     className="w-full py-3 bg-amber-800/80 hover:bg-amber-700 text-amber-100 font-serif tracking-widest text-sm rounded-sm transition-all border border-amber-600/30"
                                 >
-                                    나의 수호신 확인하러 가기
+                                    天命錄 발간하기
                                 </button>
                                 <button
                                     onClick={() => setShowLimitModal(false)}
