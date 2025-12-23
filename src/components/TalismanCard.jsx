@@ -268,7 +268,7 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                     </div>
 
                     {/* [Archive Mode Only] 중앙 거대 천명록(天命錄) 공식 인장 (Sacred Seal) */}
-                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none mix-blend-hard-light opacity-90">
+                    <div className="absolute inset-0 flex items-center justify-center z-10 pointer-events-none mix-blend-difference opacity-80">
                         <div className="relative transform rotate-[-15deg] scale-125">
                             {/* Outer Border */}
                             <div className="w-56 h-32 border-[4px] border-red-600 rounded-lg flex items-center justify-center shadow-[0_0_10px_rgba(220,38,38,0.4)]">
