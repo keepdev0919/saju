@@ -1185,21 +1185,21 @@ const ResultPage = () => {
             <div className="pt-12 mb-2 z-10 relative reveal-item w-full mx-auto">
               <div className="flex flex-col items-center">
                 <div className="flex items-center justify-center gap-4 mb-4">
-                  <div className="w-4 h-px bg-amber-600/30" />
-                  <h3 className="text-sm font-bold text-[#e8dac0] sm:tracking-[0.3em] tracking-[0.1em] font-serif uppercase whitespace-nowrap">
+                  <div className="w-8 h-px bg-amber-600/30" />
+                  <h3 className="text-sm font-bold text-[#e8dac0] sm:tracking-[0.5em] tracking-[0.2em] font-serif uppercase whitespace-nowrap">
                     제3서 : 천개의 비밀 (天機錄)
                   </h3>
-                  <div className="w-4 h-px bg-amber-600/30" />
+                  <div className="w-8 h-px bg-amber-600/30" />
                 </div>
 
                 {/* Description with Brackets */}
                 <div className="relative py-4 mb-6">
-                  <div className="absolute -top-1 left-4 text-[#e8dac0]/60 text-lg">「</div>
-                  <p className="text-stone-400 text-[11px] font-serif leading-relaxed text-center px-8">
+                  <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
+                  <p className="text-stone-400 text-[12px] font-serif tracking-wider leading-relaxed text-center px-4">
                     운명을 지탱하는 일곱 가지 기둥.<br />
                     당신의 삶을 관통하는 하늘의 비밀을 기록했습니다.
                   </p>
-                  <div className="absolute -bottom-1 right-4 text-[#e8dac0]/60 text-lg">」</div>
+                  <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
                 </div>
               </div>
             </div>
