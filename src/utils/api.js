@@ -4,8 +4,20 @@
  */
 import axios from 'axios';
 
-// API 기본 URL 설정
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+// API 기본 URL 설정: 환경변수 우선, 없으면 접속한 호스트 기반으로 계산
+const detectApiBaseUrl = () => {
+  if (import.meta.env.VITE_API_BASE_URL) return import.meta.env.VITE_API_BASE_URL;
+
+  if (typeof window !== 'undefined') {
+    const { protocol, hostname } = window.location;
+    const apiPort = import.meta.env.VITE_API_PORT || '3000';
+    return `${protocol}//${hostname}:${apiPort}/api`;
+  }
+
+  return 'http://localhost:3000/api';
+};
+
+const API_BASE_URL = detectApiBaseUrl();
 
 // axios 인스턴스 생성
 const apiClient = axios.create({

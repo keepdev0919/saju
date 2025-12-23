@@ -266,20 +266,22 @@ const ArchivePage = () => {
             <div
                 id="hero"
                 data-chapter-id="hero"
-                className="relative min-h-[100vh] flex flex-col items-center justify-center px-6 text-center -mt-20 overflow-hidden"
+                className="relative min-h-[100vh] flex flex-col items-center justify-start pt-[30vh] px-6 text-center -mt-20 overflow-hidden"
             >
-                <div className="animate-fade-in-up w-full max-w-[90vw] mx-auto">
-                    <span className="text-amber-700/50 text-[max(11px,3vw)] sm:text-[13px] tracking-[0.5em] sm:tracking-[0.8em] font-serif uppercase mb-6 block transition-all duration-1000">Celestial Records</span>
-                    <h1 className="text-amber-600/70 font-serif italic text-[7.5vw] sm:text-4xl md:text-5xl lg:text-6xl tracking-[0.15em] mb-8 whitespace-nowrap">
-                        천상의 기록 보관소
+                {/* 배경 워터마크 (Visual Filler) */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[40vh] text-amber-900/[0.03] font-serif pointer-events-none select-none z-0">
+                    天
+                </div>
+
+                <div className="relative z-10 animate-fade-in-up w-full max-w-[90vw] mx-auto">
+                    <span className="text-amber-800/40 text-[12px] sm:text-[15px] font-serif tracking-[0.8em] sm:tracking-[1.2em] block mb-4 transition-all duration-1000 ml-2">天 命 圖 鑑</span>
+                    <h1 className="text-amber-600/80 font-serif italic text-[13vw] sm:text-[10vw] lg:text-[120px] tracking-[0.05em] mb-12 whitespace-nowrap drop-shadow-lg">
+                        천명도감
                     </h1>
-                    <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mb-8"></div>
-                    <p className="text-stone-400/80 text-[max(13px,3.5vw)] sm:text-sm md:text-base tracking-[0.15em] font-serif italic leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
-                        천기(天機)의 흐름 속에 나열된<br />
-                        <span className="text-amber-500 font-bold">60甲子 수호신</span>들을 관조하십시오.
-                    </p>
-                    <p className="mt-6 text-amber-900/50 text-[10px] sm:text-xs tracking-widest font-serif opacity-80">
-                        ※ 영혼의 기운으로 5개의 기록만 열람할 수 있습니다.
+                    <div className="w-20 h-px bg-gradient-to-r from-transparent via-amber-900/40 to-transparent mx-auto mb-10"></div>
+                    <p className="text-stone-400/80 text-[14px] sm:text-base md:text-lg tracking-[0.2em] font-serif italic leading-relaxed break-keep max-w-[320px] sm:max-w-md mx-auto transition-all duration-1000">
+                        60甲子 수호신의 위엄,<br />
+                        그중 <span className="text-amber-500 font-bold">다섯 신의 자취</span>를 허락합니다.
                     </p>
                 </div>
 

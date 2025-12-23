@@ -18,11 +18,25 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 미들웨어 설정
+// 프런트 접속 IP가 자주 바뀌어도 동작하도록 CORS를 유연하게 허용
+const staticOrigins = [
+  'http://localhost:5173',
+];
+
+const envOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : [];
+
+const localNetworkPattern = /^http:\/\/\d+\.\d+\.\d+\.\d+:5173$/; // 같은 네트워크 대역 IP 허용
+
 app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://192.168.0.11:5173'
-  ],
+  origin: (origin, callback) => {
+    if (!origin) return callback(null, true); // 모바일 앱/테스트 등 Origin 없는 경우 허용
+    if (staticOrigins.includes(origin) || envOrigins.includes(origin) || localNetworkPattern.test(origin)) {
+      return callback(null, true);
+    }
+    return callback(new Error(`CORS 차단: ${origin}`));
+  },
   credentials: true
 }));
 app.use(express.json());
