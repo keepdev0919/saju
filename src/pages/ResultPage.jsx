@@ -141,10 +141,10 @@ const getSeasonInfo = (monthJi) => {
 // 오행이 강한/약한 원인을 8자에서 찾는 함수 (구조적 설명만) - 리팩토링: 문장 통합 및 우선순위 적용
 const analyzeElementSource = (element, ohengValue, sajuData) => {
   if (!sajuData) return { reasons: [] };
-  
+
   const reasons = [];
   const sources = [];
-  
+
   // 1. 천간에서 찾기
   const gans = [
     { gan: sajuData.year?.gan, pillar: '년주', meaning: '조상' },
@@ -152,13 +152,13 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
     { gan: sajuData.day?.gan, pillar: '일주', meaning: '나' },
     { gan: sajuData.hour?.gan, pillar: '시주', meaning: '자식/말년' }
   ];
-  
+
   gans.forEach(({ gan, pillar }) => {
     if (gan && getElementFromGan(gan) === element) {
       sources.push({ type: 'gan', pillar, gan });
     }
   });
-  
+
   // 2. 지지에서 찾기
   const jis = [
     { ji: sajuData.year?.ji, pillar: '년주', meaning: '조상' },
@@ -166,26 +166,26 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
     { ji: sajuData.day?.ji, pillar: '일주', meaning: '나' },
     { ji: sajuData.hour?.ji, pillar: '시주', meaning: '자식/말년' }
   ];
-  
+
   jis.forEach(({ ji, pillar }) => {
     if (ji && getElementFromJi(ji) === element) {
       sources.push({ type: 'ji', pillar, ji });
     }
   });
-  
+
   // 3. 계절(득시) 확인
   const monthJi = sajuData.month?.ji;
   const seasonInfo = getSeasonInfo(monthJi);
   const hasSeasonSupport = seasonInfo && seasonInfo.element === element && ohengValue >= 20;
-  
+
   // 4. 통근 확인 (일간과 같은 오행이 지지에 있는지)
   const dayMaster = sajuData.day?.gan;
   const dayMasterElement = getElementFromGan(dayMaster);
   const isDayMaster = dayMasterElement === element;
   const hasTonggen = isDayMaster && jis.some(({ ji }) => ji && getElementFromJi(ji) === element);
-  
+
   // 우선순위 기반 문장 생성 (중복 제거 및 통합)
-  
+
   // 우선순위 1: 일간 정보 (가장 중요)
   if (isDayMaster) {
     if (hasTonggen) {
@@ -195,7 +195,7 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
       reasons.push(`일간(日干)이 ${element} 기운이어서 근본 기운이 강하게 발현됩니다.`);
     }
   }
-  
+
   // 우선순위 2: 계절 정보 (월지와 계절 통합)
   if (hasSeasonSupport) {
     const hasMonthJi = sources.some(s => s.pillar === '월주' && s.type === 'ji');
@@ -212,11 +212,11 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
       reasons.push(`월지(月支)에 ${element} 기운이 있습니다.`);
     }
   }
-  
+
   // 우선순위 3: 다른 위치의 천간/지지 (일간, 월지 제외)
   const otherGans = sources.filter(s => s.type === 'gan' && s.pillar !== '일주');
   const otherJis = sources.filter(s => s.type === 'ji' && s.pillar !== '월주');
-  
+
   if (otherGans.length > 0 || otherJis.length > 0) {
     const locations = [];
     otherGans.forEach(s => {
@@ -225,20 +225,20 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
     otherJis.forEach(s => {
       if (!locations.includes(s.pillar)) locations.push(s.pillar);
     });
-    
+
     if (locations.length > 0) {
-      const locationText = locations.length === 1 
+      const locationText = locations.length === 1
         ? `${locations[0]}에`
         : `${locations.join(', ')}에`;
       reasons.push(`${locationText} ${element} 기운이 있습니다.`);
     }
   }
-  
+
   // 정보가 없을 경우
   if (reasons.length === 0) {
     reasons.push(`${element} 기운이 지장간(地藏干)에 숨어 있거나 다른 경로로 작용하고 있습니다.`);
   }
-  
+
   return {
     element,
     value: ohengValue,
@@ -250,10 +250,10 @@ const analyzeElementSource = (element, ohengValue, sajuData) => {
 // 일간과 오행의 관계 해석 (구조적 설명만)
 const analyzeDayMasterRelation = (dayMaster, element, ohengValue) => {
   if (!dayMaster) return null;
-  
+
   const dayMasterElement = getElementFromGan(dayMaster);
   if (!dayMasterElement) return null;
-  
+
   if (dayMasterElement === element) {
     // 일간과 같은 오행
     if (ohengValue >= 30) {
@@ -287,7 +287,7 @@ const analyzeDayMasterRelation = (dayMaster, element, ohengValue) => {
       }
     }
   }
-  
+
   return null; // 특별한 관계 없음
 };
 
@@ -1025,12 +1025,13 @@ const ResultPage = () => {
                   </p>
                 </div>
               </div>
-            </div>
-            {/* 페이지 번호 (Page 1) */}
-            <div className="absolute bottom-8 left-0 w-full flex justify-center items-center gap-3 pointer-events-none z-10 opacity-60">
-              <div className="w-6 h-px bg-amber-600/30" />
-              <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">1</span>
-              <div className="w-6 h-px bg-amber-600/30" />
+
+              {/* 페이지 번호 (Page 1) */}
+              <div className="w-full flex justify-center items-center gap-3 pointer-events-none opacity-60 mt-8 mb-4">
+                <div className="w-6 h-px bg-amber-600/30" />
+                <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">1</span>
+                <div className="w-6 h-px bg-amber-600/30" />
+              </div>
             </div>
           </section>
 
@@ -1198,13 +1199,13 @@ const ResultPage = () => {
               </div>
 
               {/* 스크롤 안내 (천상기록보관소와 통일) */}
-            </div>
 
-            {/* 페이지 번호 (Page 2) */}
-            <div className="absolute bottom-8 left-0 w-full flex justify-center items-center gap-3 pointer-events-none z-10 opacity-60">
-              <div className="w-6 h-px bg-amber-600/30" />
-              <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">2</span>
-              <div className="w-6 h-px bg-amber-600/30" />
+              {/* 페이지 번호 (Page 2) */}
+              <div className="w-full flex justify-center items-center gap-3 pointer-events-none opacity-60 mt-8 mb-4">
+                <div className="w-6 h-px bg-amber-600/30" />
+                <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">2</span>
+                <div className="w-6 h-px bg-amber-600/30" />
+              </div>
             </div>
           </section>
 
@@ -1282,10 +1283,9 @@ const ResultPage = () => {
                                 </div>
                               </div>
                               {/* 천간 */}
-                              <div 
-                                className={`relative w-8 h-8 flex items-center justify-center rounded-sm bg-[#121214] transition-all duration-300 ${
-                                  highlight.gan ? 'ring-2 ring-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : ''
-                                }`}
+                              <div
+                                className={`relative w-8 h-8 flex items-center justify-center rounded-sm bg-[#121214] transition-all duration-300 ${highlight.gan ? 'ring-2 ring-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : ''
+                                  }`}
                                 style={{ border: `1px solid ${highlight.gan ? '#f59e0b' : `${ganColor}60`}` }}
                               >
                                 <span className="text-[14px] font-bold font-serif text-stone-300/80">
@@ -1293,10 +1293,9 @@ const ResultPage = () => {
                                 </span>
                               </div>
                               {/* 지지 */}
-                              <div 
-                                className={`relative w-8 h-8 flex items-center justify-center rounded-sm bg-[#121214] transition-all duration-300 ${
-                                  highlight.ji ? 'ring-2 ring-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : ''
-                                }`}
+                              <div
+                                className={`relative w-8 h-8 flex items-center justify-center rounded-sm bg-[#121214] transition-all duration-300 ${highlight.ji ? 'ring-2 ring-amber-500/60 shadow-[0_0_8px_rgba(245,158,11,0.3)]' : ''
+                                  }`}
                                 style={{ border: `1px solid ${highlight.ji ? '#f59e0b' : `${jiColor}60`}` }}
                               >
                                 <span className="text-[14px] font-bold font-serif text-stone-300/80">
@@ -1342,7 +1341,7 @@ const ResultPage = () => {
                             <span className="text-amber-500 font-bold font-serif">{ohengLabels[strongest]}</span>
                             <span className="text-stone-500 text-xs">({Math.round(maxVal)}%) - 가장 두드러진 기운</span>
                           </div>
-                          
+
                           {/* 구조적 설명 - 통합 버전 */}
                           {strongestAnalysis.reasons.length > 0 && (
                             <div className="mb-4">
@@ -1351,7 +1350,7 @@ const ResultPage = () => {
                               </p>
                             </div>
                           )}
-                          
+
                           {/* 일간-오행 관계 */}
                           {dayMasterRelationStrongest && (
                             <div className="mb-4 pt-3 border-t border-amber-900/20">
@@ -1360,7 +1359,7 @@ const ResultPage = () => {
                               </p>
                             </div>
                           )}
-                          
+
                           {/* 일반적 특성 */}
                           <div className="pt-3 border-t border-amber-900/20">
                             <p className="text-stone-300 text-[13px] font-serif leading-relaxed">
@@ -1375,7 +1374,7 @@ const ResultPage = () => {
                             <span className="text-stone-500 font-bold font-serif">{ohengLabels[weakest]}</span>
                             <span className="text-stone-600 text-xs">({Math.round(minVal)}%) - 상대적으로 여린 기운</span>
                           </div>
-                          
+
                           {/* 구조적 설명 - 통합 버전 */}
                           {weakestAnalysis.reasons.length > 0 && (
                             <div className="mb-4">
@@ -1384,7 +1383,7 @@ const ResultPage = () => {
                               </p>
                             </div>
                           )}
-                          
+
                           {/* 일간-오행 관계 */}
                           {dayMasterRelationWeakest && (
                             <div className="mb-4 pt-3 border-t border-stone-800/20">
@@ -1393,7 +1392,7 @@ const ResultPage = () => {
                               </p>
                             </div>
                           )}
-                          
+
                           {/* 일반적 특성 */}
                           <div className="pt-3 border-t border-stone-800/20">
                             <p className="text-stone-400 text-[13px] font-serif leading-relaxed">
@@ -1421,6 +1420,13 @@ const ResultPage = () => {
                         </div>
                       </div>
                     </div>
+
+                    {/* 페이지 번호 (Page 3) */}
+                    <div className="w-full flex justify-center items-center gap-3 pointer-events-none opacity-60 mt-12 mb-4">
+                      <div className="w-6 h-px bg-amber-600/30" />
+                      <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">3</span>
+                      <div className="w-6 h-px bg-amber-600/30" />
+                    </div>
                   </div>
                 );
               } catch (error) {
@@ -1428,12 +1434,6 @@ const ResultPage = () => {
                 return null;
               }
             })()}
-            {/* 페이지 번호 (Page 3) */}
-            <div className="absolute bottom-8 left-0 w-full flex justify-center items-center gap-3 pointer-events-none z-10 opacity-60">
-              <div className="w-6 h-px bg-amber-600/30" />
-              <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">3</span>
-              <div className="w-6 h-px bg-amber-600/30" />
-            </div>
           </section>
 
           {/* 중간 힌트 (Sub CTA) */}
@@ -1466,12 +1466,12 @@ const ResultPage = () => {
 
             {/* Content Chapters */}
             <div className="flex-1 flex flex-col justify-center z-10 relative space-y-12 max-w-sm mx-auto py-10">
-              {/* Chapter 1: 명(命) */}
+              {/* Chapter 1: 본성(本性) - 근원의 불꽃 */}
               <div className="relative reveal-item">
                 <div className="flex flex-col items-center mb-6">
-                  <span className="text-emerald-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 1: Life</span>
-                  <h4 className="text-emerald-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-emerald-900/10 pb-2">
-                    제 1장: 명(命) <span className="text-stone-500 font-light text-sm">- 근원과 기질</span>
+                  <span className="text-emerald-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 1: Nature</span>
+                  <h4 className="text-emerald-600 font-bold text-xl flex items-center gap-2 font-serif border-b border-emerald-900/10 pb-2">
+                    제 1장: 본성(本性) <span className="text-stone-500 font-light text-sm">- 근원의 불꽃</span>
                   </h4>
                 </div>
                 <div className="bg-[#1a1a1c] border border-emerald-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
@@ -1484,31 +1484,50 @@ const ResultPage = () => {
                 </div>
               </div>
 
-              {/* Chapter 2: 업(業) */}
+              {/* Chapter 2: 재록(財祿) - 부의 그릇 */}
               <div className="relative reveal-item">
                 <div className="flex flex-col items-center mb-6">
-                  <span className="text-amber-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 2: Karma</span>
-                  <h4 className="text-amber-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-amber-900/10 pb-2">
-                    제 2장: 업(業) <span className="text-stone-500 font-light text-sm">- 부와 사회적 위엄</span>
+                  <span className="text-stone-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 2: Wealth</span>
+                  <h4 className="text-stone-300 font-bold text-xl flex items-center gap-2 font-serif border-b border-stone-500/10 pb-2">
+                    제 2장: 재록(財祿) <span className="text-stone-500 font-light text-sm">- 부의 그릇</span>
                   </h4>
                 </div>
-                <div className="bg-[#1a1a1c] border border-amber-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                <div className="bg-[#1a1a1c] border border-stone-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
                   <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
                   <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
                     <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {sajuResult.wealthFortune || sajuResult.detailedData?.wealth?.description || "현세에서 당신이 거머쥘 재물의 크기와 사회적 지위의 한계를 분석합니다."}
+                      {sajuResult.wealthFortune || sajuResult.detailedData?.wealth?.description || "현세에서 당신이 거머쥘 재물의 크기와 한계를 분석합니다."}
                     </p>
                   </div>
-                  {!sajuResult.isPaid && <ChapterLockOverlay element="土" />}
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="金" />}
                 </div>
               </div>
 
-              {/* Chapter 3: 연(緣) */}
+              {/* Chapter 3: 관운(官運) - 천직의 자리 */}
               <div className="relative reveal-item">
                 <div className="flex flex-col items-center mb-6">
-                  <span className="text-rose-600/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 3: Connection</span>
-                  <h4 className="text-rose-700 font-bold text-xl flex items-center gap-2 font-serif border-b border-rose-900/10 pb-2">
-                    제 3장: 연(緣) <span className="text-stone-500 font-light text-sm">- 마음의 거울과 인연</span>
+                  <span className="text-orange-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 3: Career</span>
+                  <h4 className="text-orange-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-orange-900/10 pb-2">
+                    제 3장: 관운(官運) <span className="text-stone-500 font-light text-sm">- 천직의 자리</span>
+                  </h4>
+                </div>
+                <div className="bg-[#1a1a1c] border border-orange-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {sajuResult.careerFortune || sajuResult.detailedData?.business?.advice || "당신에게 어울리는 천직과 사회적 명예의 높이를 분석합니다."}
+                    </p>
+                  </div>
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="火" />}
+                </div>
+              </div>
+
+              {/* Chapter 4: 연분(緣分) - 인연의 실타래 */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-rose-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 4: Love</span>
+                  <h4 className="text-rose-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-rose-900/10 pb-2">
+                    제 4장: 연분(緣分) <span className="text-stone-500 font-light text-sm">- 인연의 실타래</span>
                   </h4>
                 </div>
                 <div className="bg-[#1a1a1c] border border-rose-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
@@ -1522,71 +1541,93 @@ const ResultPage = () => {
                 </div>
               </div>
 
-              {/* Chapter 4: 운(運) */}
+              {/* Chapter 5: 체상(體象) - 신체의 등불 */}
               <div className="relative reveal-item">
                 <div className="flex flex-col items-center mb-6">
-                  <span className="text-stone-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 4: Fortune</span>
-                  <h4 className="text-stone-100 font-bold text-xl flex items-center gap-2 font-serif border-b border-stone-500/10 pb-2">
-                    제 4장: 운(運) <span className="text-stone-500 font-light text-sm">- 다가올 시간의 흐름</span>
+                  <span className="text-lime-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 5: Health</span>
+                  <h4 className="text-lime-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-lime-900/10 pb-2">
+                    제 5장: 체상(體象) <span className="text-stone-500 font-light text-sm">- 신체의 등불</span>
                   </h4>
                 </div>
-                <div className="bg-[#1a1a1c] border border-stone-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                <div className="bg-[#1a1a1c] border border-lime-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
                   <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
                   <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
                     <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {sajuResult.careerFortune || sajuResult.detailedData?.business?.advice || "현재 당신이 지나고 있는 인생의 계절과 다가올 거대한 흐름을 관조합니다."}
+                      {sajuResult.healthFortune || sajuResult.detailedData?.health?.description || "오행의 균형으로 본 신체의 강점과 주의해야 할 건강 영역을 분석합니다."}
                     </p>
                   </div>
-                  {!sajuResult.isPaid && <ChapterLockOverlay element="金" />}
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="土" />}
                 </div>
               </div>
 
-              {/* Chapter 5: 비기(秘記) */}
+              {/* Chapter 6: 시운(時運) - 시간의 파도 */}
               <div className="relative reveal-item">
                 <div className="flex flex-col items-center mb-6">
-                  <span className="text-slate-400 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 5: Secret</span>
-                  <h4 className="text-slate-300 font-bold text-xl flex items-center gap-2 font-serif border-b border-slate-500/10 pb-2">
-                    제 5장: 비기(秘記) <span className="text-stone-500 font-light text-sm">- 신의 한 수와 비책</span>
+                  <span className="text-purple-400/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 6: Destiny</span>
+                  <h4 className="text-purple-400 font-bold text-xl flex items-center gap-2 font-serif border-b border-purple-500/10 pb-2">
+                    제 6장: 시운(時運) <span className="text-stone-500 font-light text-sm">- 시간의 파도</span>
                   </h4>
                 </div>
-                <div className="bg-[#1a1a1c] border border-slate-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                <div className="bg-[#1a1a1c] border border-purple-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
                   <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
                   <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
                     <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {(sajuResult.detailedData?.blessings?.advice || sajuResult.advice) || "부족한 기운을 채우고 과한 기운을 다스리는 개운법과, 당신의 운명을 바꿀 결정적인 조언이 기록되어 있습니다."}
+                      {sajuResult.destinyFortune || sajuResult.detailedData?.destiny?.description || "현재 당신이 지나고 있는 대운과 향후 5년의 흐름을 관조합니다."}
                     </p>
                   </div>
                   {!sajuResult.isPaid && <ChapterLockOverlay element="水" />}
                 </div>
               </div>
 
-              {/* Celestial Bridge */}
-              <div className="flex flex-col items-center pt-8 pb-4 opacity-60">
-                {sajuResult.isPaid && (
-                  <p className="mb-10 text-amber-600/80 text-lg font-serif italic text-center animate-fade-in tracking-[0.1em] leading-relaxed">
-                    모든 기록의 끝에서,<br />
-                    당신을 수호할 단 하나의 인연을 마주하십시오
-                  </p>
-                )}
-                <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent"></div>
+              {/* Chapter 7: 비책(秘策) - 개운의 열쇠 */}
+              <div className="relative reveal-item">
+                <div className="flex flex-col items-center mb-6">
+                  <span className="text-blue-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 7: Secret</span>
+                  <h4 className="text-blue-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-blue-500/10 pb-2">
+                    제 7장: 비책(秘策) <span className="text-stone-500 font-light text-sm">- 개운의 열쇠</span>
+                  </h4>
+                </div>
+                <div className="bg-[#1a1a1c] border border-blue-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                  <div className={`${!sajuResult.isPaid ? 'blur-[10px] select-none pointer-events-none opacity-40' : ''}`}>
+                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                      {(sajuResult.detailedData?.blessings?.advice || sajuResult.advice) || "부족한 기운을 채우고 과한 기운을 다스리는 개운법과, 당신을 도울 귀인의 정보가 기록되어 있습니다."}
+                    </p>
+                  </div>
+                  {!sajuResult.isPaid && <ChapterLockOverlay element="水" />}
+                </div>
+              </div>
+
+              {/* 페이지 번호 (Page 4) */}
+              <div className="w-full flex justify-center items-center gap-3 pointer-events-none opacity-60 mt-12 mb-4">
+                <div className="w-6 h-px bg-amber-600/30" />
+                <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">4</span>
+                <div className="w-6 h-px bg-amber-600/30" />
               </div>
             </div>
-            {/* 페이지 번호 (Page 4) */}
-            <div className="absolute bottom-8 left-0 w-full flex justify-center items-center gap-3 pointer-events-none z-10 opacity-60">
-              <div className="w-6 h-px bg-amber-600/30" />
-              <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">4</span>
-              <div className="w-6 h-px bg-amber-600/30" />
+          </section>
+
+          {/* Step 5: Celestial Bridge - 모든 기록의 끝에서 */}
+          <section className="snap-section px-6 h-auto flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top)', minHeight: '100dvh' }}>
+            <div className="flex flex-col items-center w-full max-w-sm reveal-item">
+              <div className="flex flex-col items-center opacity-60">
+                <p className="text-amber-600/80 text-lg font-serif italic text-center animate-fade-in tracking-[0.1em] leading-relaxed">
+                  모든 기록의 끝에서,<br />
+                  당신을 수호할 단 하나의 인연을 마주하십시오
+                </p>
+                <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent mt-8"></div>
+              </div>
             </div>
           </section>
 
 
 
 
-          {/* Step 5: The Final Guardian - 수호신령 */}
-          <section className="snap-section px-6 pb-32" style={{ paddingTop: 'var(--safe-area-top)' }}>
-            <div className="flex-1 flex flex-col items-center py-12 reveal-item">
+          {/* Step 6: The Final Guardian - 수호신령 */}
+          <section className="snap-section px-6 pb-32 min-h-screen flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top)' }}>
+            <div className="flex flex-col items-center py-12 w-full">
 
-              <div className="p-6 pb-24 relative overflow-hidden group w-full max-w-sm">
+              <div className="p-6 pb-24 relative overflow-hidden group w-full max-w-sm reveal-item">
                 {/* 배경 효과 제거 */}
 
                 <div className="relative z-10">
@@ -1705,12 +1746,6 @@ const ResultPage = () => {
                   </div>
                 )}
               </div>
-            </div>
-            {/* 페이지 번호 (Page 5) */}
-            <div className="absolute bottom-8 left-0 w-full flex justify-center items-center gap-3 pointer-events-none z-10 opacity-60">
-              <div className="w-6 h-px bg-amber-600/30" />
-              <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">5</span>
-              <div className="w-6 h-px bg-amber-600/30" />
             </div>
           </section>
         </main >

@@ -71,7 +71,7 @@ app.use((req, res) => {
 // 에러 핸들러
 app.use((err, req, res, next) => {
   console.error('에러 발생:', err);
-  res.status(500).json({ 
+  res.status(500).json({
     error: '서버 내부 오류가 발생했습니다.',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
   });
