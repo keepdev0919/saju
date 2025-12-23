@@ -289,26 +289,31 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                     </div>
 
                     {/* 설명 텍스트 (하단) */}
-                    <div className="absolute bottom-8 left-6 right-6 text-center z-20">
-                        <div className="relative">
-                            <p className="text-slate-100 text-xs font-light leading-relaxed opacity-95 break-keep whitespace-pre-wrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
-                                {info.desc}
-                            </p>
+                    {/* 설명 텍스트 (하단) */}
+                    <div className="absolute bottom-6 left-6 right-6 text-center z-20 h-16 flex items-center justify-center">
+                        <div className="relative w-full">
+                            {/* [분기] 구매 여부에 따라 텍스트 vs 모자이크 가림막 렌더링 */}
+                            {isPurchased ? (
+                                // 1. 구매 완료: 선명한 원본 텍스트 표시
+                                <p className="text-slate-100 text-xs font-light leading-relaxed break-keep whitespace-pre-wrap drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] opacity-95 animate-fade-in" style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}>
+                                    {info.desc}
+                                </p>
+                            ) : (
+                                // 2. 미구매: 원래의 모자이크(Blur Mosaic) 효과 복구
+                                <div className="relative w-full h-full flex items-center justify-center">
+                                    {/* 모자이크 처리된 배경 텍스트 (형태만 남김) */}
+                                    <p className={`text-slate-100 text-xs font-light leading-relaxed break-keep whitespace-pre-wrap opacity-50 select-none ${getBlurEffectClass()}`}>
+                                        {info.desc}
+                                    </p>
 
-                            {/* 미구매(잠금) 상태일 때만 가리기 효과 적용 */}
-                            {!isPurchased && (
-                                <>
-                                    {/* 가리기 효과 레이어 (배경 흐림) */}
-                                    <div className={`absolute inset-0 z-10 ${getBlurEffectClass()}`} />
-
-                                    {/* 안내 문구 레이어 (위에 배치하여 선명도 유지) */}
-                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 animate-pulse-slow pointer-events-none">
-                                        <Lock size={12} className="text-amber-600/80" />
-                                        <span className="text-[10px] text-amber-500/90 font-serif tracking-tighter whitespace-nowrap">
+                                    {/* 자물쇠 및 안내 문구 오버레이 */}
+                                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center -mt-1 gap-1.5 animate-pulse-slow pointer-events-none">
+                                        <Lock size={14} className="text-amber-500/80 drop-shadow-md" />
+                                        <span className="text-[10px] text-amber-500/90 font-serif tracking-tight whitespace-nowrap drop-shadow-[0_2px_2px_rgba(0,0,0,1)] bg-black/30 px-2 py-0.5 rounded-full">
                                             수호신의 신묘한 효험(效驗)은 인연 확인 시 열람 가능합니다
                                         </span>
                                     </div>
-                                </>
+                                </div>
                             )}
                         </div>
                     </div>

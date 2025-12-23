@@ -498,7 +498,44 @@ const ArchivePage = () => {
                 <p className="text-amber-700/60 text-base md:text-xl tracking-[0.1em] font-serif italic leading-relaxed break-keep">
                     당신을 기다리는 단 하나의<br className="md:hidden" /> 인연은 무엇입니까?
                 </p>
-                <div className="w-12 h-px bg-amber-900/40 mx-auto mt-12"></div>
+
+                {/* [NEW] The Seal CTA Button (낙관 컨셉) */}
+                <div className="mt-16 w-full flex flex-col items-center">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="relative group w-16 h-36 bg-[#1a1a1c] border-4 border-double border-amber-700/60 rounded-sm flex flex-col items-center justify-center shadow-[0_0_20px_rgba(180,83,9,0.2)] animate-pulse-gentle active:scale-95 transition-transform duration-200 overflow-hidden"
+                    >
+                        {/* 붉은 기운 (Red Aura) - Hover 시 강해짐 */}
+                        <div className="absolute inset-0 bg-red-900/5 group-hover:bg-red-900/10 transition-colors duration-500"></div>
+
+                        {/* 텍스트 (세로쓰기 - 天命확인) */}
+                        <div className="relative z-10 flex flex-col items-center gap-1.5 pt-1">
+                            {/* 위쪽: 天命 (무게감 있는 금색, 한자) */}
+                            <span className="font-serif text-amber-600/90 text-xl font-bold leading-none transform group-hover:scale-105 transition-transform">天</span>
+                            <span className="font-serif text-amber-600/90 text-xl font-bold leading-none transform group-hover:scale-105 transition-transform">命</span>
+
+                            {/* 약간의 간격 */}
+                            <div className="h-1"></div>
+
+                            {/* 아래쪽: 확인 (천명과 동일 색상) */}
+                            <span className="font-serif text-amber-600/90 text-lg font-bold leading-none transform group-hover:scale-105 transition-transform">확</span>
+                            <span className="font-serif text-amber-600/90 text-lg font-bold leading-none transform group-hover:scale-105 transition-transform">인</span>
+                        </div>
+
+                        {/* 모서리 장식 (동양적 디테일) */}
+                        <div className="absolute top-0.5 left-0.5 w-2 h-2 border-t border-l border-amber-500/30"></div>
+                        <div className="absolute top-0.5 right-0.5 w-2 h-2 border-t border-r border-amber-500/30"></div>
+                        <div className="absolute bottom-0.5 left-0.5 w-2 h-2 border-b border-l border-amber-500/30"></div>
+                        <div className="absolute bottom-0.5 right-0.5 w-2 h-2 border-b border-r border-amber-500/30"></div>
+                    </button>
+
+                    {/* 보조 텍스트 */}
+                    <span className="mt-4 text-[10px] text-amber-800/60 font-serif tracking-widest opacity-60">
+                        CLICK TO SEAL
+                    </span>
+                </div>
+
+                <div className="w-12 h-px bg-amber-900/40 mx-auto mt-16"></div>
             </div>
 
             {showTalismanDetail && renderTalismanPreviewModal()}

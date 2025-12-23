@@ -98,587 +98,161 @@
   animation: day-master-glow 2.5s ease-in-out infinite;
 }
 
-/* SVG 정점 발광 효과 (Vertex Glow for SVG) */
-@keyframes svg-vertex-glow {
-
-  0%,
-  100% {
-    filter: drop-shadow(0 0 0 rgba(232, 218, 192, 0));
-    opacity: 0.6;
-  }
-
-  50% {
-    filter: drop-shadow(0 0 4px rgba(232, 218, 192, 0.8));
-    opacity: 1;
-  }
-}
-
-.animate-vertex-glow {
-  animation: svg-vertex-glow 2.5s ease-in-out infinite;
-}
-
-/* 최강 오행 강조 발광 (Strongest Oheng Glow) - 기존 유지 (다른 곳에서 사용 가능) */
-@keyframes svg-strongest-glow {
-
-  0%,
-  100% {
-    filter: drop-shadow(0 0 1px currentColor);
-    opacity: 0.8;
-  }
-
-  50% {
-    filter: drop-shadow(0 0 6px currentColor);
-    opacity: 1;
-  }
-}
-
-.animate-strongest-glow {
-  animation: svg-strongest-glow 2.5s ease-in-out infinite;
-}
-
-@keyframes shimmer {
+/* ==============================================
+   [NEW] Shimmer Effect (은은한 윤슬)
+   ============================================== */
+@keyframes shimmer-move {
   0% {
-    background-position: -200% 0;
+    transform: translateX(-150%) skewX(-20deg);
+  }
+
+  30% {
+    transform: translateX(200%) skewX(-20deg);
   }
 
   100% {
-    background-position: 200% 0;
+    transform: translateX(200%) skewX(-20deg);
   }
 }
 
-@keyframes float-slow {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  25% {
-    transform: translate(10px, -20px) scale(1.05);
-  }
-
-  50% {
-    transform: translate(-5px, 10px) scale(0.95);
-  }
-
-  75% {
-    transform: translate(-15px, -10px) scale(1.02);
-  }
-}
-
-@keyframes float-medium {
-
-  0%,
-  100% {
-    transform: translate(0, 0) scale(1);
-  }
-
-  33% {
-    transform: translate(-20px, 15px) scale(1.1);
-  }
-
-  66% {
-    transform: translate(15px, -25px) scale(0.9);
-  }
-}
-
-@keyframes float-fast {
-
-  0%,
-  100% {
-    transform: translate(0, 0);
-  }
-
-  50% {
-    transform: translate(25px, -15px);
-  }
-}
-
-@keyframes twinkle {
-
-  0%,
-  100% {
-    opacity: 0.3;
-  }
-
-  50% {
-    opacity: 0.8;
-  }
-}
-
-@keyframes pulse-glow {
-
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: scale(1);
-  }
-
-  50% {
-    opacity: 0.7;
-    transform: scale(1.2);
-  }
-}
-
-@keyframes mist-breathing {
-
-  0%,
-  100% {
-    opacity: 0.15;
-    transform: scale(1) translate(0, 0);
-  }
-
-  50% {
-    opacity: 0.25;
-    transform: scale(1.1) translate(5%, 2%);
-  }
-}
-
-/* 천상의 공명 (Celestial Resonance) - 파장 효과 */
-@keyframes celestial-resonance {
-  0% {
-    transform: scale(0.8);
-    opacity: 0;
-  }
-
-  50% {
-    opacity: 0.3;
-  }
-
-  100% {
-    transform: scale(2);
-    opacity: 0;
-  }
-}
-
-/* 천명의 고동 (Celestial Heartbeat) - 가장 강한 기운의 맥동 */
-@keyframes celestial-heartbeat {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.7;
-    filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.05));
-  }
-
-  50% {
-    transform: scale(1.1);
-    opacity: 1;
-    filter: drop-shadow(0 0 10px currentColor);
-  }
-}
-
-.animate-highest-pulse {
-  animation: celestial-heartbeat 4s ease-in-out infinite;
-  transform-box: fill-box;
-  transform-origin: center;
-}
-
-/* 영혼의 호흡 (Soul Breathing) - 부드러운 맥동 */
-@keyframes soul-breathing {
-
-  0%,
-  100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 5px rgba(217, 119, 6, 0.1));
-  }
-
-  50% {
-    transform: scale(1.08);
-    filter: drop-shadow(0 0 20px rgba(217, 119, 6, 0.4));
-  }
-}
-
-@keyframes bounce-gentle {
-
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-12px);
-  }
-}
-
-.animate-celestial-resonance {
-  animation: celestial-resonance 4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-.animate-soul-breathing {
-  animation: soul-breathing 5s ease-in-out infinite;
-}
-
-.animate-bounce-gentle {
-  animation: bounce-gentle 2s ease-in-out infinite;
-}
-
-@keyframes ink-bleeding {
-  0% {
-    filter: blur(60px) opacity(0);
-    transform: scale(0.8) rotate(-5deg);
-  }
-
-  100% {
-    filter: blur(100px) opacity(0.25);
-    transform: scale(1.2) rotate(5deg);
-  }
-}
-
-/* 애니메이션 클래스 */
-.animate-fade-in-up {
-  animation: fade-in-up 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-.animate-fade-in {
-  animation: fade-in 0.4s ease-out forwards;
-}
-
-/* Scroll Snap & Viewport Utilities */
-.snap-parent {
-  scroll-snap-type: y mandatory;
-  overflow-y: scroll;
-  height: 100dvh;
-  scroll-behavior: smooth;
-}
-
-.snap-section {
-  scroll-snap-align: start;
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  position: relative;
-}
-
-.dvh-screen {
-  height: 100dvh;
-}
-
-.animate-fade-in-landing {
-  animation: fade-in 4s ease-out forwards;
-}
-
-.animate-slide-up {
-  animation: slide-up 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
-}
-
-.animate-grow-width {
-  animation: grow-width 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-}
-
-.animate-count-up {
-  animation: count-up 0.6s ease-out forwards;
-}
-
-/* 프리미엄 유틸리티 클래스 */
-.text-shadow-sm {
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-}
-
-.text-gold-glow {
-  text-shadow: 0 0 10px rgba(217, 119, 6, 0.4), 0 0 20px rgba(180, 83, 9, 0.2);
-}
-
-.shadow-relic {
-  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(217, 119, 6, 0.05);
-}
-
-.vignette-relic {
-  background: radial-gradient(circle, transparent 30%, rgba(0, 0, 0, 0.8) 100%);
-}
-
-.reveal-item {
-  opacity: 0;
-  transform: translateY(15px);
-  transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-
-.reveal-item-active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* 순차적 딜레이 */
-.delay-100 {
-  animation-delay: 100ms;
-}
-
-.delay-200 {
-  animation-delay: 200ms;
-}
-
-.delay-300 {
-  animation-delay: 300ms;
-}
-
-.delay-400 {
-  animation-delay: 400ms;
-}
-
-.delay-500 {
-  animation-delay: 500ms;
-}
-
-.delay-600 {
-  animation-delay: 600ms;
-}
-
-.delay-700 {
-  animation-delay: 700ms;
-}
-
-.delay-800 {
-  animation-delay: 800ms;
-}
-
-/* 쉬머 효과 */
-.shimmer {
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-  background-size: 200% 100%;
-  animation: shimmer 2s infinite;
-}
-
-/* 프리미엄 배경 유틸리티: 보이는 심연 (Visible Abyss) */
-.bg-ink-abyss {
-  background: radial-gradient(circle at 50% 10%, #121216 0%, #0c0c0e 100%);
-}
-
-.bg-grain-premium {
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-  filter: contrast(180%) brightness(1000%);
-  mix-blend-mode: overlay;
-  opacity: 0.1;
-  pointer-events: none;
-}
-
-.ink-bleed-layer {
-  background: radial-gradient(ellipse at center, rgba(40, 40, 45, 0.9) 0%, transparent 70%);
-  animation: ink-bleeding 25s ease-in-out infinite alternate;
-}
-
-/* 프리미엄 고목(古木) 질감: Antique Dark Walnut 스타일 */
-.bg-wood-refined {
-  background-color: #1a1614;
-  /* 베이스: 깊은 호두나무색 */
-  background-image:
-    /* 1. 미세한 세로 섬유질 자국 */
-    repeating-linear-gradient(90deg,
-      transparent 0,
-      transparent 2px,
-      rgba(0, 0, 0, 0.15) 3px,
-      transparent 4px),
-    /* 2. 나무 옹이와 결의 불규칙한 명암 */
-    linear-gradient(180deg,
-      rgba(255, 255, 255, 0.03) 0%,
-      transparent 20%,
-      rgba(0, 0, 0, 0.1) 50%,
-      transparent 80%,
-      rgba(255, 255, 255, 0.02) 100%),
-    /* 3. 중앙 입체감 (Polished Center) */
-    radial-gradient(circle at 50% 50%, #2a2420 0%, #1a1614 100%);
-  background-size: 100% 100%;
-  position: relative;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.6);
-}
-
-.bg-wood-refined::after {
-  content: "";
+.glass-btn-shimmer::after {
+  content: '';
   position: absolute;
-  inset: 0;
-  /* 4. 유기적인 노이즈 (나무의 거친 표면감) */
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.5' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
-  mix-blend-mode: overlay;
+  top: 0;
+  left: 0;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(to right,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(245, 158, 11, 0.4) 50%,
+      /* Amber-500 equivalent */
+      rgba(255, 255, 255, 0) 100%);
+  transform: translateX(-150%) skewX(-20deg);
+  animation: shimmer-move 4s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  filter: blur(8px);
   pointer-events: none;
 }
 
-.bg-wood-refined::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  /* 5. 상단 베벨 엣지 (두께감 형성) */
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
-  border-left: 1px solid rgba(255, 255, 255, 0.03);
-  pointer-events: none;
-}
-
-.bg-hanji-refined {
-  background-image: url('https://www.transparenttextures.com/patterns/rice-paper-2.png');
-  background-repeat: repeat;
-  opacity: 0.12;
-}
-
-.celestial-particle {
-  position: absolute;
-  width: 1.5px;
-  height: 1.5px;
-  background: rgba(245, 158, 11, 0.45);
-  border-radius: 50%;
-  filter: blur(0.3px);
-  pointer-events: none;
-}
-
-/* 프리미엄 타이포그래피 */
-.font-serif {
-  font-family: 'Song Myung', 'Noto Serif KR', 'Nanum Myeongjo', 'Gungsuh', 'Batang', serif;
-}
-
-.font-brand {
-  font-family: 'Song Myung', 'Noto Serif KR', 'Nanum Myeongjo', serif;
-}
-
-/* 기본 body 스타일 */
-body {
-  margin: 0;
-  padding: 0;
-  min-height: 100vh;
-  min-height: 100dvh;
-}
-
-@media print {
-  body {
-    background: white !important;
-  }
-}
-
-/* 스크롤바 숨김 (가로 스크롤 탭용) */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-.no-scrollbar {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-/* 신성한 인장 (Sacred Seal) - 낙관 스타일 */
-.sacred-seal {
-  font-family: 'Gungsuh', 'Batang', serif;
-  color: rgba(185, 28, 28, 1);
-  border: 4px solid rgba(185, 28, 28, 1);
-  padding: 8px 16px;
-  display: inline-block;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow: inset 0 0 10px rgba(185, 28, 28, 0.2);
-  transform: rotate(-15deg);
-  user-select: none;
-  pointer-events: none;
-  mix-blend-mode: hard-light;
-  filter: blur(0.3px) contrast(1.2);
-  text-shadow: 0 0 2px rgba(185, 28, 28, 0.5);
-}
-
-.animate-seal-arrival {
-  animation: seal-arrival 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-@keyframes seal-arrival {
-  0% {
-    transform: scale(4) rotate(0deg);
-    opacity: 0;
-    filter: blur(10px);
-  }
-
-  100% {
-    transform: scale(1) rotate(-15deg);
-    opacity: 0.7;
-    filter: blur(0.3px);
-  }
-}
-
-/* 모달 등장 효과 (Grand Entrance) */
-@keyframes modal-grand-entrance {
-  0% {
-    opacity: 0;
-    transform: scale(0.9) translateY(30px);
-    filter: blur(10px);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    filter: blur(0);
-  }
-}
-
-.animate-modal-entrance {
-  animation: modal-grand-entrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-}
-
-/* 인장 도착 효과 강화 (프리미엄 버전) */
-@keyframes seal-arrival-premium {
-  0% {
-    transform: scale(5) rotate(0deg);
-    opacity: 0;
-    filter: blur(20px) contrast(1);
-  }
-
-  60% {
-    transform: scale(0.95) rotate(-15deg);
-    opacity: 0.85;
-    filter: blur(0.5px) contrast(1.3);
-  }
-
-  100% {
-    transform: scale(1) rotate(-15deg);
-    opacity: 0.7;
-    filter: blur(0.3px) contrast(1.2);
-  }
-}
-
-.animate-seal-arrival-premium {
-  animation: seal-arrival-premium 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
-
-/* 부드러운 맥동 효과 (Subtle Pulse) */
-@keyframes pulse-subtle {
-
-  0%,
-  100% {
-    opacity: 0.4;
-  }
-
-  50% {
-    opacity: 0.7;
-  }
-}
-
-.animate-pulse-subtle {
-  animation: pulse-subtle 3s ease-in-out infinite;
-}
-
-.animate-pulse-slow {
-  animation: pulse-subtle 4s ease-in-out infinite;
-}
-
-/* 큰 도장 오버레이 (도감 미리보기 전용) */
-.sacred-seal-large {
-  font-family: 'Gungsuh', 'Batang', serif;
-  font-weight: normal;
-  letter-spacing: 0.3em;
-  color: rgba(185, 28, 28, 0.8);
-  border: 8px double rgba(185, 28, 28, 0.8);
-  padding: 32px 64px;
-  background: rgba(255, 255, 255, 0.05);
-  box-shadow:
-    inset 0 0 20px rgba(185, 28, 28, 0.2),
-    0 0 40px rgba(185, 28, 28, 0.3);
-  transform: rotate(-15deg);
-  user-select: none;
-  pointer-events: none;
-  mix-blend-mode: multiply;
-  filter: blur(0.5px) contrast(1.2);
-  text-shadow:
-    0 0 3px rgba(185, 28, 28, 0.6),
-    0 2px 4px rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(2px);
-  border-radius: 4px;
-}
-
-/* 텍스트 가리기 단일 효과 (모든 카드 공통) */
+/* ==============================================
+   [NEW] Mosaic Blur Effect (텍스트 가림용)
+   ============================================== */
 .blur-effect-mosaic {
-  backdrop-filter: blur(12px) brightness(0.7);
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+  filter: blur(5px);
+  opacity: 0.4;
+  user-select: none;
+  pointer-events: none;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+  /* 빛 번짐 효과로 가독성 파괴 */
+  transform: scale(0.98);
+  /* 살짝 축소해서 더 비밀스럽게 */
+}
+
+
+/* 기존 유틸리티 클래스들... (tailwind @layer utilities 내부에 포함시키는게 좋음) */
+@layer utilities {
+  .writing-vertical-rl {
+    writing-mode: vertical-rl;
+  }
+
+  .text-shadow-sm {
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+
+  .text-shadow-md {
+    text-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+  }
+
+  .text-shadow-glow {
+    text-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+  }
+
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+
+  .backface-hidden {
+    backface-visibility: hidden;
+  }
+
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+
+  .bg-hanji-refined {
+    background-color: #eaddcf;
+    /* 더욱 정제된 한지 색상 (아이보리 톤) */
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise' x='0' y='0'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.08'/%3E%3C/svg%3E");
+    /* 기존 0.15 -> 0.08로 축소 (훨씬 은은하게) */
+  }
+
+  .bg-noise-texture {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.8s ease-out forwards;
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 1s ease-out forwards;
+  }
+
+  .animate-count-up {
+    animation: count-up 0.5s ease-out forwards;
+  }
+
+  .animate-pulse-slow {
+    animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  .snap-y-mandatory {
+    scroll-snap-type: y mandatory;
+  }
+
+  .snap-center {
+    scroll-snap-align: center;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .animate-bounce-gentle {
+    animation: bounce-gentle 2s infinite;
+  }
+
+  @keyframes bounce-gentle {
+
+    0%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.4;
+    }
+
+    50% {
+      transform: translateY(-5px);
+      opacity: 0.8;
+    }
+  }
+
+  .animate-modal-entrance {
+    animation: modal-entrance 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  @keyframes modal-entrance {
+    from {
+      opacity: 0;
+      transform: scale(0.9) translateY(10px);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+    }
+  }
 }
