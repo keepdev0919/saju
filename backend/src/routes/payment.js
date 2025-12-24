@@ -4,6 +4,7 @@
  */
 import express from 'express';
 import { createPayment, verifyPayment, cancelPayment } from '../controllers/paymentController.js';
+import { handlePortoneWebhook } from '../controllers/webhookController.js';
 
 const router = express.Router();
 
@@ -15,6 +16,9 @@ router.post('/verify', verifyPayment);
 
 // 결제 취소/환불
 router.post('/cancel', cancelPayment);
+
+// 포트원 Webhook (결제 상태 변경 알림)
+router.post('/webhook', handlePortoneWebhook);
 
 export default router;
 

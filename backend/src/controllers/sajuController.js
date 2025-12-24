@@ -19,17 +19,18 @@ import { interpretSajuWithAI, generateScoresFromWuxing } from '../services/aiSer
  */
 export async function calculateSaju(req, res) {
   try {
-    const { accessToken, birthDate, birthTime, calendarType, isLeap } = req.body;
+    const { accessToken } = req.body;
+    let { birthDate, birthTime, calendarType, isLeap } = req.body;
 
-    if (!accessToken || !birthDate) {
+    if (!accessToken) {
       return res.status(400).json({
-        error: '접근 토큰과 생년월일이 필요합니다.'
+        error: '접근 토큰이 필요합니다.'
       });
     }
 
     // 사용자 정보 조회 (삭제된 사용자 제외, 토큰 기반 검증)
     const [users] = await db.execute(
-      `SELECT id, name, gender, phone FROM users WHERE access_token = ? AND deleted_at IS NULL`,
+      `SELECT id, name, gender, phone, birth_date, birth_time, calendar_type FROM users WHERE access_token = ? AND deleted_at IS NULL`,
       [accessToken]
     );
 
@@ -39,6 +40,26 @@ export async function calculateSaju(req, res) {
 
     const user = users[0];
     const userId = user.id;
+
+    // [New] Request Body에 정보가 없으면 DB 정보 사용 (Fallback)
+    if (!birthDate) birthDate = user.birth_date;
+    if (!birthTime) birthTime = user.birth_time;
+    if (!calendarType) calendarType = user.calendar_type;
+
+    // [FIX] DB에서 가져온 birthDate가 Date 객체인 경우
+    // Timezone 이슈(UTC vs KST)로 인한 -1일 문제 방지
+    // toISOString() 대신 로컬 시간 기준 연월일 추출 사용
+    if (birthDate instanceof Date) {
+      const offset = birthDate.getTimezoneOffset() * 60000;
+      const localDate = new Date(birthDate.getTime() - offset);
+      birthDate = localDate.toISOString().split('T')[0];
+    }
+
+    // isLeap은 DB에 없으면 false로 가정 (필요시 DB 추가 필요하지만 현재 명세상 body 우선)
+
+    if (!birthDate) {
+      return res.status(400).json({ error: '생년월일 정보를 찾을 수 없습니다.' });
+    }
 
     console.log('🔮 사주 계산 시작:', {
       userId,
@@ -79,6 +100,7 @@ export async function calculateSaju(req, res) {
     // [NEW] talisman 데이터를 detailedData에 포함하여 저장
     const detailedDataToSave = result.detailedData || {};
     detailedDataToSave.talisman = result.talisman;
+    detailedDataToSave.yongshen = result.yongshen; // [NEW] AI 용신 데이터 저장
 
     // 결과 저장
     const [resultData] = await db.execute(

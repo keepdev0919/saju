@@ -51,7 +51,7 @@ export async function createPayment(req, res) {
     const paymentData = await createPortonePayment({
       merchant_uid: merchantUid,
       amount,
-      name: productType === 'pdf' ? '사주 PDF 다운로드' : '2026 프리미엄 운세 리포트'
+      name: productType === 'pdf' ? '사주 PDF 다운로드' : '천명록: 천기비록 (天機祕錄)'
     });
 
     res.json({

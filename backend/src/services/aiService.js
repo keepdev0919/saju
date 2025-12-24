@@ -16,11 +16,15 @@ const GPT_MODEL = process.env.OPENAI_MODEL || 'gpt-3.5-turbo';
 
 /**
  * 사주 데이터를 기반으로 AI 해석 생성
- * @param {Object} sajuData - lunar-javascript로 계산된 사주 데이터
+ * @param {Object} sajuData - lunar-javascript로 계산된 사주 데이터 (십신, 대운, 등 포함)
  * @param {Object} userData - 사용자 기본 정보 (이름, 성별 등)
  * @returns {Object} 해석 결과
  */
 export async function interpretSajuWithAI(sajuData, userData) {
+  // [DEBUG] API 키 상태 확인 (보안상 앞 5자리만 출력)
+  const apiKey = process.env.OPENAI_API_KEY;
+  console.log(`🔑 OpenAI Key Status: ${apiKey ? `Present (${apiKey.substring(0, 5)}...)` : 'MISSING'}`);
+
   try {
     const { name, gender, birthDate, birthTime } = userData;
 
@@ -33,20 +37,29 @@ export async function interpretSajuWithAI(sajuData, userData) {
     // System prompt (역할 정의)
     const systemPrompt = `당신은 30년 경력의 전문 사주 명리학자입니다.
 사용자의 사주팔자 데이터를 바탕으로 정확하고 구체적인 운세 해석을 제공합니다.
-해석은 긍정적이면서도 현실적이어야 하며, 실질적인 조언을 포함해야 합니다.
+
+**핵심 임무**:
+1. 전통 명리학 원리에 따라 **용신(用神)**을 계산하세요.
+   - 일간·월령·계절·신강신약을 종합적으로 고려
+   - 오행의 균형과 조화를 분석
+   - 용신 선택 근거를 명확히 제시
+
+2. 계산된 용신을 기반으로 상세한 해석을 작성하세요.
+   - 해석은 긍정적이면서도 현실적이어야 하며, 실질적인 조언을 포함해야 합니다.
+
 반드시 유효한 JSON 형식으로만 응답하세요.
 
 **중요 제약사항:**
 1. 현재 날짜는 ${currentDate} (${currentYear}년)입니다. 
    timing 필드(business.timing, marriage.timing)는 미래 예측이므로 반드시 ${currentYear}년 이후의 날짜만 언급하세요.
    description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 언급해도 되지만, 과거 날짜를 미래처럼 표현하지 마세요.
-
-2. **구조적 설명 제외**: 제2서(오행의 조화)에서 이미 오행 구조와 원인을 설명했으므로, 
-   오행이 "왜" 강한지/약한지에 대한 구조적 설명(예: "월지에 금이 있어서", "일간이 금이어서")은 생략하고,
-   오행이 "무엇을 의미하는지", "어떻게 활용해야 하는지"에 집중하세요.
-   예시: "금 기운이 강하여 결단력이 있다" (O) / "월지에 금이 있어서 강하다" (X - 구조 설명은 제2서에서 다룸)`;
+2. **구조적 설명 제외**: 제2서(오행의 조화)에서 이미 기본 오행 구조는 설명했으므로, 
+   단순한 오행 나열보다는 "의미"와 "활용"에 집중하세요.
+   예시: "금 기운이 강하여 결단력이 있다" (O) / "월지에 금이 있어서 강하다" (X)
+3. 모든 해석은 당신이 직접 계산한 '용신'을 기준으로 일관성 있게 작성되어야 합니다.`;
 
     // User prompt (사주 데이터 전달 - JSON 형식)
+    // sajuData에 있는 십신, 대운, 12운성, 신살 정보를 모두 포함
     const userPrompt = `다음은 ${name}님의 사주팔자 정보입니다:
 
 생년월일: ${birthDate} (${birthTime || '시간 미상'})
@@ -67,29 +80,58 @@ export async function interpretSajuWithAI(sajuData, userData) {
 - 금(金): ${sajuData.wuxing.금}%
 - 수(水): ${sajuData.wuxing.수}%
 
-용신(用神): ${sajuData.yongshen}
+십신(十神) 구성:
+- 년주: 천간 ${sajuData.sipsin.year.gan}, 지지 ${sajuData.sipsin.year.ji}
+- 월주: 천간 ${sajuData.sipsin.month.gan}, 지지 ${sajuData.sipsin.month.ji}
+- 일주: 천간 ${sajuData.sipsin.day.gan}, 지지 ${sajuData.sipsin.day.ji}
+- 시주: 천간 ${sajuData.sipsin.hour.gan}, 지지 ${sajuData.sipsin.hour.ji}
 
-위 사주 정보를 바탕으로 다음 JSON 형식으로 상세한 해석을 제공해주세요:
+대운(大運) 정보:
+${sajuData.dayun.map(d => `- ${d.startAge}~${d.endAge}세: ${d.gan}${d.ji} (${d.ganZhi})`).join('\n')}
+
+12운성:
+- 년주: ${sajuData.phases.year}
+- 월주: ${sajuData.phases.month}
+- 일주: ${sajuData.phases.day}
+- 시주: ${sajuData.phases.hour}
+
+신살(神殺):
+${sajuData.sinsal.join(', ')}
+
+**용신(用神) 계산 필수**:
+위 사주 정보를 바탕으로 전통 명리학 원리에 따라 용신을 계산하세요.
+- 일간의 강약(신강/신약) 판단
+- 월령(월주 지지)의 계절 영향 고려
+- 조후(계절적 조화) 및 억부(강약 조절) 고려
+- 용신 선택 근거 상세 설명
+
+위 정보를 바탕으로 다음 JSON 형식으로 상세한 해석을 제공해주세요:
 
 {
+  "yongshen": {
+    "element": "화", 
+    "reason": "용신 선택 근거 (3-4문장). 예: 일간이 신약하고 겨울에 태어나 한냉하므로, 따뜻한 화(火)를 용신으로 삼아 조후합니다.",
+    "xishen": "목", 
+    "jishen": "수" 
+  },
   "personality": {
-    "description": "일간을 중심으로 한 성격 특성 (3-4문장)",
+    "description": "일간과 용신을 중심으로 한 성격 특성 (3-4문장)",
     "strengths": ["강점1", "강점2", "강점3"],
     "weaknesses": ["약점1", "약점2"]
   },
   "business": {
     "suitableFields": ["적합한 분야1", "적합한 분야2", "적합한 분야3"],
-    "timing": "사업운이 트이는 시기 (${currentYear}년 이후의 미래 날짜만 언급, 예: '${currentYear}년 하반기', '${currentYear + 1}년 상반기' 등)",
-    "advice": "사업 관련 조언 (2-3문장, 과거 운세 흐름 언급 가능)"
+    "timing": "사업운이 트이는 시기 (${currentYear}년 이후의 미래 날짜만 언급)",
+    "advice": "사업 관련 조언 (2-3문장)"
   },
   "wealth": {
-    "description": "재물운 해석 (2-3문장, 과거 운세 패턴 언급 가능)",
+    "description": "재물운 해석 (2-3문장)",
     "income": "수입 관련 조언",
     "expense": "지출 관리 조언",
     "investment": "투자 관련 조언"
   },
   "marriage": {
-    "description": "결혼운 해석 (2-3문장, 과거 운세 언급 가능)",
+    "description": "결혼운 해석 (2-3문장)",
     "timing": "결혼 적기 (${currentYear}년 이후의 미래 날짜만 언급)",
     "partnerType": "적합한 배우자 유형"
   },
@@ -100,8 +142,8 @@ export async function interpretSajuWithAI(sajuData, userData) {
   },
   "future": {
     "${currentYear}": {
-      "energy": "주요 기운 (예: 상관·편재)",
-      "description": "${currentYear}년 운세 (2-3문장, 과거와 비교 가능)",
+      "energy": "주요 기운",
+      "description": "${currentYear}년 운세 (2-3문장)",
       "positive": ["긍정적 요소1", "긍정적 요소2"],
       "warning": ["주의사항1", "주의사항2"]
     },
@@ -115,30 +157,30 @@ export async function interpretSajuWithAI(sajuData, userData) {
       {
         "year": ${currentYear},
         "energy": "주요 기운",
-        "keyPoints": ["포인트1", "포인트2"]
+        "keyPoints": ["포인트1"]
       },
       {
         "year": ${currentYear + 1},
         "energy": "주요 기운",
-        "keyPoints": ["포인트1", "포인트2"]
+        "keyPoints": ["포인트1"]
       },
       {
         "year": ${currentYear + 2},
         "energy": "주요 기운",
-        "keyPoints": ["포인트1", "포인트2"]
+        "keyPoints": ["포인트1"]
       },
       {
         "year": ${currentYear + 3},
         "energy": "주요 기운",
-        "keyPoints": ["포인트1", "포인트2"]
+        "keyPoints": ["포인트1"]
       },
       {
         "year": ${currentYear + 4},
         "energy": "주요 기운",
-        "keyPoints": ["포인트1", "포인트2"]
+        "keyPoints": ["포인트1"]
       }
     ],
-    "lifelong": "평생 운명 예측 (3-4문장, 과거 패턴 언급 가능)"
+    "lifelong": "평생 운명 예측 (3-4문장)"
   },
   "disasters": {
     "description": "일생에 닥칠 재난 (2-3문장)",
@@ -153,7 +195,7 @@ export async function interpretSajuWithAI(sajuData, userData) {
     "recommend": ["좋은 음식1", "좋은 음식2", "좋은 음식3"]
   },
   "direction": {
-    "good": "길한 방향 (예: 북쪽)",
+    "good": "길한 방향 (용신 활용)",
     "description": "방향 관련 설명"
   },
   "color": {
@@ -165,14 +207,9 @@ export async function interpretSajuWithAI(sajuData, userData) {
     "description": "장소 관련 설명"
   },
   "overall": {
-    "summary": "종합 의견 (3-4문장, 과거와 미래를 종합적으로 언급 가능)"
+    "summary": "종합 의견 (3-4문장, 용신을 중심으로 결론)"
   }
 }
-
-**중요 지침:**
-1. timing 필드(business.timing, marriage.timing)는 미래 예측이므로 반드시 ${currentYear}년 이후의 날짜만 언급하세요.
-2. description 필드들은 과거 운세 패턴이나 흐름을 자연스럽게 언급해도 됩니다 (예: "지난 몇 년간의 운세 흐름", "과거와 비교하여" 등).
-3. 과거 날짜를 미래처럼 표현하지 마세요 (예: "2023년부터 좋아질 것입니다" ❌ → "2023년에는 이런 패턴이 있었고, ${currentYear}년 하반기부터는..." ✅).
 
 반드시 유효한 JSON 형식으로만 응답하세요.`;
 
@@ -186,7 +223,7 @@ export async function interpretSajuWithAI(sajuData, userData) {
         { role: 'user', content: userPrompt }
       ],
       temperature: 0.7,  // 창의성과 일관성 균형
-      max_tokens: 3000,  // 상세한 JSON 응답을 위해 증가
+      max_tokens: 3500,  // 상세한 JSON 응답을 위해 증가
       response_format: { type: "json_object" }  // JSON 형식 강제
     });
 
@@ -217,11 +254,23 @@ export async function interpretSajuWithAI(sajuData, userData) {
       return generateFallbackInterpretation(sajuData);
     }
 
+    // 용신 데이터 검증 (AI가 가끔 빼먹을 수 있음)
+    if (!parsedData.yongshen || !parsedData.yongshen.element) {
+      console.warn('⚠️ AI가 용신을 반환하지 않음, 폴백 용신 사용');
+      parsedData.yongshen = {
+        element: findFallbackYongshen(sajuData.wuxing),
+        reason: "오행의 균형을 맞추기 위해 선택된 용신입니다.",
+        xishen: "미상",
+        jishen: "미상"
+      };
+    }
+
     // 점수 생성 (오행 분포 기반)
     const scores = generateScoresFromWuxing(sajuData.wuxing);
 
     // --- [NEW] Talisman Recommendation Logic (Expert System) ---
-    // Logic: Yongsin (Color) + Samhap (Ally Animal)
+    // Logic: AI-Determined Yongshen (Element) + Samhap (Ally Animal)
+
     // 1. Get User's Year Zodiac (Ji)
     const userYearJi = sajuData.year.ji; // e.g. '자'
 
@@ -240,7 +289,7 @@ export async function interpretSajuWithAI(sajuData, userData) {
       myAllies.reverse();
     }
 
-    // 3. Map Yongsin Element to Stems (Colors)
+    // 3. Map AI-Determined Yongsin Element to Stems (Colors)
     const STEM_GROUPS = {
       '목': { yang: '갑', yin: '을' },
       '화': { yang: '병', yin: '정' },
@@ -249,13 +298,16 @@ export async function interpretSajuWithAI(sajuData, userData) {
       '수': { yang: '임', yin: '계' }
     };
 
-    const targetElement = sajuData.yongshen; // e.g. '화' (Fix: Removed .korean since it's already a string)
+    // Use AI's Yongshen!
+    const targetElement = parsedData.yongshen.element; // e.g. '화'
     const targetStems = STEM_GROUPS[targetElement] || STEM_GROUPS['화']; // Default to Fire if error
 
     // 4. Find the Perfect Match
     let bestTalisman = null;
     let selectionReason = null;
     const YANG_BRANCHES = ['자', '인', '진', '오', '신', '술'];
+    // 동물 맵
+    const ANIMAL_MAP = { '자': '쥐', '축': '소', '인': '호랑이', '묘': '토끼', '진': '용', '사': '뱀', '오': '말', '미': '양', '신': '원숭이', '유': '닭', '술': '개', '해': '돼지' };
 
     for (const allyJi of myAllies) {
       const isAllyYang = YANG_BRANCHES.includes(allyJi);
@@ -266,20 +318,20 @@ export async function interpretSajuWithAI(sajuData, userData) {
         element: targetElement, // e.g. '화'
         stem: stem,           // e.g. '병'
         branch: allyJi,       // e.g. '인'
-        branchAnimal: { '자': '쥐', '축': '소', '인': '호랑이', '묘': '토끼', '진': '용', '사': '뱀', '오': '말', '미': '양', '신': '원숭이', '유': '닭', '술': '개', '해': '돼지' }[allyJi],
-        userYearJi: { '자': '쥐', '축': '소', '인': '호랑이', '묘': '토끼', '진': '용', '사': '뱀', '오': '말', '미': '양', '신': '원숭이', '유': '닭', '술': '개', '해': '돼지' }[userYearJi]
+        branchAnimal: ANIMAL_MAP[allyJi], // "호랑이"
+        userYearJi: ANIMAL_MAP[userYearJi], // "쥐"
+        yongshenReason: parsedData.yongshen.reason // AI의 용신 선택 근거 포함
       };
       break;
     }
 
     if (!bestTalisman) {
       bestTalisman = '갑자';
-      selectionReason = { element: '목', stem: '갑', branch: '자', branchAnimal: '쥐', userYearJi: '쥐' };
+      selectionReason = { element: '목', stem: '갑', branch: '자', branchAnimal: '쥐', userYearJi: ANIMAL_MAP[userYearJi] || '쥐' };
     }
 
     // -----------------------------------------------------------
 
-    // 기존 형식과 호환되도록 변환 (하위 호환성 유지)
     return {
       overall: parsedData.overall?.summary || parsedData.personality?.description || '총운 정보를 준비 중입니다.',
       wealth: parsedData.wealth?.description || '재물운 정보를 준비 중입니다.',
@@ -291,9 +343,10 @@ export async function interpretSajuWithAI(sajuData, userData) {
       talisman: {
         name: bestTalisman,
         reason: selectionReason
-      }, // [NEW] Expert System Talisman + Reason
+      },
+      yongshen: parsedData.yongshen, // [NEW] AI 용신 정보 반환
       aiRawResponse: aiInterpretation,  // 원본 JSON 응답
-      detailedData: parsedData  // 상세 데이터 전체 (새로운 필드)
+      detailedData: parsedData  // 상세 데이터 전체
     };
   } catch (error) {
     console.error('❌ AI 사주 해석 실패:', error.message);
@@ -311,30 +364,20 @@ export async function interpretSajuWithAI(sajuData, userData) {
 }
 
 /**
- * AI 응답 파싱 (텍스트에서 각 운세 추출)
- * @param {string} aiResponse - AI가 생성한 텍스트
- * @returns {Object} 파싱된 운세 객체
+ * AI 응답 파싱 (텍스트에서 각 운세 추출) - Legacy Support
+ * 현재는 JSON 응답을 강제하므로 거의 사용되지 않음
  */
 function parseAIResponse(aiResponse) {
-  const result = {};
+  return {};
+}
 
-  // 정규식으로 각 운세 섹션 추출
-  const patterns = {
-    overall: /(?:1\.|총운|전반적)[\s\S]*?:\s*(.+?)(?=\n\n|\n2\.|\n재물운|$)/i,
-    wealth: /(?:2\.|재물운)[\s\S]*?:\s*(.+?)(?=\n\n|\n3\.|\n애정운|$)/i,
-    love: /(?:3\.|애정운)[\s\S]*?:\s*(.+?)(?=\n\n|\n4\.|\n직장운|$)/i,
-    career: /(?:4\.|직장운)[\s\S]*?:\s*(.+?)(?=\n\n|\n5\.|\n건강운|$)/i,
-    health: /(?:5\.|건강운)[\s\S]*?:\s*(.+?)(?=\n\n|$)/i
-  };
-
-  Object.keys(patterns).forEach(key => {
-    const match = aiResponse.match(patterns[key]);
-    if (match) {
-      result[key] = match[1].trim();
-    }
-  });
-
-  return result;
+/**
+ * 폴백용 간단 용신 찾기 (가장 약한 오행)
+ */
+function findFallbackYongshen(wuxing) {
+  return Object.keys(wuxing).reduce((min, key) =>
+    wuxing[key] < wuxing[min] ? key : min
+  );
 }
 
 /**
@@ -344,22 +387,20 @@ function parseAIResponse(aiResponse) {
  */
 export function generateScoresFromWuxing(wuxing) {
   // 오행 균형도를 점수로 환산
-  // 오행 균형도를 점수로 환산
-  // 기존 로직: 100 - (Max - Min) -> 차이가 40만 나도 바로 60점(최하점)이 되는 문제 수정
-  // 개선 로직: 95 - (차이 * 0.5) -> 차이가 40이면 20점 감점 -> 75점 (훨씬 자연스러움)
+  // 개선 로직: 95 - (차이 * 0.5) -> 차이가 40이면 20점 감점 -> 75점
   const wuxingValues = Object.values(wuxing);
   const maxWuxing = Math.max(...wuxingValues);
   const minWuxing = Math.min(...wuxingValues);
 
   const diff = maxWuxing - minWuxing;
-  const rawScore = 95 - (diff * 0.5); // 차이의 절반만 감점
+  const rawScore = 95 - (diff * 0.5);
 
   // 최하점 40점, 최고점 98점으로 제한
   const baseScore = Math.min(Math.max(rawScore, 40), 98);
 
   return {
     overall: Math.round(baseScore),
-    wealth: Math.round(Math.min(baseScore + (wuxing.금 / 3), 100)),   // 가산점 비율 조정 (1/2 -> 1/3)
+    wealth: Math.round(Math.min(baseScore + (wuxing.금 / 3), 100)),
     love: Math.round(Math.min(baseScore + (wuxing.화 / 3), 100)),
     career: Math.round(Math.min(baseScore + (wuxing.목 / 3), 100)),
     health: Math.round(Math.min(baseScore + (wuxing.토 / 3), 100))
@@ -427,14 +468,15 @@ function generateFallbackInterpretation(sajuData) {
     health: messages.health,
     scores,
     oheng: sajuData.wuxing,
-    // Fallback Talisman (Default specific to element generally)
-    talisman: { name: '갑자' }, // Default
+    yongshen: { element: dominantElement, reason: "기본 오행 분석" }, // Fallback Yongshen
+    talisman: { name: '갑자', reason: { element: '목', userYearJi: '쥐' } }, // Default
     detailedData: {
       personality: { description: messages.overall },
       wealth: { description: messages.wealth },
       marriage: { description: messages.love },
       business: { advice: messages.career },
-      health: { description: messages.health }
+      health: { description: messages.health },
+      yongshen: { element: dominantElement, reason: "기본 오행 분석" }
     }
   };
 }
