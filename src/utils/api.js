@@ -181,6 +181,16 @@ export const getSajuResult = async (token) => {
 };
 
 /**
+ * AI 해석 상태 확인
+ * @param {string} token - 접근 토큰
+ * @returns {Promise} 상태 정보 { isPaid, isCompleted, progress }
+ */
+export const checkAiStatus = async (token) => {
+  const response = await apiClient.get(`/saju/status/${token}`);
+  return response.data;
+};
+
+/**
  * PDF API
  */
 

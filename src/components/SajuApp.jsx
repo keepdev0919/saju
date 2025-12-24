@@ -71,6 +71,7 @@ const SajuApp = () => {
 
   // 분석 진행률 상태
   const [progress, setProgress] = useState(0);
+  const [isFreeAnalysis, setIsFreeAnalysis] = useState(false); // [NEW] 무료 분석 여부
 
   // 실시간 분석 로그 상태 [NEW]
   const [analysisLogs, setAnalysisLogs] = useState([]);
@@ -347,6 +348,7 @@ const SajuApp = () => {
     setLoading(true);
     setError(null);
     setProgress(0);
+    setIsFreeAnalysis(false); // 유료(결제) 분석 모드 설정
 
     try {
       console.log('🔍 결제 검증 시작:', { impUid, merchantUid });
@@ -493,6 +495,7 @@ const SajuApp = () => {
     setProgress(0);
     setAnalysisLogs([]);
     setActiveLogIndex(-1);
+    setIsFreeAnalysis(true); // 무료 분석 모드 설정
 
     try {
       // 분석 시작 시간 기록
@@ -1335,6 +1338,13 @@ const SajuApp = () => {
 
         {/* 프로그레스 바 (Enhanced Amber Glow with Flare & Shimmer) */}
         <div className="w-full max-w-[280px] space-y-6">
+          {/* 단계 표시 (프로그레스 바 위) */}
+          <p className="text-xs text-amber-600/60 text-center font-serif tracking-wider min-h-[1rem]">
+            {!isFreeAnalysis && (progress < 30 ? '1/3 결제 확인 중' :
+              progress < 90 ? '2/3 AI 해석 생성 중' :
+                '3/3 천명록 준비 중')}
+          </p>
+
           <div className="relative h-[3px] w-full bg-stone-950/80 rounded-full border border-white/5 shadow-inner">
             {/* Base Progress Bar */}
             <div
@@ -1380,6 +1390,13 @@ const SajuApp = () => {
                 </p>
               )}
             </div>
+
+            {/* 예상 시간 안내 (하단) */}
+            {!isFreeAnalysis && (
+              <p className="text-[9px] text-stone-600/60 font-serif tracking-widest text-center mt-6 italic">
+                약 10-30초 소요됩니다
+              </p>
+            )}
           </div>
         </div>
       </div>

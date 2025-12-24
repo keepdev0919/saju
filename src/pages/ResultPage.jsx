@@ -4,7 +4,7 @@
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getSajuResult, verifyUser, createPayment, verifyPayment, generatePDF, getPdfDownloadUrl, checkPdfPayment } from '../utils/api';
+import { getSajuResult, verifyUser, createPayment, verifyPayment, checkPdfPayment, generatePDF, getPdfDownloadUrl, checkAiStatus } from '../utils/api';
 import { RefreshCw, Download, Lock, X, Eye, ChevronLeft, ChevronRight, ZoomIn, ZoomOut, Share2, Sparkles, TrendingUp, Heart, Briefcase, Activity, Zap, Compass, MapPin, Search, Scroll } from 'lucide-react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Cell, RadialBarChart, RadialBar } from 'recharts';
@@ -218,18 +218,9 @@ const ResultPage = () => {
   const [activeTab, setActiveTab] = useState('overall'); // overall, money, love, career, health
 
   const [showTechData, setShowTechData] = useState(false);
-  const [showFab, setShowFab] = useState(false);
   const entranceRef = useRef(null);
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        // entrance-section이 화면에 보이지 않을 때(isIntersecting이 false일 때) FAB 노출
-        setShowFab(!entry.isIntersecting);
-      },
-      { threshold: 0.1 }
-    );
-
     // reveal-item 애니메이션 감시자
     const revealObserver = new IntersectionObserver(
       (entries) => {
@@ -242,15 +233,10 @@ const ResultPage = () => {
       { threshold: 0.05 }
     );
 
-    if (entranceRef.current) {
-      observer.observe(entranceRef.current);
-    }
-
     const items = document.querySelectorAll('.reveal-item');
     items.forEach((item) => revealObserver.observe(item));
 
     return () => {
-      observer.disconnect();
       revealObserver.disconnect();
     };
   }, [loading, sajuResult]); // 인쇄 데이터나 로딩 상태가 바뀌면 다시 스캔
@@ -286,6 +272,16 @@ const ResultPage = () => {
   const [scoreAnimated, setScoreAnimated] = useState(0);
   const talismanCardRef = useRef(null);
 
+  // AI 해석 상태 관리
+  const [aiStatus, setAiStatus] = useState({
+    isProcessing: false,  // AI 처리 중 여부
+    isCompleted: false,   // AI 완료 여부
+    progress: 0,          // 진행률 (0-100)
+    elapsedTime: 0        // 경과 시간 (초)
+  });
+  const pollingIntervalRef = useRef(null);
+  const elapsedTimeIntervalRef = useRef(null);
+
   // [Tech Demo] Mock Data for Testing without Token
   const MOCK_DATA = {
     scores: { overall: 85, wealth: 90, love: 75, career: 88, health: 80 },
@@ -301,6 +297,12 @@ const ResultPage = () => {
       }
     }, // Default Demo Talisman
     oheng_deficiency: { most_deficient: '수(水)' },
+    sajuData: {
+      year: { gan: '갑', ji: '진' },
+      month: { gan: '정', ji: '묘' },
+      day: { gan: '갑', ji: '인' },
+      time: { gan: '병', ji: '자' }
+    },
     detailedData: {
       personality: { description: '당신은 푸른 소나무처럼 굳건한 의지를 지닌 지도자입니다.' },
       wealth: { description: '재물운이 매우 좋으며, 꾸준한 노력으로 큰 부를 쌓을 수 있습니다.' },
@@ -317,7 +319,14 @@ const ResultPage = () => {
       if (!token) {
         console.warn('⚠️ No token provided. Loading [Tech Demo] Mock Data.');
         setSajuResult(MOCK_DATA);
-        setUserInfo({ name: '테스트 유저', birthDate: '1990-01-01' });
+        setUserInfo({
+          id: 999, // 테스트용 ID
+          name: '테스트 유저',
+          birthDate: '1990-01-01',
+          birthTime: '12:00',
+          phone: '010-0000-0000',
+          calendarType: 'solar'
+        });
         setLoading(false);
         setTimeout(() => setMounted(true), 100);
         return;
@@ -500,11 +509,23 @@ const ResultPage = () => {
       const { merchantUid } = await createPayment({ userId: userInfo.id, amount, productType: 'basic' });
 
       window.IMP.init(import.meta.env.VITE_PORTONE_IMP_KEY || 'imp12345678');
-      window.IMP.request_pay({
-        pg: 'html5_inicis', pay_method: 'card', merchant_uid: merchantUid,
-        name: '2026 프리미엄 사주 상세 리포트', amount, buyer_name: userInfo.name, buyer_tel: userInfo.phone,
-        m_redirect_url: `${window.location.origin}/payment/callback`
-      }, async (rsp) => {
+
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const paymentData = {
+        pg: 'html5_inicis',
+        pay_method: 'card',
+        merchant_uid: merchantUid,
+        name: '2026 프리미엄 사주 상세 리포트',
+        amount,
+        buyer_name: userInfo.name,
+        buyer_tel: userInfo.phone,
+      };
+
+      if (isMobile) {
+        paymentData.m_redirect_url = `${window.location.origin}/payment/callback`;
+      }
+
+      window.IMP.request_pay(paymentData, async (rsp) => {
         if (rsp.success) await processBasicPaymentSuccess(rsp.imp_uid, merchantUid);
         else { setError(rsp.error_msg); setLoading(false); }
       });
@@ -516,17 +537,28 @@ const ResultPage = () => {
       const verify = await verifyPayment({ imp_uid: impUid, merchant_uid: merchantUid });
       if (!verify.success) throw new Error(verify.error);
 
-      // 결제 성공 시 AI 사주 계산 실행 (백엔드의 상세 계산 로직 호출)
-      const sajuResponse = await calculateSaju({
+      // 결제 검증 완료 → 즉시 페이지 표시 (로딩 종료)
+      setLoading(false);
+
+      // AI 계산을 백그라운드에서 시작 (await 없이 비동기 호출)
+      calculateSaju({
         accessToken: token,
         birthDate: userInfo.birthDate,
         birthTime: userInfo.birthTime,
         calendarType: userInfo.calendarType,
         isLeap: userInfo.isLeap
+      }).catch(err => {
+        console.error('AI 계산 시작 실패:', err);
+        setError('AI 해석 생성을 시작하지 못했습니다. 잠시 후 다시 시도해주세요.');
       });
 
-      setSajuResult(sajuResponse.result);
-    } catch (e) { setError(e.message); } finally { setLoading(false); }
+      // 폴링 시작 (AI 완료 상태 확인)
+      startPollingForAiCompletion();
+
+    } catch (e) {
+      setError(e.message);
+      setLoading(false);
+    }
   };
 
   const handlePdfDownload = async () => {
@@ -537,6 +569,65 @@ const ResultPage = () => {
     } catch (e) { setPdfError(e.message); } finally { setPdfLoading(false); }
   };
 
+  // AI 완료 상태 폴링 시작
+  const startPollingForAiCompletion = () => {
+    // AI 처리 시작 상태로 변경
+    setAiStatus({
+      isProcessing: true,
+      isCompleted: false,
+      progress: 0,
+      elapsedTime: 0
+    });
+
+    // 경과 시간 카운터 시작 (1초마다)
+    elapsedTimeIntervalRef.current = setInterval(() => {
+      setAiStatus(prev => ({
+        ...prev,
+        elapsedTime: prev.elapsedTime + 1,
+        // 경과 시간에 따라 예상 진행률 표시 (실제 완료는 폴링으로 확인)
+        progress: Math.min(90, prev.elapsedTime * 3) // 최대 90%까지만 (완료는 API 확인 후)
+      }));
+    }, 1000);
+
+    // 10초마다 AI 완료 상태 확인
+    pollingIntervalRef.current = setInterval(async () => {
+      try {
+        // 백엔드 상태 확인 API 호출
+        const status = await checkAiStatus(token);
+
+        // AI 해석이 완료되었는지 확인
+        if (status && status.isCompleted) {
+          // AI 완료! 전체 결과 다시 로드
+          const response = await getSajuResult(token);
+          if (response.result) {
+            setSajuResult(response.result);
+          }
+
+          setAiStatus({
+            isProcessing: false,
+            isCompleted: true,
+            progress: 100,
+            elapsedTime: 0
+          });
+
+          // 폴링 중지
+          clearInterval(pollingIntervalRef.current);
+          clearInterval(elapsedTimeIntervalRef.current);
+        }
+      } catch (err) {
+        console.error('AI 상태 확인 실패:', err);
+        // 에러 시에도 계속 폴링 (네트워크 일시 오류 대비)
+      }
+    }, 10000); // 10초마다
+  };
+
+  // 컴포넌트 언마운트 시 폴링 정리
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
+      if (elapsedTimeIntervalRef.current) clearInterval(elapsedTimeIntervalRef.current);
+    };
+  }, []);
 
   const titleFont = "font-serif tracking-[0.2em]";
   const bodyFont = "font-sans tracking-normal";
@@ -1334,95 +1425,126 @@ const ResultPage = () => {
                 </div>
               </div>
 
-              {/* Chapter 4: 연분(緣分) - 인연의 실타래 */}
-              <div className="relative reveal-item">
-                <div className="flex flex-col items-center mb-6">
-                  <span className="text-rose-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 4: Love</span>
-                  <h4 className="text-rose-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-rose-900/10 pb-2">
-                    제 4장: 연분(緣分) <span className="text-stone-500 font-light text-sm">- 인연의 실타래</span>
-                  </h4>
-                </div>
-                <div className="bg-[#1a1a1c] border border-rose-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                  <div>
-                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {sajuResult.loveFortune || sajuResult.detailedData?.marriage?.description || "인연은 때로 한 줄의 실처럼 얇지만, 당신의 사주 속에 그 실이 누구와 엮일 운명인지 새겨져 있습니다."}
-                    </p>
+              {/* AI Interpretation Section (Chapters 4-7) - Hybrid Loading Flow */}
+              {(aiStatus.isProcessing && !aiStatus.isCompleted) ? (
+                <div className="w-full max-w-sm mx-auto py-10 space-y-8 animate-pulse">
+                  {/* Progress Card */}
+                  <div className="bg-[#1a1a1c] border border-amber-900/20 rounded-md p-6 shadow-lg">
+                    <div className="flex items-center gap-4 mb-5">
+                      <div className="w-10 h-10 border-2 border-amber-600 rounded-full animate-spin border-t-transparent flex-shrink-0 shadow-[0_0_10px_rgba(245,158,11,0.3)]"></div>
+                      <div className="flex-1">
+                        <p className="text-amber-500 font-serif font-bold text-sm tracking-wider mb-1 animate-pulse">
+                          천명(天命)을 해석하는 중...
+                        </p>
+                        <p className="text-stone-500 text-[11px] text-left tracking-wide">
+                          약 {Math.max(0, 30 - aiStatus.elapsedTime)}초 남음 - 전문가 AI가 분석 중입니다
+                        </p>
+                      </div>
+                    </div>
+                    <div className="w-full bg-stone-900/50 h-2 rounded-full overflow-hidden border border-stone-800">
+                      <div
+                        className="h-full bg-gradient-to-r from-amber-800 to-amber-500 transition-all duration-300 ease-out shadow-[0_0_10px_rgba(245,158,11,0.5)]"
+                        style={{ width: `${aiStatus.progress}%` }}
+                      ></div>
+                    </div>
                   </div>
 
+                  {/* Skeleton Cards */}
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="h-48 bg-[#1a1a1c] border border-stone-800/50 rounded-sm relative overflow-hidden">
+                      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] animate-shimmer" style={{ animationDelay: `${i * 0.2}s` }}></div>
+                    </div>
+                  ))}
                 </div>
-              </div>
-
-              {/* Chapter 5: 체상(體象) - 신체의 등불 */}
-              <div className="relative reveal-item">
-                <div className="flex flex-col items-center mb-6">
-                  <span className="text-lime-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 5: Health</span>
-                  <h4 className="text-lime-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-lime-900/10 pb-2">
-                    제 5장: 체상(體象) <span className="text-stone-500 font-light text-sm">- 신체의 등불</span>
-                  </h4>
-                </div>
-                <div className="bg-[#1a1a1c] border border-lime-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                  <div>
-                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {sajuResult.healthFortune || sajuResult.detailedData?.health?.description || "당신의 몸은 오행의 거울입니다. 그 빛이 머무는 곳과, 가려진 그림자를 함께 비춰봅니다."}
-                    </p>
+              ) : (
+                <div className="animate-fade-in space-y-12">
+                  {/* Chapter 4: 연분(緣分) - 인연의 실타래 */}
+                  <div className="relative reveal-item">
+                    <div className="flex flex-col items-center mb-6">
+                      <span className="text-rose-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 4: Love</span>
+                      <h4 className="text-rose-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-rose-900/10 pb-2">
+                        제 4장: 연분(緣分) <span className="text-stone-500 font-light text-sm">- 인연의 실타래</span>
+                      </h4>
+                    </div>
+                    <div className="bg-[#1a1a1c] border border-rose-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                      <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                      <div>
+                        <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                          {sajuResult.loveFortune || sajuResult.detailedData?.marriage?.description || "인연은 때로 한 줄의 실처럼 얇지만, 당신의 사주 속에 그 실이 누구와 엮일 운명인지 새겨져 있습니다."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                </div>
-              </div>
-
-              {/* Chapter 6: 시운(時運) - 시간의 파도 */}
-              <div className="relative reveal-item">
-                <div className="flex flex-col items-center mb-6">
-                  <span className="text-purple-400/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 6: Destiny</span>
-                  <h4 className="text-purple-400 font-bold text-xl flex items-center gap-2 font-serif border-b border-purple-500/10 pb-2">
-                    제 6장: 시운(時運) <span className="text-stone-500 font-light text-sm">- 시간의 파도</span>
-                  </h4>
-                </div>
-                <div className="bg-[#1a1a1c] border border-purple-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                  <div>
-                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {sajuResult.destinyFortune || sajuResult.detailedData?.destiny?.description || "현재 당신이 지나고 있는 대운과 향후 5년의 흐름을 관조합니다."}
-                    </p>
+                  {/* Chapter 5: 체상(體象) - 신체의 등불 */}
+                  <div className="relative reveal-item">
+                    <div className="flex flex-col items-center mb-6">
+                      <span className="text-lime-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 5: Health</span>
+                      <h4 className="text-lime-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-lime-900/10 pb-2">
+                        제 5장: 체상(體象) <span className="text-stone-500 font-light text-sm">- 신체의 등불</span>
+                      </h4>
+                    </div>
+                    <div className="bg-[#1a1a1c] border border-lime-900/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                      <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                      <div>
+                        <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                          {sajuResult.healthFortune || sajuResult.detailedData?.health?.description || "당신의 몸은 오행의 거울입니다. 그 빛이 머무는 곳과, 가려진 그림자를 함께 비춰봅니다."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                </div>
-              </div>
-
-              {/* Chapter 7: 비책(秘策) - 개운의 열쇠 */}
-              <div className="relative reveal-item">
-                <div className="flex flex-col items-center mb-6">
-                  <span className="text-blue-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 7: Secret</span>
-                  <h4 className="text-blue-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-blue-500/10 pb-2">
-                    제 7장: 비책(秘策) <span className="text-stone-500 font-light text-sm">- 개운의 열쇠</span>
-                  </h4>
-                </div>
-                <div className="bg-[#1a1a1c] border border-blue-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
-                  <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
-                  <div>
-                    <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
-                      {(sajuResult.detailedData?.blessings?.advice || sajuResult.advice) || "부족한 기운을 채우고 과한 기운을 다스리는 개운법과, 당신을 도울 귀인의 정보가 기록되어 있습니다."}
-                    </p>
+                  {/* Chapter 6: 시운(時運) - 시간의 파도 */}
+                  <div className="relative reveal-item">
+                    <div className="flex flex-col items-center mb-6">
+                      <span className="text-purple-400/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 6: Destiny</span>
+                      <h4 className="text-purple-400 font-bold text-xl flex items-center gap-2 font-serif border-b border-purple-500/10 pb-2">
+                        제 6장: 시운(時運) <span className="text-stone-500 font-light text-sm">- 시간의 파도</span>
+                      </h4>
+                    </div>
+                    <div className="bg-[#1a1a1c] border border-purple-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                      <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                      <div>
+                        <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                          {sajuResult.destinyFortune || sajuResult.detailedData?.destiny?.description || "현재 당신이 지나고 있는 대운과 향후 5년의 흐름을 관조합니다."}
+                        </p>
+                      </div>
+                    </div>
                   </div>
 
-                </div>
-              </div>
+                  {/* Chapter 7: 비책(秘策) - 개운의 열쇠 */}
+                  <div className="relative reveal-item">
+                    <div className="flex flex-col items-center mb-6">
+                      <span className="text-blue-500/70 text-[9px] tracking-[0.5em] uppercase font-bold mb-2">Chapter 7: Secret</span>
+                      <h4 className="text-blue-500 font-bold text-xl flex items-center gap-2 font-serif border-b border-blue-500/10 pb-2">
+                        제 7장: 비책(秘策) <span className="text-stone-500 font-light text-sm">- 개운의 열쇠</span>
+                      </h4>
+                    </div>
+                    <div className="bg-[#1a1a1c] border border-blue-500/10 rounded-sm p-6 shadow-xl relative overflow-hidden group">
+                      <div className="absolute inset-0 opacity-5 pointer-events-none" style={{ backgroundImage: 'url("https://www.transparenttextures.com/patterns/rice-paper-2.png")' }}></div>
+                      <div>
+                        <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
+                          {(sajuResult.detailedData?.blessings?.advice || sajuResult.advice) || "부족한 기운을 채우고 과한 기운을 다스리는 개운법과, 당신을 도울 귀인의 정보가 기록되어 있습니다."}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-              {/* Secondary CTA - 제3서 끝 */}
-              {!sajuResult.isPaid && (
-                <div className="w-full flex flex-col items-center mt-12 mb-8">
-                  <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/30 to-transparent mb-6" />
-                  <button
-                    onClick={handleBasicPayment}
-                    className="text-amber-500/70 hover:text-amber-400 font-serif text-sm tracking-[0.15em] transition-colors duration-300 group"
-                  >
-                    <span className="border-b border-amber-600/30 group-hover:border-amber-500/50 pb-1">
-                      봉인 해제하고 전문 열람하기 →
-                    </span>
-                  </button>
-                  <p className="text-stone-600 text-xs mt-3 font-serif">7개 장의 상세 분석이 해금됩니다</p>
+                  {/* Secondary CTA - 제3서 끝 */}
+                  {!sajuResult.isPaid && (
+                    <div className="w-full flex flex-col items-center mt-12 mb-8">
+                      <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-600/30 to-transparent mb-6" />
+                      <button
+                        onClick={handleBasicPayment}
+                        className="text-amber-500/70 hover:text-amber-400 font-serif text-sm tracking-[0.15em] transition-colors duration-300 group"
+                      >
+                        <span className="border-b border-amber-600/30 group-hover:border-amber-500/50 pb-1">
+                          봉인 해제하고 전문 열람하기 →
+                        </span>
+                      </button>
+                      <p className="text-stone-600 text-xs mt-3 font-serif">7개 장의 상세 분석이 해금됩니다</p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1640,28 +1762,6 @@ const ResultPage = () => {
         }
 
         {/* Floating Action Button (PDF) - 숨김 처리 (나중에 위치 결정 후 재활성화) */}
-        {/* FAB는 인라인 CTA로 대체되어 숨김 처리됨 */}
-        {
-          false && showFab && (
-            <div className="fixed bottom-6 left-0 w-full flex justify-center z-40 pointer-events-none animate-fade-in">
-              <div className="w-full max-w-[480px] px-6 pointer-events-auto">
-                {sajuResult.isPaid ? (
-                  <div className="flex gap-2">
-                    <button onClick={handlePdfPreview} className="flex-1 bg-[#2a2a2c] text-stone-300 py-4 rounded font-bold border border-amber-900/30 flex items-center justify-center gap-2 font-serif"><Eye size={18} /> 미리보기</button>
-                    <button onClick={handlePdfPayment} className="flex-[2] bg-[#3f2e18] text-amber-100 py-4 rounded font-bold border border-amber-700/50 flex items-center justify-center gap-2 font-serif"><Download size={18} /> <span>영구 소장하기</span></button>
-                  </div>
-                ) : (
-                  <button onClick={handleBasicPayment} className="group relative w-full overflow-hidden rounded py-5 shadow-2xl transition-all">
-                    <div className="absolute inset-0 bg-gradient-to-r from-amber-900 via-amber-800 to-amber-900" />
-                    <div className="relative flex items-center justify-center gap-4 text-amber-100 font-serif text-lg font-bold tracking-[0.3em]">
-                      <span>천기(天機) 열람하기</span>
-                    </div>
-                  </button>
-                )}
-              </div>
-            </div>
-          )
-        }
 
       </div >
 

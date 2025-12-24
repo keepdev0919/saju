@@ -3,6 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import SajuApp from './components/SajuApp';
 import ResultPage from './pages/ResultPage';
 import ArchivePage from './pages/ArchivePage';
+import PaymentCallback from './pages/PaymentCallback';
 
 // Admin Components
 import AdminLogin from './pages/AdminLogin';
@@ -27,6 +28,9 @@ function App() {
       {/* URL 파라미터로 결과 조회: /result/:token */}
       <Route path="/result" element={<ResultPage />} />
       <Route path="/result/:token" element={<ResultPage />} />
+
+      {/* 결제 콜백 처리 (모바일/하이브리드 결제 리다이렉트용) */}
+      <Route path="/payment/callback" element={<PaymentCallback />} />
 
       {/* 관리자 페이지 */}
       <Route path="/admin/login" element={<AdminLogin />} />

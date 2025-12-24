@@ -305,3 +305,68 @@ export async function getSajuResult(req, res) {
     });
   }
 }
+
+/**
+ * AI 해석 상태 확인
+ * 사주 결과 생성 여부와 AI 데이터 포함 여부만 가볍게 확인
+ */
+export async function checkAiStatus(req, res) {
+  try {
+    const { token } = req.params;
+
+    if (!token) {
+      return res.status(400).json({ error: '토큰이 필요합니다.' });
+    }
+
+    // 사용자 조회
+    const [users] = await db.execute(
+      `SELECT id FROM users WHERE access_token = ? AND deleted_at IS NULL`,
+      [token]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
+    }
+
+    const userId = users[0].id;
+
+    // 최신 결과 조회
+    const [results] = await db.execute(
+      `SELECT id, ai_raw_response, detailed_data, created_at FROM saju_results WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`,
+      [userId]
+    );
+
+    let isCompleted = false;
+    let progress = 0;
+
+    if (results.length > 0) {
+      const result = results[0];
+      // AI 데이터가 있거나 detailed_data에 내용이 있으면 완료로 판단
+      if (result.ai_raw_response || (result.detailed_data && (typeof result.detailed_data === 'string' ? result.detailed_data.length > 50 : Object.keys(result.detailed_data).length > 2))) {
+        isCompleted = true;
+        progress = 100;
+      }
+    }
+
+    // 결제 정보 확인
+    const [payments] = await db.execute(
+      `SELECT id FROM payments WHERE user_id = ? AND product_type = 'basic' AND status = 'paid'`,
+      [userId]
+    );
+    const isPaid = payments.length > 0;
+
+    res.json({
+      success: true,
+      isPaid,
+      isCompleted,
+      progress: isCompleted ? 100 : 30
+    });
+
+  } catch (error) {
+    console.error('AI 상태 확인 오류:', error);
+    res.status(500).json({
+      error: '상태 확인 실패',
+      message: error.message
+    });
+  }
+}
