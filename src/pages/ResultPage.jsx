@@ -70,7 +70,7 @@ const getElementAura = (element) => elementAuraMap[element] || 'transparent';
 // 일간(日干)별 성격 키워드 맵
 const dayMasterDescriptions = {
   '갑': { hanja: '甲', desc: '곧게 뻗어 나가는 거목(巨木)' },
-  '을': { hanja: '乙', desc: '바람에 흔들려도 꺾이지 않는 꽃' },
+  '을': { hanja: '乙', desc: '바람에 흔들려도 꺾이지 않는 풀' },
   '병': { hanja: '丙', desc: '만물을 비추는 뜨거운 태양' },
   '정': { hanja: '丁', desc: '어둠 속에서도 길을 밝히는 촛불' },
   '무': { hanja: '戊', desc: '묵직하고 흔들림 없는 큰 산' },
@@ -278,6 +278,8 @@ const ResultPage = () => {
   const [isTalismanFlipped, setIsTalismanFlipped] = useState(false);
   const [isTalismanPurchased, setIsTalismanPurchased] = useState(false);
   const [showPurchaseSheet, setShowPurchaseSheet] = useState(false);
+  const [showOhengInfo, setShowOhengInfo] = useState(false);
+  const [ohengTab, setOhengTab] = useState('sangseong'); // 'sangseong' or 'sanggeuk'
 
   // 애니메이션 상태
   const [mounted, setMounted] = useState(false);
@@ -917,22 +919,55 @@ const ResultPage = () => {
               </div>
 
               {/* 오행 차트 - 가시성 복구 및 패딩 최적화 */}
-              <div className="w-full max-w-xs relative reveal-item delay-100 min-h-[300px] flex items-center justify-center">
+              <div
+                className="w-full max-w-xs relative reveal-item delay-100 min-h-[300px] flex flex-col items-center justify-center cursor-pointer group"
+                onClick={() => setShowOhengInfo(true)}
+              >
                 <div className="relative flex flex-col items-center">
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] h-[240px] bg-amber-800/10 blur-[80px] rounded-full"></div>
-
-                  <svg width="260" height="260" viewBox="0 0 120 120" className="overflow-visible relative z-10 scale-110 sm:scale-125">
+                  <svg width="260" height="260" viewBox="0 0 120 120" className="overflow-visible relative z-10 scale-110 sm:scale-125 transition-transform duration-500 group-hover:scale-[1.15] sm:group-hover:scale-[1.3]">
                     <defs>
-                      <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-                        <feGaussianBlur stdDeviation="1.5" result="blur" />
-                        <feComposite in="SourceGraphic" in2="blur" operator="over" />
-                      </filter>
                       <linearGradient id="poly-grad" x1="0%" y1="0%" x2="100%" y2="100%">
                         <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
                         <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
                         <stop offset="100%" stopColor="#78350f" stopOpacity="0.7" />
                       </linearGradient>
+                      <radialGradient id="bg-glow" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+                        <stop offset="0%" stopColor="#92400e" stopOpacity="0.15" />
+                        <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+                      </radialGradient>
+
+                      {/* 궤도 경로 정의 - 반지름 53 원형 */}
+                      <path id="orbit-path" d="M 60,7 A 53,53 0 1,1 59.99,7" fill="none" />
+
+                      {/* 황금빛 그라디언트 - 신비로운 후광 효과 */}
+                      <radialGradient id="mystic-glow">
+                        <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />      {/* 중심: 밝은 크림 */}
+                        <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.9" />   {/* amber-300 */}
+                        <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />   {/* amber-500 */}
+                        <stop offset="100%" stopColor="#d97706" stopOpacity="0" />    {/* amber-600 페이드아웃 */}
+                      </radialGradient>
+
+                      {/* 빛나는 입자 필터 - 다층 블러 효과 */}
+                      <filter id="particle-glow" x="-200%" y="-200%" width="400%" height="400%">
+                        {/* 강한 외곽 glow */}
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+                        {/* 중간 glow */}
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur2" />
+                        {/* 선명한 중심 */}
+                        <feGaussianBlur in="SourceGraphic" stdDeviation="0.3" result="blur3" />
+
+                        {/* 레이어 합성 */}
+                        <feMerge>
+                          <feMergeNode in="blur1" />  {/* 가장 넓은 후광 */}
+                          <feMergeNode in="blur2" />  {/* 중간 후광 */}
+                          <feMergeNode in="blur3" />  {/* 선명한 중심 */}
+                          <feMergeNode in="SourceGraphic" />  {/* 원본 */}
+                        </feMerge>
+                      </filter>
                     </defs>
+
+                    {/* Background Glow Circle (Replaces CSS Blur Div) */}
+                    <circle cx="60" cy="60" r="60" fill="url(#bg-glow)" />
 
                     {[15, 30, 45].map((r, i) => (
                       <circle key={i} cx="60" cy="60" r={r} fill="none" stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.2" />
@@ -944,6 +979,47 @@ const ResultPage = () => {
                         <line key={i} x1="60" y1="60" x2={60 + 45 * Math.cos(rad)} y2={60 + 45 * Math.sin(rad)} stroke="rgba(217, 119, 6, 0.1)" strokeWidth="0.3" />
                       );
                     })}
+
+                    {/* 상극의 별 (Inner Star) - Pentagram (Control Cycle) */}
+                    <path
+                      d={
+                        [0, 144, 288, 72, 216].map((angle, i) => {
+                          const rad = (angle - 90) * (Math.PI / 180);
+                          const r = 45;
+                          const x = 60 + r * Math.cos(rad);
+                          const y = 60 + r * Math.sin(rad);
+                          return (i === 0 ? 'M' : 'L') + x + ',' + y;
+                        }).join(' ') + ' Z'
+                      }
+                      fill="none"
+                      stroke="rgba(180, 83, 9, 0.1)"
+                      strokeWidth="0.4"
+                      strokeDasharray="2 2"
+                    />
+
+                    {/* 상생의 궤도 (Outer Orbit) - Generation Cycle */}
+                    <circle cx="60" cy="60" r="53" fill="none" stroke="rgba(251, 191, 36, 0.15)" strokeWidth="0.4" />
+
+                    {/* 순환하는 빛 (Orbiting Light) - SVG Native Animation */}
+                    <circle r="2.5" fill="url(#mystic-glow)" filter="url(#particle-glow)">
+                      <animateMotion dur="24s" repeatCount="indefinite">
+                        <mpath href="#orbit-path" />
+                      </animateMotion>
+                      {/* 펄스 애니메이션 - 맥박처럼 커졌다 작아짐 */}
+                      <animate
+                        attributeName="r"
+                        values="2.2;3.2;2.2"
+                        dur="2.5s"
+                        repeatCount="indefinite"
+                      />
+                      {/* 투명도 펄스 - 빛의 강약 */}
+                      <animate
+                        attributeName="opacity"
+                        values="0.85;1;0.85"
+                        dur="2.5s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
 
                     {(() => {
                       try {
@@ -1043,6 +1119,12 @@ const ResultPage = () => {
                       }
                     })()}
                   </svg>
+                </div>
+                {/* 힌트 텍스트 (Guidance) */}
+                <div className="mt-4 sm:mt-8 md:mt-10 opacity-0 animate-fade-in delay-1000 fill-mode-forwards pointer-events-none">
+                  <p className="text-[10px] text-amber-500/40 font-serif tracking-widest text-center">
+                    * 궤도를 도는 빛을 눌러보세요
+                  </p>
                 </div>
               </div>
 
@@ -1164,21 +1246,6 @@ const ResultPage = () => {
             })()}
           </section>
 
-          {/* 중간 힌트 (Sub CTA) */}
-          {
-            !sajuResult.isPaid && (
-              <div className="flex justify-center pb-8">
-                <button
-                  onClick={handleBasicPayment}
-                  className="text-amber-600/70 hover:text-amber-500 font-serif text-sm tracking-wider transition-colors flex items-center gap-2"
-                >
-                  <Lock size={14} />
-                  <span>봉인된 천기(天機)를 지금 바로 확인하기</span>
-                </button>
-              </div>
-            )
-          }
-
           {/* Step 4: The Sealed Archive - 제 3권: 천개의 비밀 */}
           <section className="snap-section px-6 h-auto pb-20" style={{ paddingTop: 'var(--safe-area-top)' }}>
             {/* Chapter 3 Heading */}
@@ -1196,10 +1263,15 @@ const ResultPage = () => {
                 <div className="relative py-4 mb-6">
                   <div className="absolute -top-1 left-0 text-stone-700 text-lg">「</div>
                   <p className="text-stone-400 text-[12px] font-serif tracking-wider leading-relaxed text-center px-4">
-                    운명을 지탱하는 일곱 가지 기둥.<br />
-                    당신의 삶을 관통하는 하늘의 비밀을 기록했습니다.
+                    운명을 지탱하는 <span className="text-[#e8dac0] italic">일곱 가지 기둥</span>.<br />
+                    당신의 삶을 관통하는 <span className="text-[#e8dac0] italic">하늘의 비밀</span>을 기록했습니다.
                   </p>
                   <div className="absolute -bottom-1 right-0 text-stone-700 text-lg">」</div>
+                </div>
+
+                {/* Vertical Flow Line */}
+                <div className="flex justify-center -mt-2 mb-2 opacity-40">
+                  <div className="w-px h-16 bg-gradient-to-b from-amber-600/50 to-transparent"></div>
                 </div>
               </div>
             </div>
@@ -1641,6 +1713,136 @@ const ResultPage = () => {
             </div>
           </div>
         </>
+      )}
+
+      {/* 오행 정보 모달 (Five Elements Info Modal) */}
+      {showOhengInfo && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowOhengInfo(false)} />
+          <div className="relative w-full max-w-md bg-[#050505] border border-amber-800/30 shadow-2xl animate-fade-in">
+            {/* 장식용 코너 */}
+            <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-amber-600/50" />
+            <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-amber-600/50" />
+            <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-amber-600/50" />
+            <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-amber-600/50" />
+
+            <div className="text-center">
+              {/* 제목 */}
+              <div className="py-6 border-b border-amber-800/20">
+                <h3 className="text-lg font-serif text-amber-500 tracking-[0.3em] font-bold">
+                  五行의 순환
+                </h3>
+              </div>
+
+              {/* 탭 */}
+              <div className="flex border-b border-stone-800">
+                <button
+                  onClick={() => setOhengTab('sangseong')}
+                  className={`flex-1 py-3 text-sm font-medium tracking-wide transition-colors ${ohengTab === 'sangseong'
+                    ? 'text-amber-400 bg-amber-900/20 border-b-2 border-amber-500'
+                    : 'text-stone-500 hover:text-stone-300'
+                    }`}
+                >
+                  相生 (상생)
+                </button>
+                <button
+                  onClick={() => setOhengTab('sanggeuk')}
+                  className={`flex-1 py-3 text-sm font-medium tracking-wide transition-colors ${ohengTab === 'sanggeuk'
+                    ? 'text-stone-300 bg-stone-900/30 border-b-2 border-stone-500'
+                    : 'text-stone-500 hover:text-stone-300'
+                    }`}
+                >
+                  相剋 (상극)
+                </button>
+              </div>
+
+              {/* 컨텐츠 */}
+              <div className="p-8 min-h-[280px] flex flex-col items-center justify-center">
+                {ohengTab === 'sangseong' ? (
+                  <div className="space-y-5 animate-fade-in">
+                    {/* 한자 순환 - 작은 화살표로 연결 */}
+                    <div className="text-center">
+                      <p className="text-lg font-bold leading-relaxed flex items-center justify-center gap-1">
+                        <span className="tracking-wider" style={{ color: '#059669' }}>木</span>
+                        <span className="text-xs text-amber-600/40">→</span>
+                        <span className="tracking-wider" style={{ color: '#e11d48' }}>火</span>
+                        <span className="text-xs text-amber-600/40">→</span>
+                        <span className="tracking-wider" style={{ color: '#d97706' }}>土</span>
+                        <span className="text-xs text-amber-600/40">→</span>
+                        <span className="tracking-wider" style={{ color: '#d6d3d1' }}>金</span>
+                        <span className="text-xs text-amber-600/40">→</span>
+                        <span className="tracking-wider" style={{ color: '#94a3b8' }}>水</span>
+                      </p>
+                      <p className="text-[10px] text-stone-500/60 mt-2 tracking-wider">
+                        목 화 토 금 수
+                      </p>
+                    </div>
+
+                    {/* 예시 문장 */}
+                    <p className="text-xs text-stone-400 leading-relaxed px-4">
+                      <span className="text-amber-500/70">"나무가 불을 피우고, 재가 흙이 되는 이치"</span><br />
+                      서로를 돕고 키워주는 황금 궤도의 흐름입니다.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-5 animate-fade-in">
+                    {/* 한자 제어 관계 - 화살표 + 슬래시로 구분 */}
+                    <div className="text-center space-y-2">
+                      <p className="text-base font-bold leading-relaxed flex items-center justify-center gap-2 flex-wrap">
+                        <span className="flex items-center gap-1">
+                          <span style={{ color: '#94a3b8' }}>水</span>
+                          <span className="text-xs text-stone-600/40">→</span>
+                          <span style={{ color: '#e11d48' }}>火</span>
+                        </span>
+                        <span className="text-stone-600/60">/</span>
+                        <span className="flex items-center gap-1">
+                          <span style={{ color: '#e11d48' }}>火</span>
+                          <span className="text-xs text-stone-600/40">→</span>
+                          <span style={{ color: '#d6d3d1' }}>金</span>
+                        </span>
+                        <span className="text-stone-600/60">/</span>
+                        <span className="flex items-center gap-1">
+                          <span style={{ color: '#d6d3d1' }}>金</span>
+                          <span className="text-xs text-stone-600/40">→</span>
+                          <span style={{ color: '#059669' }}>木</span>
+                        </span>
+                      </p>
+                      <p className="text-base font-bold leading-relaxed flex items-center justify-center gap-2">
+                        <span className="flex items-center gap-1">
+                          <span style={{ color: '#059669' }}>木</span>
+                          <span className="text-xs text-stone-600/40">→</span>
+                          <span style={{ color: '#d97706' }}>土</span>
+                        </span>
+                        <span className="text-stone-600/60">/</span>
+                        <span className="flex items-center gap-1">
+                          <span style={{ color: '#d97706' }}>土</span>
+                          <span className="text-xs text-stone-600/40">→</span>
+                          <span style={{ color: '#94a3b8' }}>水</span>
+                        </span>
+                      </p>
+                      <p className="text-[10px] text-stone-500/50 mt-2 tracking-wider">
+                        물이 불을 제압, 불이 쇠를 제압...
+                      </p>
+                    </div>
+
+                    {/* 예시 문장 */}
+                    <p className="text-xs text-stone-400 leading-relaxed px-4">
+                      <span className="text-stone-500/70">"물이 불을 끄거나, 쇠가 나무를 다듬는 것"</span><br />
+                      서로를 제어하고 균형 잡는 별 모양의 힘입니다.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={() => setShowOhengInfo(false)}
+              className="absolute top-4 right-4 text-stone-600 hover:text-stone-300 p-2 transition-colors"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
       )}
 
     </div >

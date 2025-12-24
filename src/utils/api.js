@@ -14,7 +14,7 @@ const detectApiBaseUrl = () => {
     return `${protocol}//${hostname}:${apiPort}/api`;
   }
 
-  return 'http://localhost:3000/api';
+  return 'http://172.30.1.88:3000/api';
 };
 
 const API_BASE_URL = detectApiBaseUrl();
