@@ -29,3 +29,7 @@ backend/.env
 *.njsproj
 *.sln
 *.sw?
+
+# Media
+video/
+.env*.local

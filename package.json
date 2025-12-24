@@ -11,9 +11,14 @@
   },
   "dependencies": {
     "axios": "^1.13.2",
+    "html2canvas": "^1.4.1",
     "lucide-react": "^0.560.0",
+    "pdfjs-dist": "^5.4.449",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0"
+    "react-dom": "^19.2.0",
+    "react-pdf": "^10.2.0",
+    "react-router-dom": "^7.10.1",
+    "recharts": "^3.6.0"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
