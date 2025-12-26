@@ -4,7 +4,7 @@
  */
 import db from '../config/database.js';
 import { calculateSaju as callSajuAPI } from '../services/sajuService.js';
-import { interpretSajuWithAI, generateScoresFromWuxing } from '../services/aiService.js';
+import { interpretSajuWithAI } from '../services/aiService.js';
 
 /**
  * 사주 계산
@@ -46,6 +46,37 @@ export async function calculateSaju(req, res) {
     if (!birthTime) birthTime = user.birth_time;
     if (!calendarType) calendarType = user.calendar_type;
 
+    // [OPTIMIZATION] 이미 생성된 유료 결과가 있는지 확인
+    const [existingResults] = await db.execute(
+      `SELECT * FROM saju_results WHERE user_id = ? ORDER BY created_at DESC LIMIT 1`,
+      [userId]
+    );
+
+    if (existingResults.length > 0) {
+      const row = existingResults[0];
+      try {
+        const data = JSON.parse(row.saju_data || '{}');
+        if (data.detailedData && data.detailedData.personality) {
+          console.log('✅ 기존 유료 결과 발견! 중복 계산 스킵 및 즉시 반환 (ID:', row.id, ')');
+          return res.json({
+            success: true,
+            resultId: row.id,
+            result: {
+              ...JSON.parse(row.oheng_data || '{}'),
+              overall: row.overall_fortune,
+              wealth: row.wealth_fortune,
+              love: row.love_fortune,
+              career: row.career_fortune,
+              health: row.health_fortune,
+              detailedData: data.detailedData,
+              analysisLogs: []
+            },
+            message: '사주 계산이 완료되었습니다.'
+          });
+        }
+      } catch (e) { /* ignore parse error and proceed */ }
+    }
+
     // [FIX] DB에서 가져온 birthDate가 Date 객체인 경우
     // Timezone 이슈(UTC vs KST)로 인한 -1일 문제 방지
     // toISOString() 대신 로컬 시간 기준 연월일 추출 사용
@@ -85,8 +116,7 @@ export async function calculateSaju(req, res) {
       day: `${sajuData.day.gan}${sajuData.day.ji}`,
       hour: `${sajuData.hour.gan}${sajuData.hour.ji}`,
       dayMaster: sajuData.dayMaster,
-      wuxing: sajuData.wuxing,
-      yongshen: sajuData.yongshen
+      wuxing: sajuData.wuxing
     });
 
     // 2단계: AI로 해석 생성
@@ -102,29 +132,21 @@ export async function calculateSaju(req, res) {
     detailedDataToSave.talisman = result.talisman;
     detailedDataToSave.yongshen = result.yongshen; // [NEW] AI 용신 데이터 저장
 
-    // 결과 저장
+    // 결과 저장 (스키마에 맞게 수정)
     const [resultData] = await db.execute(
       `INSERT INTO saju_results
        (user_id, saju_data, overall_fortune, wealth_fortune, love_fortune,
-        career_fortune, health_fortune, overall_score, wealth_score,
-        love_score, career_score, health_score, oheng_data, ai_raw_response, detailed_data)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        career_fortune, health_fortune, oheng_data)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
-        JSON.stringify(sajuData),
+        JSON.stringify({ ...sajuData, detailedData: detailedDataToSave }), // detailedData를 saju_data에 포함
         result.overall,
         result.wealth,
         result.love,
         result.career,
         result.health,
-        result.scores.overall,
-        result.scores.wealth,
-        result.scores.love,
-        result.scores.career,
-        result.scores.health,
-        JSON.stringify(result.oheng),
-        result.aiRawResponse || null,  // 원본 응답 저장
-        JSON.stringify(detailedDataToSave)
+        JSON.stringify(result.oheng)
       ]
     );
 
@@ -175,6 +197,43 @@ export async function calculateFreeResult(req, res) {
     const user = users[0];
     const userId = user.id;
 
+    // [OPTIMIZATION] 기존에 결제하여 AI 결과가 있는지 먼저 확인 ('함수 수정 방식')
+    // 가장 최근 결과 중 saju_data 안에 detailedData가 있는 것을 조회
+    const [existingResults] = await db.execute(
+      `SELECT * FROM saju_results WHERE user_id = ? ORDER BY created_at DESC`,
+      [userId]
+    );
+
+    // AI 데이터가 있는 결과 찾기
+    const paidResult = existingResults.find(row => {
+      try {
+        const data = JSON.parse(row.saju_data || '{}');
+        return data.detailedData && data.detailedData.personality; // AI 데이터 존재 확인
+      } catch (e) { return false; }
+    });
+
+    // 기존 유료 결과가 있으면 즉시 반환 (LITERAL PASS-THROUGH)
+    if (paidResult) {
+      console.log('✅ 기존 유료 결과 발견! 무료 계산 스킵 및 즉시 반환 (ID:', paidResult.id, ')');
+
+      const parsedSajuData = JSON.parse(paidResult.saju_data);
+      const detailedData = parsedSajuData.detailedData;
+
+      return res.json({
+        success: true,
+        result: {
+          id: paidResult.id,
+          sajuData: parsedSajuData,
+          oheng: JSON.parse(paidResult.oheng_data || '{}'),
+          talisman: detailedData.talisman,
+          detailedData: detailedData,
+          isPaid: true, // 프론트엔드에 유료 상태임을 알림
+          analysisLogs: [] // 로딩 스킵을 위해 빈 로그 전달
+        },
+        message: '기존 유료 결과를 불러왔습니다.'
+      });
+    }
+
     // 1단계: lunar-javascript로 사주 계산 (매우 빠름)
     const sajuData = await callSajuAPI({
       birthDate,
@@ -184,23 +243,15 @@ export async function calculateFreeResult(req, res) {
       gender: user.gender
     });
 
-    // 오행 분석 데이터를 기반으로 기초 점수 생성
-    const scores = generateScoresFromWuxing(sajuData.wuxing);
-
     // 기본 결과 저장 (AI 데이터는 비워둠)
     const [resultData] = await db.execute(
       `INSERT INTO saju_results
-       (user_id, saju_data, oheng_data, overall_score, wealth_score, love_score, career_score, health_score)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+       (user_id, saju_data, oheng_data)
+       VALUES (?, ?, ?)`,
       [
         userId,
         JSON.stringify(sajuData),
-        JSON.stringify(sajuData.wuxing), // 서비스에서 계산된 오행
-        scores.overall,
-        scores.wealth,
-        scores.love,
-        scores.career,
-        scores.health
+        JSON.stringify(sajuData.wuxing) // 서비스에서 계산된 오행
       ]
     );
 
@@ -210,7 +261,7 @@ export async function calculateFreeResult(req, res) {
         sajuData,
         oheng: sajuData.wuxing,
         analysisLogs: sajuData.analysisLogs, // 서비스에서 계산된 실시간 로그 포함
-        scores, // 계산된 기초 점수 포함
+
         isPaid: false
       },
       message: '기초 사주 계산이 완료되었습니다.'
@@ -287,6 +338,10 @@ export async function getSajuResult(req, res) {
       return data;
     };
 
+    // saju_data에서 detailedData 추출 (스키마 변경으로 saju_data 안에 저장됨)
+    const parsedSajuData = parseJsonData(result.saju_data, {});
+    const detailedData = parsedSajuData.detailedData || null;
+
     res.json({
       success: true,
       user: {
@@ -306,17 +361,17 @@ export async function getSajuResult(req, res) {
         careerFortune: result.career_fortune,
         healthFortune: result.health_fortune,
         scores: {
-          overall: result.overall_score,
-          wealth: result.wealth_score,
-          love: result.love_score,
-          career: result.career_score,
-          health: result.health_score
+          overall: result.overall_score || 0,
+          wealth: result.wealth_score || 0,
+          love: result.love_score || 0,
+          career: result.career_score || 0,
+          health: result.health_score || 0
         },
         oheng: parseJsonData(result.oheng_data, {}),
-        sajuData: parseJsonData(result.saju_data, {}),
-        talisman: parseJsonData(result.detailed_data, null)?.talisman || { name: '갑자' },
-        aiRawResponse: result.ai_raw_response || null,  // 원본 응답 포함
-        detailedData: parseJsonData(result.detailed_data, null)  // 상세 데이터 포함
+        sajuData: parsedSajuData,
+        talisman: detailedData?.talisman || { name: '갑자' },
+        aiRawResponse: null,  // 더 이상 별도 저장 안 함
+        detailedData: detailedData  // saju_data에서 추출한 상세 데이터
       }
     });
   } catch (error) {

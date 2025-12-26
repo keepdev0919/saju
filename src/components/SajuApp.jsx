@@ -36,7 +36,18 @@ const SajuApp = () => {
   const location = useLocation(); // [NEW] Get location state
 
   // 현재 화면 단계 상태 (landing, input, payment, analyzing, result)
-  const [step, setStep] = useState('landing');
+  const [step, setStepState] = useState('landing');
+
+  // step 변경 시 URL query parameter도 함께 업데이트하는 헬퍼 함수
+  const setStep = (newStep) => {
+    setStepState(newStep);
+    // URL에 step 파라미터 추가 (landing일 때는 파라미터 제거)
+    if (newStep === 'landing') {
+      navigate('/', { replace: true });
+    } else {
+      navigate(`/?step=${newStep}`, { replace: true });
+    }
+  };
 
   // [NEW] 외부에서 특정 단계로 바로 진입 요청 시 처리 (Archive -> Input)
   useEffect(() => {
@@ -439,7 +450,7 @@ const SajuApp = () => {
 
         // 모든 로그가 다 읽히고 1초 뒤에 결과 페이지로 이동 (여유 전환경로)
         setTimeout(() => {
-          navigate(`/result/${accessToken}`);
+          navigate(`/result/${accessToken}`, { state: { isNewPayment: true } });
           setLoading(false);
         }, dynamicDuration + 1000);
       }
@@ -560,7 +571,13 @@ const SajuApp = () => {
 
         // 전체 동적 시간이 흐른 뒤 결과로 이동
         setTimeout(() => {
-          navigate(`/result/${token}`);
+          // [FIX] 데이터를 state로 전달하여 ResultPage에서 중복 fetch 방지
+          navigate(`/result/${token}`, {
+            state: {
+              prefetchedResult: sajuResponse.result,
+              prefetchedUser: userInfo
+            }
+          });
           setLoading(false);
         }, 1000);
       }, dynamicAnalysisTime);

@@ -13,9 +13,15 @@ const PaymentCallback = () => {
     const navigate = useNavigate();
     const [status, setStatus] = useState('verifying'); // verifying, success, error
     const [message, setMessage] = useState('천계(天界)의 응답을 확인하고 있습니다...');
+    const hasProcessed = React.useRef(false);
 
     useEffect(() => {
+        if (hasProcessed.current) return;
+
         const processPayment = async () => {
+            if (hasProcessed.current) return;
+            hasProcessed.current = true;
+
             // 1. URL 파라미터 파싱
             const imp_uid = searchParams.get('imp_uid');
             const merchant_uid = searchParams.get('merchant_uid'); // merchant_2026_...
@@ -58,6 +64,7 @@ const PaymentCallback = () => {
                 const { accessToken } = verifyResponse;
 
                 // 4. AI 분석 요청 (백그라운드 트리거)
+                // [FIX] ResultPage는 폴링만 하므로, 여기서 계산을 시작해주어야 함 (무한로딩 해결)
                 calculateSaju({
                     accessToken,
                 }).catch(err => console.warn('Background calc trigger warning:', err));
@@ -69,7 +76,7 @@ const PaymentCallback = () => {
                 // 잠시 후 이동
                 setTimeout(() => {
                     if (accessToken) {
-                        navigate(`/result/${accessToken}`, { replace: true });
+                        navigate(`/result/${accessToken}`, { replace: true, state: { isNewPayment: true } });
                     } else {
                         navigate('/', { replace: true });
                     }

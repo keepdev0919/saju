@@ -63,11 +63,8 @@ CREATE TABLE IF NOT EXISTS saju_results (
   health_fortune TEXT,               -- 건강운
   
   -- 점수
-  overall_score INT,
-  wealth_score INT,
-  love_score INT,
-  career_score INT,
-  health_score INT,
+  -- 점수 컬럼 삭제됨
+
   
   -- 오행 분석
   oheng_data JSON,                   -- { "목": 20, "화": 60, ... }
