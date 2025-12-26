@@ -1,6 +1,6 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import html2canvas from 'html2canvas';
-import { Download, Lock, Sun, ShieldCheck, Info, Image as ImageIcon } from 'lucide-react';
+import { Download, Lock, Sun, ShieldCheck, Info } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
 
 // Helper function: 보관소 가리기 효과 (모든 카드 동일 적용)

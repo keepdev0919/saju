@@ -206,7 +206,7 @@ JSON의 yongshen 필드를 채우기 위해 다음 순서를 엄격히 따르세
   // [2. 답안지 틀 (Dynamic Schema)]
   const OUTPUT_SCHEMA = {
     "yongshen": {
-      "element": "용신 오행 (한글: 목, 화, 토, 금, 수 중 하나)",
+      "element": "용신 오행 ('목', '화', '토', '금', '수' 중 하나를 반드시 선택)",
       "reason": "용신 선정 이유 (조후/억부/통관 중 어떤 원칙에 따라 선택되었는지, 판단 근거를 자연스럽게 설명)"
     },
     "personality": {
@@ -317,9 +317,10 @@ ${JSON.stringify(OUTPUT_SCHEMA, null, 2)}
   // 용신 데이터 검증 (AI가 가끔 빼먹을 수 있음)
   if (!parsedData.yongshen || !parsedData.yongshen.element) {
     console.warn('⚠️ AI가 용신을 반환하지 않음, 폴백 용신 사용');
+    const fallbackElement = findFallbackYongshen(sajuData.wuxing);
     parsedData.yongshen = {
-      element: findFallbackYongshen(sajuData.wuxing),
-      reason: "오행의 균형을 맞추기 위해 선택된 용신입니다.",
+      element: fallbackElement,
+      reason: getYongshenFallbackMessage(fallbackElement),
     };
   }
   // --- [NEW] Talisman Recommendation Logic (Expert System) ---
@@ -405,10 +406,32 @@ ${JSON.stringify(OUTPUT_SCHEMA, null, 2)}
 }
 
 /**
+ * 오행별 폴백 메시지 생성
+ * "부족한 기운을 채워준다"는 용신의 본질을 문학적으로 표현
+ * @param {string} element - 오행 ('목', '화', '토', '금', '수')
+ * @returns {string} 해당 오행에 맞는 문학적 폴백 메시지
+ */
+function getYongshenFallbackMessage(element) {
+  const messages = {
+    '목': "당신의 사주에는 푸른 생명력의 기운이 더 필요합니다. 봄날의 새싹이 대지를 뚫고 솟아오르듯, 이 기운을 채워 새로운 시작과 성장의 힘을 불어넣어 드립니다.",
+
+    '화': "당신의 사주에는 따뜻한 열정의 기운이 더 필요합니다. 한겨울 밤을 밝히는 화롯불처럼, 이 기운을 채워 당신의 앞길을 환하게 비추고 희망의 불씨를 지펴드립니다.",
+
+    '토': "당신의 사주에는 단단한 대지의 기운이 더 필요합니다. 만물을 품어 결실로 이끄는 땅처럼, 이 기운을 채워 흔들리지 않는 안정과 풍요의 터전을 마련해 드립니다.",
+
+    '금': "당신의 사주에는 예리한 통찰의 기운이 더 필요합니다. 가을 서리가 만물의 본질을 드러내듯, 이 기운을 채워 혼란 속에서도 올바른 길을 분별하는 지혜를 선사합니다.",
+
+    '수': "당신의 사주에는 깊은 지혜의 기운이 더 필요합니다. 메마른 땅에 스며드는 샘물처럼, 이 기운을 채워 지친 마음을 어루만지고 유연하게 흐르는 회복의 힘을 드립니다."
+  };
+
+  return messages[element] || messages['목']; // 기본값: 목
+}
+
+/**
  * 폴백 용신 찾기 (AI가 용신을 반환하지 않았을 때 사용)
  * 오행 분포 중 가장 낮은 비율의 오행을 선택 (균형을 맞추기 위한 최소한의 대안)
  * 주의: 이는 간단한 폴백 로직이며, 정확한 용신 판단을 대체할 수 없습니다.
- * 
+ *
  * @param {Object} wuxing - 오행 분포 객체 { 목: 20, 화: 30, 토: 15, 금: 10, 수: 25 }
  * @returns {string} 용신 오행 ('목', '화', '토', '금', '수' 중 하나)
  */
@@ -459,18 +482,18 @@ function generateFallbackInterpretation(sajuData) {
         branch: '자',
         branchAnimal: '쥐',
         userYearJi: ANIMAL_MAP[userYearJi] || '쥐',
-        yongshenReason: "오행의 균형을 맞추기 위해 선택된 용신입니다. (폴백 모드)"
+        yongshenReason: getYongshenFallbackMessage(fallbackElement)
       }
     },
     yongshen: {
       element: fallbackElement,
-      reason: "오행의 균형을 맞추기 위해 선택된 용신입니다. (자동 폴백 처리됨)"
+      reason: getYongshenFallbackMessage(fallbackElement)
     },
     aiRawResponse: null,
     detailedData: {
       yongshen: {
         element: fallbackElement,
-        reason: "오행의 균형을 맞추기 위해 선택된 용신입니다. (자동 폴백 처리됨)"
+        reason: getYongshenFallbackMessage(fallbackElement)
       }
     }
   };

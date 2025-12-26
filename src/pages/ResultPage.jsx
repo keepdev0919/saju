@@ -11,6 +11,7 @@ import { Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Responsi
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import TalismanCard from '../components/TalismanCard';
+import HanjaInputModal from '../components/HanjaInputModal';
 import { talismanNames } from '../data/talismanData';
 import { getGanColor, getJiAnimal, ganHanjaMap, jiHanjaMap } from '../utils/sajuHelpers';
 
@@ -310,6 +311,7 @@ const ResultPage = () => {
   const [showPurchaseSheet, setShowPurchaseSheet] = useState(false);
   const [showOhengInfo, setShowOhengInfo] = useState(false);
   const [ohengTab, setOhengTab] = useState('sangseong'); // 'sangseong' or 'sanggeuk'
+  const [showHanjaModal, setShowHanjaModal] = useState(false); // 한자 입력 모달
 
   // 애니메이션 상태
   const [mounted, setMounted] = useState(false);
@@ -648,6 +650,62 @@ const ResultPage = () => {
       const pdf = await generatePDF({ userId: userInfo.id, resultId: sajuResult.id });
       if (pdf.success) window.open(getPdfDownloadUrl(token), '_blank');
     } catch (e) { setPdfError(e.message); } finally { setPdfLoading(false); }
+  };
+
+  // 프리미엄 - 수호신 카드 다운로드 (서버에서 한자 각인)
+  const handleDownloadTalismanCard = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talisman/download/${token}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '다운로드에 실패했습니다.');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `수호신_${userInfo?.name || '사용자'}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('수호신 카드 다운로드 실패:', error);
+      alert(error.message);
+    }
+  };
+
+  // 프리미엄 - 전체 PDF 다운로드
+  const handleDownloadPDF = async () => {
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/pdf/download/${token}`);
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'PDF 다운로드에 실패했습니다.');
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `천명록_${userInfo?.name || '사용자'}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('PDF 다운로드 실패:', error);
+      alert(error.message);
+    }
+  };
+
+  // 한자 입력 모달 제출 (결제 성공 후 호출됨)
+  const handleHanjaSubmit = (hanjaName) => {
+    console.log('한자 이름 제출:', hanjaName);
+    // 결제 성공 후 페이지 새로고침은 모달 내부에서 처리됨
   };
 
   // AI 완료 상태 폴링 시작
@@ -1606,6 +1664,20 @@ const ResultPage = () => {
                             {sajuResult.detailedData.career.sub3}
                           </p>
                         </div>
+
+                        {/* [NEW] 추천 직업 분야 (suitableFields) */}
+                        {sajuResult.detailedData?.career?.suitableFields && (
+                          <div className="mt-6 border-t border-orange-900/10 pt-4">
+                            <h6 className="text-orange-900/60 text-[10px] font-bold tracking-widest mb-3 uppercase">추천 업종 (推荐)</h6>
+                            <div className="flex flex-wrap gap-2">
+                              {sajuResult.detailedData.career.suitableFields.map((field, idx) => (
+                                <span key={idx} className="text-xs text-orange-200/70 bg-stone-900/80 px-3 py-1.5 rounded-sm border border-orange-900/20 font-serif">
+                                  #{field}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ) : (
                       <p className="text-stone-300 leading-8 font-serif text-[15px] whitespace-pre-line text-justify">
@@ -1613,7 +1685,6 @@ const ResultPage = () => {
                       </p>
                     )}
                   </div>
-
                 </div>
               </div>
 
@@ -1920,28 +1991,58 @@ const ResultPage = () => {
                                     기운을 담은 빛깔
                                   </h5>
                                 </div>
-                                <div className="border-l-2 border-amber-600/30 pl-4 py-1 relative z-10">
-                                  <h6 className="text-amber-200/50 text-[10px] font-bold tracking-widest mb-3 uppercase">길한 색 (吉色)</h6>
-                                  <div className="flex flex-wrap gap-4 items-center">
-                                    {sajuResult.detailedData.color.good?.map((color, idx) => (
-                                      <div key={idx} className="flex items-center gap-2">
-                                        <div
-                                          className="w-5 h-5 rounded-full border border-white/10 shadow-inner"
-                                          style={{
-                                            background: color === '빨강' ? '#ef4444' :
-                                              color === '검정' ? '#0a0a0a' :
-                                                color === '파랑' ? '#3b82f6' :
-                                                  color === '녹색' ? '#22c55e' :
-                                                    color === '노랑' ? '#eab308' :
-                                                      color === '흰색' ? '#ffffff' :
-                                                        color === '갈색' ? '#92400e' :
-                                                          color === '회색' ? '#6b7280' : color
-                                          }}
-                                        />
-                                        <span className="text-stone-400 text-xs font-serif">{color}</span>
-                                      </div>
-                                    ))}
+                                <div className="space-y-6 relative z-10">
+                                  {/* 길한 색 */}
+                                  <div className="border-l-2 border-amber-600/30 pl-4 py-1">
+                                    <h6 className="text-amber-200/50 text-[10px] font-bold tracking-widest mb-3 uppercase">길한 색 (吉色)</h6>
+                                    <div className="flex flex-wrap gap-4 items-center">
+                                      {sajuResult.detailedData.color.good?.map((color, idx) => (
+                                        <div key={idx} className="flex items-center gap-2">
+                                          <div
+                                            className="w-5 h-5 rounded-full border border-white/10 shadow-inner"
+                                            style={{
+                                              background: color === '빨강' ? '#ef4444' :
+                                                color === '검정' ? '#0a0a0a' :
+                                                  color === '파랑' ? '#3b82f6' :
+                                                    color === '녹색' ? '#22c55e' :
+                                                      color === '노랑' ? '#eab308' :
+                                                        color === '흰색' ? '#ffffff' :
+                                                          color === '갈색' ? '#92400e' :
+                                                            color === '회색' ? '#6b7280' : color
+                                            }}
+                                          />
+                                          <span className="text-stone-400 text-xs font-serif">{color}</span>
+                                        </div>
+                                      ))}
+                                    </div>
                                   </div>
+
+                                  {/* 피해야 할 색 (Avoid) */}
+                                  {sajuResult.detailedData.color.avoid && (
+                                    <div className="border-l-2 border-stone-800 pl-4 py-1 opacity-60 filter grayscale">
+                                      <h6 className="text-stone-500 text-[10px] font-bold tracking-widest mb-3 uppercase">경계할 색 (忌色)</h6>
+                                      <div className="flex flex-wrap gap-4 items-center">
+                                        {sajuResult.detailedData.color.avoid.map((color, idx) => (
+                                          <div key={idx} className="flex items-center gap-2">
+                                            <div
+                                              className="w-4 h-4 rounded-full border border-white/5 shadow-inner"
+                                              style={{
+                                                background: color === '빨강' ? '#ef4444' :
+                                                  color === '검정' ? '#0a0a0a' :
+                                                    color === '파랑' ? '#3b82f6' :
+                                                      color === '녹색' ? '#22c55e' :
+                                                        color === '노랑' ? '#eab308' :
+                                                          color === '흰색' ? '#ffffff' :
+                                                            color === '갈색' ? '#92400e' :
+                                                              color === '회색' ? '#6b7280' : color
+                                              }}
+                                            />
+                                            <span className="text-stone-500 text-[10px] font-serif">{color}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             )}
@@ -1967,7 +2068,19 @@ const ResultPage = () => {
                                   </div>
                                   {sajuResult.detailedData.place && (
                                     <div className="border-l-2 border-amber-600/30 pl-4 py-1">
-                                      <h6 className="text-amber-200/50 text-[10px] font-bold tracking-widest mb-3 uppercase">길한 거주지 (吉居)</h6>
+                                      <h6 className="text-amber-200/50 text-[10px] font-bold tracking-widest mb-3 uppercase">길한 터전 (吉居/吉所)</h6>
+
+                                      {/* 길한 장소 목록 - Food 추천 스타일과 매칭 */}
+                                      {sajuResult.detailedData.place.good && (
+                                        <div className="flex flex-wrap gap-2 mb-4">
+                                          {sajuResult.detailedData.place.good.map((p, idx) => (
+                                            <span key={idx} className="text-xs text-stone-200 bg-stone-900/80 px-3 py-1.5 rounded-sm border border-amber-900/20 font-serif">
+                                              {p}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+
                                       <p className="text-stone-400 text-xs font-serif leading-relaxed italic">
                                         {sajuResult.detailedData.place.description || "당신의 기운을 보강해줄 최적의 거주 환경을 제안합니다."}
                                       </p>
@@ -2049,7 +2162,8 @@ const ResultPage = () => {
                     </div>
                   )}
                 </div>
-              )}
+              )
+              }
 
               {/* 페이지 번호 (Page 4) */}
               <div className="w-full flex justify-center items-center gap-3 pointer-events-none opacity-60 mt-12 mb-4">
@@ -2057,11 +2171,11 @@ const ResultPage = () => {
                 <span className="text-[#e8dac0] text-[10px] font-serif tracking-[0.2em]">4</span>
                 <div className="w-6 h-px bg-amber-600/30" />
               </div>
-            </div>
-          </section>
+            </div >
+          </section >
 
           {/* Step 5: Celestial Bridge - 모든 기록의 끝에서 */}
-          <section className="snap-section px-6 h-auto flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top)', minHeight: '100dvh' }}>
+          < section className="snap-section px-6 h-auto flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top)', minHeight: '100dvh' }}>
             <div className="flex flex-col items-center w-full max-w-sm reveal-item">
               <div className="flex flex-col items-center opacity-60">
                 <p className="text-amber-600/80 text-lg font-serif italic text-center animate-fade-in tracking-[0.1em] leading-relaxed">
@@ -2071,13 +2185,13 @@ const ResultPage = () => {
                 <div className="w-px h-16 bg-gradient-to-b from-amber-600/60 to-transparent mt-8"></div>
               </div>
             </div>
-          </section>
+          </section >
 
 
 
 
           {/* Step 6: The Final Guardian - 수호신령 */}
-          <section className="snap-section px-6 pb-32 min-h-screen flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top)' }}>
+          < section className="snap-section px-6 pb-32 min-h-screen flex items-center justify-center" style={{ paddingTop: 'var(--safe-area-top)' }}>
             <div className="flex flex-col items-center py-12 w-full">
 
               <div className="p-6 pb-24 relative group w-full max-w-sm reveal-item">
@@ -2122,6 +2236,22 @@ const ResultPage = () => {
                           </div>
                         )}
 
+                        {/* [NEW] 외부 텍스트 토글 - 카드 뒤집힌 후에만 표시 */}
+                        {isTalismanFlipped && (
+                          <div className="absolute -top-8 right-0 z-30 animate-fade-in">
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation(); // 카드 클릭 이벤트 방지
+                                // 내용만 전환 (카드는 뒤집히지 않음)
+                                setTalismanViewMode(prev => prev === 'image' ? 'reason' : 'image');
+                              }}
+                              className="text-amber-100/80 hover:text-amber-50 text-sm font-serif tracking-wider transition-all duration-300 hover:scale-105 active:scale-95 cursor-pointer underline decoration-amber-500/30 underline-offset-4 hover:decoration-amber-400/60"
+                            >
+                              {talismanViewMode === 'image' ? '선정비책' : '수호신령'}
+                            </button>
+                          </div>
+                        )}
+
                         <div className={!sajuResult.isPaid ? 'pointer-events-none' : ''}>
                           <TalismanCard
                             ref={talismanCardRef}
@@ -2129,8 +2259,18 @@ const ResultPage = () => {
                             userName={userInfo?.name || '사용자'}
                             reason={sajuResult.talisman?.reason}
                             activeTab={talismanViewMode}
-                            isFlipped={isTalismanFlipped} // 부모에서 제어
-                            onClick={() => { }} // TalismanCard 내부 클릭 핸들러 무시 (부모 wrapper에서 처리)
+                            isFlipped={isTalismanFlipped}
+                            onClick={() => {
+                              // Default flip logic
+                              if (!sajuResult.isPaid) {
+                                setShowPurchaseSheet(true);
+                                return;
+                              }
+
+                              const nextFlipped = !isTalismanFlipped;
+                              setIsTalismanFlipped(nextFlipped);
+                              if (nextFlipped && !hasTalismanBeenRevealed) setHasTalismanBeenRevealed(true);
+                            }}
                             isPurchased={isTalismanPurchased}
                             setIsPurchased={setIsTalismanPurchased}
                             talismanData={
@@ -2146,72 +2286,87 @@ const ResultPage = () => {
 
                       </div>
 
-                      {/* [NEW] 수호신 하단 가변형 토글 버튼 (중복 제거 및 미니멀리즘 반영) */}
-                      {sajuResult.isPaid && isTalismanFlipped && (
-                        <div className="flex items-center justify-center mt-2 animate-fade-in">
+                    </div>
+                  </div>
+
+
+                  {/* Premium Download/Purchase Buttons - Slim & Premium Redesign */}
+                  {sajuResult.isPaid && isTalismanFlipped && (
+                    <div className="flex flex-col gap-4 px-8 mt-2 mb-8 items-center w-full max-w-[320px] mx-auto animate-fade-in-up delay-300">
+                      {!sajuResult.isPremium ? (
+                        <>
+                          {/* [REDESIGNED] Name Engraving - Traditional Gold/Red Border Style */}
                           <button
-                            onClick={() => {
-                              const nextMode = talismanViewMode === 'image' ? 'reason' : 'image';
-                              setTalismanViewMode(nextMode);
-                              setIsTalismanFlipped(true); // 항상 리빌된 뒷면 상태 유지
-                            }}
-                            className="group relative px-8 py-2.5 flex items-center gap-3 transition-all duration-500 overflow-hidden"
+                            onClick={() => setShowHanjaModal(true)}
+                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-amber-600/40 transition-all duration-700 hover:border-amber-500 active:scale-[0.98]"
                           >
-                            {/* Button Background - Glassmorphism Seal Style */}
-                            <div className="absolute inset-0 bg-amber-900/10 backdrop-blur-sm border border-amber-600/20 rounded-full group-hover:bg-amber-900/20 group-hover:border-amber-600/40 transition-all duration-500" />
+                            <div className="absolute inset-0 bg-gradient-to-r from-amber-950/20 to-transparent group-hover:from-amber-950/40 transition-all duration-700" />
 
-                            <span className="relative text-[11px] font-serif tracking-[0.3em] text-amber-600/80 group-hover:text-amber-500 transition-colors duration-500">
-                              {talismanViewMode === 'image' ? (
-                                '선정비책 보기'
-                              ) : (
-                                '수호신령 보기'
-                              )}
-                            </span>
-
-                            {/* Decorative Dots */}
-                            <div className="relative w-1.5 h-1.5 rounded-full bg-amber-600/40 group-hover:bg-amber-500 transition-colors" />
+                            <div className="relative flex items-center justify-center gap-4">
+                              <div className="w-6 h-px bg-amber-600/30 group-hover:w-10 transition-all duration-700" />
+                              <span className="text-amber-500 font-serif font-bold tracking-[0.3em] text-xs uppercase flex items-center gap-2">
+                                <span className="text-[10px] opacity-70">✨</span>
+                                이름 새기기 (銘刻)
+                              </span>
+                              <div className="w-6 h-px bg-amber-600/30 group-hover:w-10 transition-all duration-700" />
+                            </div>
                           </button>
-                        </div>
+
+                          {/* [REDESIGNED] Save Card - Minimal Traditional Ink Style */}
+                          <button
+                            onClick={() => talismanCardRef.current?.handleDownload()}
+                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-stone-800 transition-all duration-700 hover:border-amber-900/50 active:scale-[0.98]"
+                          >
+                            <div className="absolute inset-0 bg-[#0a0a0c]/50 transition-colors group-hover:bg-[#121214]/80" />
+
+                            <div className="relative flex items-center justify-center gap-4">
+                              <Download size={14} className="text-stone-500 group-hover:text-amber-600 transition-all duration-500" />
+                              <span className="text-stone-400 group-hover:text-stone-300 font-serif tracking-[0.2em] text-[11px]">
+                                수호신 카드 저장 (貯藏)
+                              </span>
+                            </div>
+                          </button>
+                        </>
+                      ) : (
+                        /* 2차 결제자용 버튼 (프리미엄) - Slim & Premium Redesign */
+                        <>
+                          {/* [REDESIGNED] PDF Download - Slim & Premium Purple Style */}
+                          <button
+                            onClick={handleDownloadPDF}
+                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-purple-900/30 transition-all duration-700 hover:border-purple-600 active:scale-[0.98]"
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-purple-950/20 to-transparent transition-colors group-hover:from-purple-900/30" />
+
+                            <div className="relative flex items-center justify-center gap-4">
+                              <Scroll size={14} className="text-purple-400 group-hover:text-purple-300 transition-all duration-500" />
+                              <span className="text-purple-300/80 group-hover:text-white font-serif tracking-[0.2em] text-[11px] font-bold">
+                                전체 결과 PDF 다운로드 (下載)
+                              </span>
+                            </div>
+                          </button>
+
+                          {/* [REDESIGNED] Save Card (Still needed for premium users) */}
+                          <button
+                            onClick={() => talismanCardRef.current?.handleDownload()}
+                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-stone-800 transition-all duration-700 hover:border-amber-900/50 active:scale-[0.98]"
+                          >
+                            <div className="absolute inset-0 bg-[#0a0a0c]/50 transition-colors group-hover:bg-[#121214]/80" />
+
+                            <div className="relative flex items-center justify-center gap-4">
+                              <Download size={14} className="text-stone-500 group-hover:text-amber-600 transition-all duration-500" />
+                              <span className="text-stone-400 group-hover:text-stone-300 font-serif tracking-[0.2em] text-[11px]">
+                                수호신 카드 저장 (貯藏)
+                              </span>
+                            </div>
+                          </button>
+                        </>
                       )}
                     </div>
-
-
-                    {/* Premium Download/Purchase Button */}
-                    {isTalismanFlipped && (
-                      <div className="flex justify-center px-8 mb-8">
-                        <button
-                          onClick={() => talismanCardRef.current?.handleDownload()}
-                          className="w-full max-w-[320px] relative group overflow-hidden py-4 rounded-lg transition-all duration-500 active:scale-[0.98]"
-                        >
-                          {/* Button Background: Deep Traditional Ink */}
-                          <div className="absolute inset-0 bg-[#0d0d0f] border border-amber-900/30 group-hover:border-amber-600/50 transition-colors" />
-                          <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent opacity-50" />
-
-                          {/* Subtle Texture Hook */}
-                          <div className="absolute inset-0 opacity-[0.03] bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] pointer-events-none" />
-
-                          {/* Button Content */}
-                          <div className="relative flex items-center justify-center gap-3">
-                            <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
-                            <Download size={18} className="text-amber-600 group-hover:scale-110 transition-transform" />
-                            <span className="text-amber-500 font-serif font-bold tracking-[0.2em] text-sm">
-                              {isTalismanPurchased ? '護符 貯藏 (저장하기)' : '名銘 貯藏 (이름 새겨 소장하기)'}
-                            </span>
-                            <div className="w-8 h-px bg-amber-900/50 group-hover:w-12 transition-all duration-700" />
-                          </div>
-
-                          {/* Glossy Overlay */}
-                          <div className="absolute top-0 left-[-100%] w-full h-full bg-gradient-to-r from-transparent via-white/5 to-transparent skew-x-[-20deg] group-hover:left-[100%] transition-all duration-1000" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
-
-
               </div>
             </div>
-          </section>
+          </section >
         </main >
 
         {/* --- Modals & Overlays (Outside main for focus) --- */}
@@ -2271,195 +2426,203 @@ const ResultPage = () => {
           )
         }
 
+
         {/* Floating Action Button (PDF) - 숨김 처리 (나중에 위치 결정 후 재활성화) */}
 
-      </div >
+        {/* Purchase Bottom Sheet */}
+        {
+          showPurchaseSheet && (
+            <>
+              {/* Backdrop */}
+              <div
+                className="fixed inset-0 bg-black/60 z-50 transition-opacity"
+                onClick={() => setShowPurchaseSheet(false)}
+              />
 
-      {/* Purchase Bottom Sheet */}
-      {
-        showPurchaseSheet && (
-          <>
-            {/* Backdrop */}
-            <div
-              className="fixed inset-0 bg-black/60 z-50 transition-opacity"
-              onClick={() => setShowPurchaseSheet(false)}
-            />
+              {/* Bottom Sheet */}
+              <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
+                <div className="bg-[#111113] border-t border-amber-900/30 rounded-t-3xl p-6 pb-10 max-w-lg mx-auto">
+                  {/* Handle */}
+                  <div className="w-16 h-px bg-amber-700/40 mx-auto mb-8" />
 
-            {/* Bottom Sheet */}
-            <div className="fixed bottom-0 left-0 right-0 z-50 animate-slide-up">
-              <div className="bg-[#111113] border-t border-amber-900/30 rounded-t-3xl p-6 pb-10 max-w-lg mx-auto">
-                {/* Handle */}
-                <div className="w-16 h-px bg-amber-700/40 mx-auto mb-8" />
+                  {/* Content */}
+                  <div className="text-center">
+                    <h3 className="text-amber-500 font-serif text-xl font-bold tracking-[0.1em] mb-6 italic">
+                      인연의 문이 닫혀 있습니다
+                    </h3>
+                    <p className="text-stone-400 font-serif leading-relaxed mb-8">
+                      天命錄을 발간하여<br />
+                      당신만의 수호신을 확인하세요
+                    </p>
 
-                {/* Content */}
+                    {/* CTA Button */}
+                    <button
+                      onClick={() => {
+                        setShowPurchaseSheet(false);
+                        handleBasicPayment();
+                      }}
+                      className="w-full relative group overflow-hidden py-5 border-2 border-amber-700/60 hover:border-amber-600/80 transition-colors"
+                    >
+                      {/* Background */}
+                      <div className="absolute inset-0 bg-[#111113]" />
+                      <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent" />
+
+                      {/* Content */}
+                      <div className="relative flex items-center justify-center gap-4 text-amber-600 font-serif font-bold tracking-[0.3em]">
+                        <div className="w-8 h-px bg-amber-700/50" />
+                        <span>天 命 錄   발 간 하 기</span>
+                        <div className="w-8 h-px bg-amber-700/50" />
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          )
+        }
+
+        {/* 오행 정보 모달 (Five Elements Info Modal) */}
+        {
+          showOhengInfo && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+              <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowOhengInfo(false)} />
+              <div className="relative w-full max-w-md bg-[#050505] border border-amber-800/30 shadow-2xl animate-fade-in">
+                {/* 장식용 코너 */}
+                <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-amber-600/50" />
+                <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-amber-600/50" />
+                <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-amber-600/50" />
+                <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-amber-600/50" />
+
                 <div className="text-center">
-                  <h3 className="text-amber-500 font-serif text-xl font-bold tracking-[0.1em] mb-6 italic">
-                    인연의 문이 닫혀 있습니다
-                  </h3>
-                  <p className="text-stone-400 font-serif leading-relaxed mb-8">
-                    天命錄을 발간하여<br />
-                    당신만의 수호신을 확인하세요
-                  </p>
+                  {/* 제목 */}
+                  <div className="py-6 border-b border-amber-800/20">
+                    <h3 className="text-lg font-serif text-amber-500 tracking-[0.3em] font-bold">
+                      五行의 순환
+                    </h3>
+                  </div>
 
-                  {/* CTA Button */}
-                  <button
-                    onClick={() => {
-                      setShowPurchaseSheet(false);
-                      handleBasicPayment();
-                    }}
-                    className="w-full relative group overflow-hidden py-5 border-2 border-amber-700/60 hover:border-amber-600/80 transition-colors"
-                  >
-                    {/* Background */}
-                    <div className="absolute inset-0 bg-[#111113]" />
-                    <div className="absolute inset-0 bg-gradient-to-b from-amber-900/10 to-transparent" />
+                  {/* 탭 */}
+                  <div className="flex border-b border-stone-800">
+                    <button
+                      onClick={() => setOhengTab('sangseong')}
+                      className={`flex-1 py-3 text-sm font-medium tracking-wide transition-colors ${ohengTab === 'sangseong'
+                        ? 'text-amber-400 bg-amber-900/20 border-b-2 border-amber-500'
+                        : 'text-stone-500 hover:text-stone-300'
+                        }`}
+                    >
+                      相生 (상생)
+                    </button>
+                    <button
+                      onClick={() => setOhengTab('sanggeuk')}
+                      className={`flex-1 py-3 text-sm font-medium tracking-wide transition-colors ${ohengTab === 'sanggeuk'
+                        ? 'text-stone-300 bg-stone-900/30 border-b-2 border-stone-500'
+                        : 'text-stone-500 hover:text-stone-300'
+                        }`}
+                    >
+                      相剋 (상극)
+                    </button>
+                  </div>
 
-                    {/* Content */}
-                    <div className="relative flex items-center justify-center gap-4 text-amber-600 font-serif font-bold tracking-[0.3em]">
-                      <div className="w-8 h-px bg-amber-700/50" />
-                      <span>天 命 錄   발 간 하 기</span>
-                      <div className="w-8 h-px bg-amber-700/50" />
-                    </div>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </>
-        )
-      }
+                  {/* 컨텐츠 */}
+                  <div className="p-8 min-h-[280px] flex flex-col items-center justify-center">
+                    {ohengTab === 'sangseong' ? (
+                      <div className="space-y-5 animate-fade-in">
+                        {/* 한자 순환 - 작은 화살표로 연결 */}
+                        <div className="text-center">
+                          <p className="text-lg font-bold leading-relaxed flex items-center justify-center gap-1">
+                            <span className="tracking-wider" style={{ color: '#059669' }}>木</span>
+                            <span className="text-xs text-amber-600/40">→</span>
+                            <span className="tracking-wider" style={{ color: '#e11d48' }}>火</span>
+                            <span className="text-xs text-amber-600/40">→</span>
+                            <span className="tracking-wider" style={{ color: '#d97706' }}>土</span>
+                            <span className="text-xs text-amber-600/40">→</span>
+                            <span className="tracking-wider" style={{ color: '#d6d3d1' }}>金</span>
+                            <span className="text-xs text-amber-600/40">→</span>
+                            <span className="tracking-wider" style={{ color: '#94a3b8' }}>水</span>
+                          </p>
+                          <p className="text-[10px] text-stone-500/60 mt-2 tracking-wider">
+                            목 화 토 금 수
+                          </p>
+                        </div>
 
-      {/* 오행 정보 모달 (Five Elements Info Modal) */}
-      {
-        showOhengInfo && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowOhengInfo(false)} />
-            <div className="relative w-full max-w-md bg-[#050505] border border-amber-800/30 shadow-2xl animate-fade-in">
-              {/* 장식용 코너 */}
-              <div className="absolute top-0 left-0 w-3 h-3 border-t border-l border-amber-600/50" />
-              <div className="absolute top-0 right-0 w-3 h-3 border-t border-r border-amber-600/50" />
-              <div className="absolute bottom-0 left-0 w-3 h-3 border-b border-l border-amber-600/50" />
-              <div className="absolute bottom-0 right-0 w-3 h-3 border-b border-r border-amber-600/50" />
-
-              <div className="text-center">
-                {/* 제목 */}
-                <div className="py-6 border-b border-amber-800/20">
-                  <h3 className="text-lg font-serif text-amber-500 tracking-[0.3em] font-bold">
-                    五行의 순환
-                  </h3>
-                </div>
-
-                {/* 탭 */}
-                <div className="flex border-b border-stone-800">
-                  <button
-                    onClick={() => setOhengTab('sangseong')}
-                    className={`flex-1 py-3 text-sm font-medium tracking-wide transition-colors ${ohengTab === 'sangseong'
-                      ? 'text-amber-400 bg-amber-900/20 border-b-2 border-amber-500'
-                      : 'text-stone-500 hover:text-stone-300'
-                      }`}
-                  >
-                    相生 (상생)
-                  </button>
-                  <button
-                    onClick={() => setOhengTab('sanggeuk')}
-                    className={`flex-1 py-3 text-sm font-medium tracking-wide transition-colors ${ohengTab === 'sanggeuk'
-                      ? 'text-stone-300 bg-stone-900/30 border-b-2 border-stone-500'
-                      : 'text-stone-500 hover:text-stone-300'
-                      }`}
-                  >
-                    相剋 (상극)
-                  </button>
-                </div>
-
-                {/* 컨텐츠 */}
-                <div className="p-8 min-h-[280px] flex flex-col items-center justify-center">
-                  {ohengTab === 'sangseong' ? (
-                    <div className="space-y-5 animate-fade-in">
-                      {/* 한자 순환 - 작은 화살표로 연결 */}
-                      <div className="text-center">
-                        <p className="text-lg font-bold leading-relaxed flex items-center justify-center gap-1">
-                          <span className="tracking-wider" style={{ color: '#059669' }}>木</span>
-                          <span className="text-xs text-amber-600/40">→</span>
-                          <span className="tracking-wider" style={{ color: '#e11d48' }}>火</span>
-                          <span className="text-xs text-amber-600/40">→</span>
-                          <span className="tracking-wider" style={{ color: '#d97706' }}>土</span>
-                          <span className="text-xs text-amber-600/40">→</span>
-                          <span className="tracking-wider" style={{ color: '#d6d3d1' }}>金</span>
-                          <span className="text-xs text-amber-600/40">→</span>
-                          <span className="tracking-wider" style={{ color: '#94a3b8' }}>水</span>
-                        </p>
-                        <p className="text-[10px] text-stone-500/60 mt-2 tracking-wider">
-                          목 화 토 금 수
+                        {/* 예시 문장 */}
+                        <p className="text-xs text-stone-400 leading-relaxed px-4">
+                          <span className="text-amber-500/70">"나무가 불을 피우고, 재가 흙이 되는 이치"</span><br />
+                          서로를 돕고 키워주는 황금 궤도의 흐름입니다.
                         </p>
                       </div>
+                    ) : (
+                      <div className="space-y-5 animate-fade-in">
+                        {/* 한자 제어 관계 - 화살표 + 슬래시로 구분 */}
+                        <div className="text-center space-y-2">
+                          <p className="text-base font-bold leading-relaxed flex items-center justify-center gap-2 flex-wrap">
+                            <span className="flex items-center gap-1">
+                              <span style={{ color: '#94a3b8' }}>水</span>
+                              <span className="text-xs text-stone-600/40">→</span>
+                              <span style={{ color: '#e11d48' }}>火</span>
+                            </span>
+                            <span className="text-stone-600/60">/</span>
+                            <span className="flex items-center gap-1">
+                              <span style={{ color: '#e11d48' }}>火</span>
+                              <span className="text-xs text-stone-600/40">→</span>
+                              <span style={{ color: '#d6d3d1' }}>金</span>
+                            </span>
+                            <span className="text-stone-600/60">/</span>
+                            <span className="flex items-center gap-1">
+                              <span style={{ color: '#d6d3d1' }}>金</span>
+                              <span className="text-xs text-stone-600/40">→</span>
+                              <span style={{ color: '#059669' }}>木</span>
+                            </span>
+                          </p>
+                          <p className="text-base font-bold leading-relaxed flex items-center justify-center gap-2">
+                            <span className="flex items-center gap-1">
+                              <span style={{ color: '#059669' }}>木</span>
+                              <span className="text-xs text-stone-600/40">→</span>
+                              <span style={{ color: '#d97706' }}>土</span>
+                            </span>
+                            <span className="text-stone-600/60">/</span>
+                            <span className="flex items-center gap-1">
+                              <span style={{ color: '#d97706' }}>土</span>
+                              <span className="text-xs text-stone-600/40">→</span>
+                              <span style={{ color: '#94a3b8' }}>水</span>
+                            </span>
+                          </p>
+                          <p className="text-[10px] text-stone-500/50 mt-2 tracking-wider">
+                            물이 불을 제압, 불이 쇠를 제압...
+                          </p>
+                        </div>
 
-                      {/* 예시 문장 */}
-                      <p className="text-xs text-stone-400 leading-relaxed px-4">
-                        <span className="text-amber-500/70">"나무가 불을 피우고, 재가 흙이 되는 이치"</span><br />
-                        서로를 돕고 키워주는 황금 궤도의 흐름입니다.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-5 animate-fade-in">
-                      {/* 한자 제어 관계 - 화살표 + 슬래시로 구분 */}
-                      <div className="text-center space-y-2">
-                        <p className="text-base font-bold leading-relaxed flex items-center justify-center gap-2 flex-wrap">
-                          <span className="flex items-center gap-1">
-                            <span style={{ color: '#94a3b8' }}>水</span>
-                            <span className="text-xs text-stone-600/40">→</span>
-                            <span style={{ color: '#e11d48' }}>火</span>
-                          </span>
-                          <span className="text-stone-600/60">/</span>
-                          <span className="flex items-center gap-1">
-                            <span style={{ color: '#e11d48' }}>火</span>
-                            <span className="text-xs text-stone-600/40">→</span>
-                            <span style={{ color: '#d6d3d1' }}>金</span>
-                          </span>
-                          <span className="text-stone-600/60">/</span>
-                          <span className="flex items-center gap-1">
-                            <span style={{ color: '#d6d3d1' }}>金</span>
-                            <span className="text-xs text-stone-600/40">→</span>
-                            <span style={{ color: '#059669' }}>木</span>
-                          </span>
-                        </p>
-                        <p className="text-base font-bold leading-relaxed flex items-center justify-center gap-2">
-                          <span className="flex items-center gap-1">
-                            <span style={{ color: '#059669' }}>木</span>
-                            <span className="text-xs text-stone-600/40">→</span>
-                            <span style={{ color: '#d97706' }}>土</span>
-                          </span>
-                          <span className="text-stone-600/60">/</span>
-                          <span className="flex items-center gap-1">
-                            <span style={{ color: '#d97706' }}>土</span>
-                            <span className="text-xs text-stone-600/40">→</span>
-                            <span style={{ color: '#94a3b8' }}>水</span>
-                          </span>
-                        </p>
-                        <p className="text-[10px] text-stone-500/50 mt-2 tracking-wider">
-                          물이 불을 제압, 불이 쇠를 제압...
+                        {/* 예시 문장 */}
+                        <p className="text-xs text-stone-400 leading-relaxed px-4">
+                          <span className="text-stone-500/70">"물이 불을 끄거나, 쇠가 나무를 다듬는 것"</span><br />
+                          서로를 제어하고 균형 잡는 별 모양의 힘입니다.
                         </p>
                       </div>
-
-                      {/* 예시 문장 */}
-                      <p className="text-xs text-stone-400 leading-relaxed px-4">
-                        <span className="text-stone-500/70">"물이 불을 끄거나, 쇠가 나무를 다듬는 것"</span><br />
-                        서로를 제어하고 균형 잡는 별 모양의 힘입니다.
-                      </p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
+
+                <button
+                  onClick={() => setShowOhengInfo(false)}
+                  className="absolute top-4 right-4 text-stone-600 hover:text-stone-300 p-2 transition-colors"
+                >
+                  ✕
+                </button>
               </div>
-
-              <button
-                onClick={() => setShowOhengInfo(false)}
-                className="absolute top-4 right-4 text-stone-600 hover:text-stone-300 p-2 transition-colors"
-              >
-                ✕
-              </button>
             </div>
-          </div>
-        )
-      }
+          )
+        }
 
-    </div >
+        {/* 한자 입력 모달 */}
+        <HanjaInputModal
+          isOpen={showHanjaModal}
+          onClose={() => setShowHanjaModal(false)}
+          onSubmit={handleHanjaSubmit}
+          accessToken={token}
+        />
+
+      </div>
+    </div>
   );
 };
 
