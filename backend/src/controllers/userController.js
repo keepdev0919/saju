@@ -33,30 +33,47 @@ export async function createUser(req, res) {
       });
     }
 
-    // 접근 토큰 생성
+    // 신규 사용자용 토큰 생성
     const accessToken = generateAccessToken();
 
     // 사용자 정보 저장 (Soft Deleted 된 유저가 재가입 시 deleted_at = NULL 로 부활)
+    // ✅ [HOTFIX] 기존 사용자 재입력 시 access_token을 덮어쓰지 않도록 수정
     const [result] = await db.execute(
       `INSERT INTO users (name, phone, birth_date, birth_time, gender, calendar_type, is_leap, access_token)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-       ON DUPLICATE KEY UPDATE 
+       ON DUPLICATE KEY UPDATE
          name = VALUES(name),
          birth_time = VALUES(birth_time),
          gender = VALUES(gender),
          calendar_type = VALUES(calendar_type),
          is_leap = VALUES(is_leap),
-         access_token = VALUES(access_token),
          deleted_at = NULL`,
       [name, cleanPhone, birthDate, birthTime || null, gender, calendarType || 'solar', isLeap ? 1 : 0, accessToken]
     );
 
-    const userId = result.insertId || result.affectedRows;
+    // user_id 확인
+    // affectedRows: 1 = INSERT, 2 = UPDATE
+    let userId;
+    let finalAccessToken;
+
+    if (result.affectedRows === 1) {
+      // 신규 사용자 → 새 토큰 사용
+      userId = result.insertId;
+      finalAccessToken = accessToken;
+    } else {
+      // 기존 사용자 (UPDATE 발생) → 기존 토큰 조회 (덮어쓰지 않았으므로 기존 토큰 유지됨)
+      const [users] = await db.execute(
+        `SELECT id, access_token FROM users WHERE phone = ? AND birth_date = ? AND deleted_at IS NULL`,
+        [cleanPhone, birthDate]
+      );
+      userId = users[0].id;
+      finalAccessToken = users[0].access_token;
+    }
 
     res.json({
       success: true,
       userId,
-      accessToken,
+      accessToken: finalAccessToken,
       message: '사용자 정보가 저장되었습니다.'
     });
   } catch (error) {
