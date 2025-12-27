@@ -53,8 +53,11 @@ export async function calculateSaju({ birthDate, birthTime, calendarType, gender
     // 오행 분석
     const { wuxing, analysisLogs } = calculateWuXing(eightChar, hourGanZhi);
 
-    // 용신 분석 (간단 로직 - 부족한 오행 찾기)
-    const yongshen = findYongShen(wuxing);
+    // 십신, 대운, 12운성, 신살 계산 (AI에게 용신 계산 위임)
+    const sipsin = calculateSipSin(eightChar, dayMaster, hourGanZhi);
+    const dayun = calculateDaUn(lunar, gender);
+    const phases = calculate12Phases(eightChar, dayMaster, hourGanZhi);
+    const sinsal = calculateSinSal(eightChar, dayMaster);
 
     return {
       year: parseGanZhi(yearGanZhi),
@@ -66,16 +69,16 @@ export async function calculateSaju({ birthDate, birthTime, calendarType, gender
       birthTime,
       wuxing,        // 오행 분포
       analysisLogs,  // [NEW] 실시간 분석 로그
-      yongshen,      // 용신
       dayMaster: parseSingleGan(dayMaster), // 일간 (日干)
 
-      // [Tech Demo Data] 고급 분석 데이터 추가
-      techData: {
-        daun: calculateDaUn(lunar, gender), // 대운 (Fix: userData.gender -> gender)
-        sipsin: calculateSipSin(eightChar, dayMaster), // 십신
-        phases: calculate12Phases(eightChar, dayMaster), // 12운성
-        sinsal: calculateSinSal(eightChar) // 신살
-      }
+      // ✅ AI에게 전달할 상세 명리학 데이터
+      sipsin,   // 십신 (十神)
+      dayun,    // 대운 (大運)
+      phases,   // 12운성
+      sinsal,   // 신살 (神殺)
+
+      // ❌ 용신 제거 - AI가 계산하도록 위임
+      // yongshen: findYongShen(wuxing) ← 삭제됨
     };
   } catch (error) {
     console.error('사주 계산 실패:', error);
@@ -236,41 +239,48 @@ function calculateWuXing(eightChar, hourGanZhi) {
 }
 
 /**
- * 용신(用神) 찾기 - 간단 로직
- * 부족한 오행을 용신으로 선택
- * @param {Object} wuxing - 오행 분포
- * @returns {string} 용신 (예: "수")
+ * ❌ 용신(用神) 찾기 함수 제거됨
+ * 이유: 전통 명리학의 복잡한 용신 선택 원리를 단순 "가장 약한 오행" 로직으로 대체할 수 없음
+ * 해결: AI가 일간·월령·계절·신강신약을 종합 분석하여 용신 계산
  */
-function findYongShen(wuxing) {
-  const minElement = Object.keys(wuxing).reduce((min, key) =>
-    wuxing[key] < wuxing[min] ? key : min
-  );
-  return minElement;
-}
 
 /**
- * 대운(Da-un) 계산
- * 10년 단위의 운세 흐름
+ * 대운(大運) 계산 - 10년 단위 운세 흐름
+ * @param {Object} lunar - lunar-javascript 객체
+ * @param {string} gender - 성별 ('male' | 'female')
+ * @returns {Array} 대운 목록 (최대 10개)
  */
 function calculateDaUn(lunar, gender) {
   try {
     const eightChar = lunar.getEightChar();
-    // 성별: 남성 1, 여성 0 (lunar-javascript 기준)
     const genderNum = gender === 'male' ? 1 : 0;
     const yun = eightChar.getYun(genderNum);
     const daTun = yun.getDaYun();
 
-    // 대운 10개 추출 (0~9)
+    const ganMap = {
+      '甲': '갑', '乙': '을', '丙': '병', '丁': '정', '戊': '무',
+      '己': '기', '庚': '경', '辛': '신', '壬': '임', '癸': '계'
+    };
+    const jiMap = {
+      '子': '자', '丑': '축', '寅': '인', '卯': '묘', '辰': '진', '巳': '사',
+      '午': '오', '未': '미', '申': '신', '酉': '유', '戌': '술', '亥': '해'
+    };
+
     const dauns = [];
     for (let i = 0; i < 10; i++) {
       const da = daTun[i];
       if (!da) continue;
+
+      const ganZhi = da.getGanZhi();
+      const ganChinese = ganZhi.substring(0, 1);
+      const jiChinese = ganZhi.substring(1, 2);
+
       dauns.push({
         startAge: da.getStartAge(),
         endAge: da.getEndAge(),
-        ganZhi: da.getGanZhi(), // 간지 (예: 갑자)
-        gan: da.getGanZhi().substring(0, 1),
-        ji: da.getGanZhi().substring(1, 2)
+        ganZhi: `${ganMap[ganChinese] || ganChinese}${jiMap[jiChinese] || jiChinese}`, // 한글 간지
+        gan: ganMap[ganChinese] || ganChinese,
+        ji: jiMap[jiChinese] || jiChinese
       });
     }
     return dauns;
@@ -281,38 +291,271 @@ function calculateDaUn(lunar, gender) {
 }
 
 /**
- * 십신(Sip-sin) 계산
- * 일간과 다른 간지의 관계 (비견, 겁재, 식신 등)
- * 라이브러리가 지원하지 않을 경우 수동 매핑 필요할 수 있음
- * 여기서는 간단히 천간 관계만 예시로 구현 (실제로는 지장간까지 봐야 함)
+ * 십신(十神) 계산 - 일간과 다른 천간의 관계
+ * @param {Object} eightChar - lunar-javascript 사주팔자 객체
+ * @param {string} dayMaster - 일간 (한자)
+ * @param {string} hourGanZhi - 시주 간지
+ * @returns {Object} 년·월·일·시 천간 및 지지의 십신
  */
-function calculateSipSin(eightChar, dayMaster) {
-  // 실제 라이브러리 메소드 활용 권장 (여기서는 Tech Demo용 모의 데이터 구조)
-  // lunar-javascript의 정확한 메소드를 모를 때는 Mockup으로 기능 보여주기 전략
+function calculateSipSin(eightChar, dayMaster, hourGanZhi) {
+  const yearGZ = eightChar.getYear();
+  const monthGZ = eightChar.getMonth();
+  const dayGZ = eightChar.getDay();
+
+  const yearGan = yearGZ[0];
+  const monthGan = monthGZ[0];
+  const hourGan = hourGanZhi ? hourGanZhi[0] : null;
+
+  // 지지의 지장간 중 본기(정기) 추출
+  const yearJi = yearGZ[1];
+  const monthJi = monthGZ[1];
+  const dayJi = dayGZ[1];
+  const hourJi = hourGanZhi ? hourGanZhi[1] : null;
+
   return {
-    yearGan: "편관",
-    monthGan: "정인",
-    hourGan: "식신"
+    year: {
+      gan: getSipSinName(dayMaster, yearGan),
+      ji: getSipSinName(dayMaster, getJiMainGan(yearJi))
+    },
+    month: {
+      gan: getSipSinName(dayMaster, monthGan),
+      ji: getSipSinName(dayMaster, getJiMainGan(monthJi))
+    },
+    day: {
+      gan: '비견', // 일간 자신은 항상 비견
+      ji: getSipSinName(dayMaster, getJiMainGan(dayJi))
+    },
+    hour: hourGan ? {
+      gan: getSipSinName(dayMaster, hourGan),
+      ji: getSipSinName(dayMaster, getJiMainGan(hourJi))
+    } : { gan: '미상', ji: '미상' }
   };
 }
 
 /**
- * 12운성(12 Phases) 계산
- * 에너지의 강약
+ * 지지의 본기(정기) 천간 추출
+ * @param {string} ji - 지지 (한자)
+ * @returns {string} 본기 천간
  */
-function calculate12Phases(eightChar, dayMaster) {
+function getJiMainGan(ji) {
+  const jiMainGanMap = {
+    '子': '癸', '丑': '己', '寅': '甲', '卯': '乙', '辰': '戊', '巳': '丙',
+    '午': '丁', '未': '己', '申': '庚', '酉': '辛', '戌': '戊', '亥': '壬'
+  };
+  return jiMainGanMap[ji] || ji;
+}
+
+/**
+ * 십신 이름 계산
+ * @param {string} dayMaster - 일간 (한자)
+ * @param {string} targetGan - 대상 천간 (한자)
+ * @returns {string} 십신명 (예: '비견', '식신', '정재')
+ */
+function getSipSinName(dayMaster, targetGan) {
+  if (!targetGan) return '미상';
+
+  // 오행 매핑
+  const ganWuxingMap = {
+    '甲': '목', '乙': '목', '丙': '화', '丁': '화', '戊': '토',
+    '己': '토', '庚': '금', '辛': '금', '壬': '수', '癸': '수'
+  };
+
+  // 음양 매핑 (양간: 甲丙戊庚壬, 음간: 乙丁己辛癸)
+  const yangGans = ['甲', '丙', '戊', '庚', '壬'];
+  const isYang = (gan) => yangGans.includes(gan);
+
+  const dayElement = ganWuxingMap[dayMaster];
+  const targetElement = ganWuxingMap[targetGan];
+  const sameYinYang = isYang(dayMaster) === isYang(targetGan);
+
+  // 십신 계산 로직
+  if (dayElement === targetElement) {
+    return sameYinYang ? '비견' : '겁재';
+  }
+
+  // 오행 생극 관계
+  const shengMap = { // 생(生): 나를 생하는 것
+    '목': '수', '화': '목', '토': '화', '금': '토', '수': '금'
+  };
+  const keMap = { // 극(克): 내가 극하는 것
+    '목': '토', '화': '금', '토': '수', '금': '목', '수': '화'
+  };
+
+  // 내가 생하는 오행 → 식상
+  if (shengMap[targetElement] === dayElement) {
+    return sameYinYang ? '식신' : '상관';
+  }
+
+  // 나를 생하는 오행 → 인성
+  if (shengMap[dayElement] === targetElement) {
+    return sameYinYang ? '편인' : '정인';
+  }
+
+  // 내가 극하는 오행 → 재성
+  if (keMap[dayElement] === targetElement) {
+    return sameYinYang ? '편재' : '정재';
+  }
+
+  // 나를 극하는 오행 → 관성
+  if (keMap[targetElement] === dayElement) {
+    return sameYinYang ? '편관' : '정관';
+  }
+
+  return '미상';
+}
+
+/**
+ * 12운성(12 Phases) 계산 - 일간 기준 에너지 강약
+ * @param {Object} eightChar - lunar-javascript 사주팔자 객체
+ * @param {string} dayMaster - 일간 (한자)
+ * @param {string} hourGanZhi - 시주 간지
+ * @returns {Object} 년·월·일·시 지지의 12운성
+ */
+function calculate12Phases(eightChar, dayMaster, hourGanZhi) {
+  const yearGZ = eightChar.getYear();
+  const monthGZ = eightChar.getMonth();
+  const dayGZ = eightChar.getDay();
+
+  const yearJi = yearGZ[1];
+  const monthJi = monthGZ[1];
+  const dayJi = dayGZ[1];
+  const hourJi = hourGanZhi ? hourGanZhi[1] : null;
+
   return {
-    year: "제왕",
-    month: "관대",
-    day: "장생",
-    hour: "양"
+    year: get12PhaseName(dayMaster, yearJi),
+    month: get12PhaseName(dayMaster, monthJi),
+    day: get12PhaseName(dayMaster, dayJi),
+    hour: hourJi ? get12PhaseName(dayMaster, hourJi) : '미상'
   };
 }
 
 /**
- * 신살(Sin-sal) 계산
- * 도화살, 역마살 등
+ * 12운성 이름 계산
+ * @param {string} dayMaster - 일간 (한자)
+ * @param {string} ji - 지지 (한자)
+ * @returns {string} 12운성명 (예: '장생', '제왕', '사')
  */
-function calculateSinSal(eightChar) {
-  return ["도화살", "문창귀인", "천을귀인"];
+function get12PhaseName(dayMaster, ji) {
+  if (!ji) return '미상';
+
+  // 12운성 순서: 장생 → 목욕 → 관대 → 건록 → 제왕 → 쇠 → 병 → 사 → 묘 → 절 → 태 → 양
+  const phases = ['장생', '목욕', '관대', '건록', '제왕', '쇠', '병', '사', '묘', '절', '태', '양'];
+
+  // 십간별 장생지 (장생이 시작되는 지지)
+  const birthPlaceMap = {
+    '甲': '亥', '乙': '午', '丙': '寅', '丁': '酉', '戊': '寅',
+    '己': '酉', '庚': '巳', '辛': '子', '壬': '申', '癸': '卯'
+  };
+
+  // 지지 순서 (순행/역행 판단용)
+  const jiOrder = ['子', '丑', '寅', '卯', '辰', '巳', '午', '未', '申', '酉', '戌', '亥'];
+
+  const birthPlace = birthPlaceMap[dayMaster];
+  if (!birthPlace) return '미상';
+
+  const birthIndex = jiOrder.indexOf(birthPlace);
+  const targetIndex = jiOrder.indexOf(ji);
+
+  if (birthIndex === -1 || targetIndex === -1) return '미상';
+
+  // 양간(甲丙戊庚壬)은 순행, 음간(乙丁己辛癸)은 역행
+  const yangGans = ['甲', '丙', '戊', '庚', '壬'];
+  const isYang = yangGans.includes(dayMaster);
+
+  let phaseIndex;
+  if (isYang) {
+    // 순행: 장생지부터 순서대로
+    phaseIndex = (targetIndex - birthIndex + 12) % 12;
+  } else {
+    // 역행: 장생지부터 거꾸로
+    phaseIndex = (birthIndex - targetIndex + 12) % 12;
+  }
+
+  return phases[phaseIndex] || '미상';
+}
+
+/**
+ * 신살(神殺) 계산 - 특수 길흉 표시
+ * @param {Object} eightChar - lunar-javascript 사주팔자 객체
+ * @param {string} dayMaster - 일간 (한자)
+ * @returns {Array} 신살 목록
+ */
+function calculateSinSal(eightChar, dayMaster) {
+  const sinsals = [];
+
+  const yearGZ = eightChar.getYear();
+  const monthGZ = eightChar.getMonth();
+  const dayGZ = eightChar.getDay();
+
+  const yearJi = yearGZ[1];
+  const monthJi = monthGZ[1];
+  const dayJi = dayGZ[1];
+
+  // 1. 천을귀인(天乙貴人) - 일간 기준
+  const cheonEulMap = {
+    '甲': ['丑', '未'], '乙': ['申', '子'], '丙': ['亥', '酉'], '丁': ['亥', '酉'], '戊': ['丑', '未'],
+    '己': ['申', '子'], '庚': ['丑', '未'], '辛': ['寅', '午'], '壬': ['卯', '巳'], '癸': ['卯', '巳']
+  };
+  const cheonEul = cheonEulMap[dayMaster] || [];
+  if (cheonEul.includes(yearJi) || cheonEul.includes(monthJi) || cheonEul.includes(dayJi)) {
+    sinsals.push('천을귀인');
+  }
+
+  // 2. 도화살(桃花殺) - 연지·일지 기준
+  const doHwaMap = {
+    '寅': '卯', '午': '卯', '戌': '卯',  // 인오술 → 묘
+    '申': '酉', '子': '酉', '辰': '酉',  // 신자진 → 유
+    '巳': '午', '酉': '午', '丑': '午',  // 사유축 → 오
+    '亥': '子', '卯': '子', '未': '子'   // 해묘미 → 자
+  };
+  const doHwa = doHwaMap[yearJi] || doHwaMap[dayJi];
+  if (doHwa && (doHwa === yearJi || doHwa === monthJi || doHwa === dayJi)) {
+    sinsals.push('도화살');
+  }
+
+  // 3. 역마살(驛馬殺) - 연지·일지 기준
+  const yeokMaMap = {
+    '寅': '申', '午': '申', '戌': '申',  // 인오술 → 신
+    '申': '寅', '子': '寅', '辰': '寅',  // 신자진 → 인
+    '巳': '亥', '酉': '亥', '丑': '亥',  // 사유축 → 해
+    '亥': '巳', '卯': '巳', '未': '巳'   // 해묘미 → 사
+  };
+  const yeokMa = yeokMaMap[yearJi] || yeokMaMap[dayJi];
+  if (yeokMa && (yeokMa === yearJi || yeokMa === monthJi || yeokMa === dayJi)) {
+    sinsals.push('역마살');
+  }
+
+  // 4. 화개살(華蓋殺) - 연지·일지 기준
+  const hwaGaeMap = {
+    '寅': '戌', '午': '戌', '戌': '戌',  // 인오술 → 술
+    '申': '辰', '子': '辰', '辰': '辰',  // 신자진 → 진
+    '巳': '丑', '酉': '丑', '丑': '丑',  // 사유축 → 축
+    '亥': '未', '卯': '未', '未': '未'   // 해묘미 → 미
+  };
+  const hwaGae = hwaGaeMap[yearJi] || hwaGaeMap[dayJi];
+  if (hwaGae && (hwaGae === yearJi || hwaGae === monthJi || hwaGae === dayJi)) {
+    sinsals.push('화개살');
+  }
+
+  // 5. 공망(空亡) - 일주 기준
+  const gongMangMap = {
+    '甲子': ['戌', '亥'], '甲戌': ['申', '酉'], '甲申': ['午', '未'], '甲午': ['辰', '巳'], '甲辰': ['寅', '卯'], '甲寅': ['子', '丑']
+  };
+  const dayGanJi = dayGZ[0] + dayGZ[1];
+  const gongMang = gongMangMap[dayGanJi];
+  if (gongMang && (gongMang.includes(yearJi) || gongMang.includes(monthJi) || gongMang.includes(dayJi))) {
+    sinsals.push('공망');
+  }
+
+  // 6. 문창귀인(文昌貴人) - 일간 기준
+  const munChangMap = {
+    '甲': '巳', '乙': '午', '丙': '申', '丁': '酉', '戊': '申',
+    '己': '酉', '庚': '亥', '辛': '子', '壬': '寅', '癸': '卯'
+  };
+  const munChang = munChangMap[dayMaster];
+  if (munChang && (munChang === yearJi || munChang === monthJi || munChang === dayJi)) {
+    sinsals.push('문창귀인');
+  }
+
+  return sinsals.length > 0 ? sinsals : ['없음'];
 }

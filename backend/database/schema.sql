@@ -36,9 +36,10 @@ CREATE TABLE IF NOT EXISTS payments (
   product_type ENUM('basic', 'pdf') NOT NULL DEFAULT 'basic', -- 기본 사주 or PDF 추가
   status ENUM('pending', 'paid', 'cancelled', 'refunded') DEFAULT 'pending',
   paid_at TIMESTAMP NULL,
+  refunded_at TIMESTAMP NULL,                 -- 환불 처리 시간 (Webhook용)
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   deleted_at TIMESTAMP NULL,
-  
+
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
   INDEX idx_user_id (user_id),
   INDEX idx_merchant_uid (merchant_uid),
@@ -62,11 +63,8 @@ CREATE TABLE IF NOT EXISTS saju_results (
   health_fortune TEXT,               -- 건강운
   
   -- 점수
-  overall_score INT,
-  wealth_score INT,
-  love_score INT,
-  career_score INT,
-  health_score INT,
+  -- 점수 컬럼 삭제됨
+
   
   -- 오행 분석
   oheng_data JSON,                   -- { "목": 20, "화": 60, ... }

@@ -1,6 +1,6 @@
 import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
 import html2canvas from 'html2canvas';
-import { Download, Lock, Zap, Heart, Info, Image as ImageIcon } from 'lucide-react';
+import { Download, Lock, Sun, ShieldCheck, Info } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
 
 // Helper function: 보관소 가리기 효과 (모든 카드 동일 적용)
@@ -8,8 +8,21 @@ const getBlurEffectClass = () => {
     return 'blur-effect-mosaic';
 };
 
-const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talismanData, reason, activeTab = 'image', onFlip, isPurchased = false, setIsPurchased, isArchiveMode = false }, ref) => {
-    const [isFlipped, setIsFlipped] = useState(false); // 카드 뒤집힘 상태
+const TalismanCard = forwardRef(({
+    type = 'water',
+    userName = '사용자',
+    talismanData,
+    reason,
+    activeTab = 'image',
+    onFlip,
+    isPurchased = false,
+    setIsPurchased,
+    isArchiveMode = false,
+    isFlipped: controlledFlipped, // [NEW] 외부 제어용 prop
+    onClick: customOnClick       // [NEW] 외부 클릭 핸들러
+}, ref) => {
+    const [internalFlipped, setInternalFlipped] = useState(false); // 로컬 상태
+    const isFlipped = controlledFlipped !== undefined ? controlledFlipped : internalFlipped;
     const [stampName, setStampName] = useState(userName); // 기본은 한글 이름
     const [showModal, setShowModal] = useState(false);
     const cardRef = useRef(null);
@@ -331,9 +344,15 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
             {/* 3D Flip Container */}
             <div
                 className="relative w-[320px] h-[480px] group perspective-1000 cursor-pointer"
-                onClick={() => {
+                onClick={(e) => {
+                    if (customOnClick) {
+                        customOnClick(e);
+                        return;
+                    }
                     const nextFlipped = !isFlipped;
-                    setIsFlipped(nextFlipped);
+                    if (controlledFlipped === undefined) {
+                        setInternalFlipped(nextFlipped);
+                    }
                     if (onFlip) onFlip(nextFlipped);
                 }} // Toggle flip
             >
@@ -510,30 +529,54 @@ const TalismanCard = forwardRef(({ type = 'water', userName = '사용자', talis
                                     <div className="space-y-10">
                                         {/* Step 1: Element Balance - Animation delay 200ms */}
                                         <div className={`flex gap-5 items-start transition-all duration-1000 delay-200 transform ${activeTab === 'reason' ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
-                                            <div className="flex-shrink-0 w-14 h-14 rounded-full border border-amber-600/20 flex items-center justify-center bg-black/80 shadow-[0_0_20px_rgba(217,119,6,0.15)] group-hover:scale-110 transition-transform">
-                                                <Zap size={22} className="text-amber-500 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
+                                            {/* Traditional Seal Icon Container */}
+                                            <div className="flex-shrink-0 w-14 h-14 relative group-hover:scale-110 transition-transform duration-700">
+                                                {/* Seal Base (Octagonal / Aged Square) */}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-amber-900/40 to-black border border-amber-600/30 rotate-3 transform shadow-[0_0_15px_rgba(217,119,6,0.2)]" style={{ borderRadius: '4px' }}></div>
+                                                <div className="absolute inset-1 border border-amber-900/20 rotate-[-2deg] rounded-sm"></div>
+
+                                                <div className="relative w-full h-full flex items-center justify-center">
+                                                    <Sun size={24} className="text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.6)] animate-pulse-slow" />
+                                                </div>
                                             </div>
+
                                             <div className="space-y-2 pt-1 font-serif">
-                                                <p className="text-[11px] text-amber-600 font-bold uppercase tracking-[0.3em] text-shadow-sm">기운 보강 (補强)</p>
-                                                <p className="text-[15px] text-stone-200 leading-[2.0] break-keep text-shadow-sm">
-                                                    귀하의 사주에 다소 치우친 <span className="text-amber-500 font-bold drop-shadow-[0_0_5px_rgba(245,158,11,0.3)]">{reason.element}</span> 기운을 다스리기 위해,
-                                                    이를 보강하는 <span className="text-amber-400 font-bold">{reason.stem}</span>의 기운을 수신하여
-                                                    생명력 넘치는 에너지를 부여하였습니다.
+                                                <p className="text-[11px] text-amber-600 font-bold uppercase tracking-[0.3em] text-shadow-sm flex items-center gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+                                                    기운 보강 (補强)
+                                                </p>
+                                                <p className="text-[14px] text-stone-200 leading-[1.8] break-keep text-shadow-sm opacity-90">
+                                                    {reason.yongshenReason ? (
+                                                        reason.yongshenReason
+                                                    ) : (
+                                                        <>
+                                                            귀하의 사주에 부족하거나 치우친 <span className="text-amber-500 font-bold drop-shadow-[0_0_5px_rgba(245,158,11,0.3)]">{reason.element}</span>의 기운을 다루기 위해, 이를 보강하는 <span className="text-amber-400 font-bold">{reason.stem}</span>의 기운을 수신하여 생명력 넘치는 에너지를 부여하였습니다.
+                                                        </>
+                                                    )}
                                                 </p>
                                             </div>
                                         </div>
 
                                         {/* Step 2: Harmony (Samhap) - Animation delay 400ms */}
                                         <div className={`flex gap-5 items-start transition-all duration-1000 delay-400 transform ${activeTab === 'reason' ? 'translate-y-0 opacity-100' : 'translate-y-6 opacity-0'}`}>
-                                            <div className="flex-shrink-0 w-14 h-14 rounded-full border border-rose-600/20 flex items-center justify-center bg-black/80 shadow-[0_0_20px_rgba(225,29,72,0.15)] group-hover:scale-110 transition-transform">
-                                                <Heart size={22} className="text-rose-500 drop-shadow-[0_0_8px_rgba(225,29,72,0.5)]" />
+                                            {/* Traditional Seal Icon Container */}
+                                            <div className="flex-shrink-0 w-14 h-14 relative group-hover:scale-110 transition-transform duration-700">
+                                                {/* Seal Base (Aged Ink Stamp look) */}
+                                                <div className="absolute inset-0 bg-gradient-to-br from-rose-950/40 to-black border border-rose-800/30 rotate-[-5deg] transform shadow-[0_0_15px_rgba(225,29,72,0.15)]" style={{ borderRadius: '6px' }}></div>
+                                                <div className="absolute inset-1 border border-rose-900/20 rotate-[3deg] rounded-sm"></div>
+
+                                                <div className="relative w-full h-full flex items-center justify-center">
+                                                    <ShieldCheck size={24} className="text-rose-500 drop-shadow-[0_0_10px_rgba(225,29,72,0.6)]" />
+                                                </div>
                                             </div>
+
                                             <div className="space-y-2 pt-1 font-serif">
-                                                <p className="text-[11px] text-rose-600 font-bold uppercase tracking-[0.3em] text-shadow-sm">영혼의 단짝 (合)</p>
-                                                <p className="text-[15px] text-stone-200 leading-[2.0] break-keep text-shadow-sm">
-                                                    귀하의 타고난 <span className="text-rose-500 font-bold drop-shadow-[0_0_5px_rgba(225,29,72,0.3)]">{reason.userYearJi}띠</span>와 천상의 화합(삼합)을 이루는
-                                                    <span className="text-rose-400 font-bold"> {reason.branchAnimal}</span>의 기운을 결합하여,
-                                                    당신을 수호하는 가장 견고한 방패가 되게 하였습니다.
+                                                <p className="text-[11px] text-rose-600 font-bold uppercase tracking-[0.3em] text-shadow-sm flex items-center gap-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-600/50"></span>
+                                                    영혼의 단짝 (合)
+                                                </p>
+                                                <p className="text-[14px] text-stone-200 leading-[1.8] break-keep text-shadow-sm opacity-90">
+                                                    천지에 흩어진 기운 중 귀하의 본연인 <span className="text-rose-500 font-bold drop-shadow-[0_0_5px_rgba(225,29,72,0.3)]">{reason.userYearJi}띠</span>와 천상의 공명을 이루는 <span className="text-rose-400 font-bold">{reason.branchAnimal}</span>의 영기를 결합하여, 결코 무너지지 않을 수호의 성벽을 쌓았습니다.
                                                 </p>
                                             </div>
                                         </div>

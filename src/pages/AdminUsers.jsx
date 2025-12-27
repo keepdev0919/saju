@@ -13,6 +13,7 @@ const AdminUsers = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
     const [editTarget, setEditTarget] = useState(null); // Result to edit
+    const [expandedResultId, setExpandedResultId] = useState(null); // Accordion state
 
     const fetchUsers = async () => {
         setLoading(true);
@@ -251,9 +252,9 @@ const AdminUsers = () => {
                                     <table className="min-w-full divide-y divide-gray-200">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">일시</th>
+                                                <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 w-24">일시</th>
                                                 <th className="px-4 py-2 text-left text-xs font-medium text-gray-500">요약</th>
-                                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500">관리</th>
+                                                <th className="px-4 py-2 text-right text-xs font-medium text-gray-500 w-24">관리</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-gray-200">
@@ -261,18 +262,59 @@ const AdminUsers = () => {
                                                 <tr><td colSpan="3" className="p-4 text-center text-sm text-gray-500">이력이 없습니다.</td></tr>
                                             ) : (
                                                 selectedUser.sajuResults.map(result => (
-                                                    <tr key={result.id}>
-                                                        <td className="px-4 py-2 text-sm text-gray-500">{new Date(result.created_at).toLocaleDateString()}</td>
-                                                        <td className="px-4 py-2 text-sm text-gray-900 truncate max-w-xs">{result.request_summary || '전체 풀이'}</td>
-                                                        <td className="px-4 py-2 text-sm text-right">
-                                                            <button
-                                                                onClick={() => handleEditResult(result)}
-                                                                className="text-blue-600 hover:text-blue-800 flex items-center justify-end gap-1 ml-auto text-xs font-bold border border-blue-200 bg-blue-50 px-2 py-1 rounded"
-                                                            >
-                                                                <Edit2 size={12} /> 수정
-                                                            </button>
-                                                        </td>
-                                                    </tr>
+                                                    <React.Fragment key={result.id}>
+                                                        {/* Main Row */}
+                                                        <tr className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-4 py-3 text-sm text-gray-500 whitespace-nowrap">
+                                                                {new Date(result.created_at).toLocaleDateString()}
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-gray-900">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="truncate max-w-xs block">
+                                                                        {result.request_summary || '전체 풀이'}
+                                                                    </span>
+                                                                    <button
+                                                                        onClick={() => setExpandedResultId(expandedResultId === result.id ? null : result.id)}
+                                                                        className="text-xs text-blue-600 hover:text-blue-800 underline ml-2 whitespace-nowrap"
+                                                                    >
+                                                                        {expandedResultId === result.id ? 'DB 원본 닫기 ▲' : 'DB 원본 보기 ▼'}
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-sm text-right whitespace-nowrap">
+                                                                <button
+                                                                    onClick={() => handleEditResult(result)}
+                                                                    className="text-blue-600 hover:text-blue-800 flex items-center justify-end gap-1 ml-auto text-xs font-bold border border-blue-200 bg-blue-50 px-2 py-1 rounded"
+                                                                >
+                                                                    <Edit2 size={12} /> 수정
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                        {/* Expandable JSON Row */}
+                                                        {expandedResultId === result.id && (
+                                                            <tr className="bg-gray-50 animate-fade-in">
+                                                                <td colSpan="3" className="px-4 py-4 border-t border-gray-100 shadow-inner">
+                                                                    <div className="bg-[#1e1e1e] text-green-400 p-4 rounded-md overflow-x-auto shadow-inner text-xs font-mono border border-gray-700">
+                                                                        <div className="flex justify-between items-center mb-2 border-b border-gray-700 pb-2">
+                                                                            <span className="text-gray-400 font-bold">DATABASE RAW JSON</span>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    navigator.clipboard.writeText(JSON.stringify(result, null, 2));
+                                                                                    alert('복사되었습니다!');
+                                                                                }}
+                                                                                className="text-gray-400 hover:text-white text-[10px] border border-gray-600 px-2 py-1 rounded"
+                                                                            >
+                                                                                COPY JSON
+                                                                            </button>
+                                                                        </div>
+                                                                        <pre className="whitespace-pre-wrap break-all leading-relaxed">
+                                                                            {JSON.stringify(result, null, 2)}
+                                                                        </pre>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </React.Fragment>
                                                 ))
                                             )}
                                         </tbody>

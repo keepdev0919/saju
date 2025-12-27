@@ -90,7 +90,7 @@ export async function getUserDetail(req, res) {
 
         // 2. 사주 결과 내역
         const [sajuResults] = await db.query(
-            `SELECT id, LEFT(overall_fortune, 50) as request_summary, created_at FROM saju_results WHERE user_id = ? ORDER BY created_at DESC`,
+            `SELECT *, LEFT(overall_fortune, 50) as request_summary FROM saju_results WHERE user_id = ? ORDER BY created_at DESC`,
             [id]
         );
 

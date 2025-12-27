@@ -27,8 +27,17 @@ import ProtectedRoute from './components/ProtectedRoute';
 function App() {
   const location = useLocation();
 
-  // Admin 페이지에서는 Footer를 표시하지 않음
-  const isAdminPage = location.pathname.startsWith('/admin');
+  // Footer를 표시할 페이지 목록 (랜딩 페이지 + 법적 페이지만)
+  const searchParams = new URLSearchParams(location.search);
+  const currentStep = searchParams.get('step');
+
+  // 푸터 표시 조건:
+  // 1. / 경로이면서 step이 없거나 'landing'인 경우 (랜딩 페이지)
+  // 2. /terms 또는 /privacy 페이지
+  const shouldShowFooter =
+    (location.pathname === '/' && (!currentStep || currentStep === 'landing')) ||
+    location.pathname === '/terms' ||
+    location.pathname === '/privacy';
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -65,8 +74,8 @@ function App() {
         </Routes>
       </main>
 
-      {/* Admin 페이지 제외하고 모든 페이지에 Footer 표시 (PG사 심사 필수) */}
-      {!isAdminPage && <Footer />}
+      {/* 메인 페이지와 법적 페이지에만 Footer 표시 (서비스 페이지는 집중도 향상을 위해 숨김) */}
+      {shouldShowFooter && <Footer />}
     </div>
   );
 }

@@ -51,7 +51,7 @@ export async function createPayment(req, res) {
     const paymentData = await createPortonePayment({
       merchant_uid: merchantUid,
       amount,
-      name: productType === 'pdf' ? '사주 PDF 다운로드' : '2026 프리미엄 운세 리포트'
+      name: productType === 'pdf' ? '사주 PDF 다운로드' : '천명록: 천기비록 (天機祕錄)'
     });
 
     res.json({
@@ -74,6 +74,7 @@ export async function createPayment(req, res) {
 /**
  * 결제 검증
  * 포트원에서 결제 완료 후 실제 결제가 완료되었는지 검증
+ * 기본 결제(basic)와 프리미엄 결제(premium) 모두 처리
  */
 export async function verifyPayment(req, res) {
   try {
@@ -84,6 +85,9 @@ export async function verifyPayment(req, res) {
         error: '결제 정보가 필요합니다.'
       });
     }
+
+    // payment_type 구분 (merchant_uid로 판단)
+    const isPremium = merchant_uid.startsWith('premium_');
 
     // 포트원에서 결제 정보 조회 및 검증 (merchant_uid 전달)
     const paymentInfo = await verifyPortonePayment(imp_uid, merchant_uid);
@@ -121,7 +125,7 @@ export async function verifyPayment(req, res) {
 
     // 결제 상태 업데이트
     await db.execute(
-      `UPDATE payments 
+      `UPDATE payments
        SET imp_uid = ?, status = 'paid', paid_at = NOW()
        WHERE merchant_uid = ?`,
       [imp_uid, merchant_uid]
@@ -133,8 +137,24 @@ export async function verifyPayment(req, res) {
       [payment.user_id]
     );
 
-    if (users.length > 0) {
-      const user = users[0];
+    if (users.length === 0) {
+      return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+    }
+
+    const user = users[0];
+
+    // 프리미엄 결제일 경우 is_premium 플래그 업데이트
+    if (isPremium) {
+      await db.execute(
+        `UPDATE saju_results
+         SET is_premium = TRUE
+         WHERE user_id = ? AND deleted_at IS NULL`,
+        [payment.user_id]
+      );
+
+      console.log(`✅ 프리미엄 업그레이드 완료: user_id=${payment.user_id}`);
+    } else {
+      // 기본 결제일 경우 알림톡 발송
       const resultUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/result/${user.access_token}`;
 
       // 알림톡 발송 기록 저장 (pending 상태)
@@ -178,15 +198,124 @@ export async function verifyPayment(req, res) {
         id: payment.id,
         userId: payment.user_id,
         amount: payment.amount,
-        status: 'paid'
+        status: 'paid',
+        paymentType: isPremium ? 'premium' : 'basic'
       },
-      accessToken: users.length > 0 ? users[0].access_token : null,
-      message: '결제가 완료되었습니다.'
+      accessToken: user.access_token,
+      isPremium: isPremium,
+      message: isPremium ? '프리미엄 업그레이드가 완료되었습니다.' : '결제가 완료되었습니다.'
     });
   } catch (error) {
     console.error('결제 검증 오류:', error);
     res.status(500).json({
       error: '결제 검증에 실패했습니다.',
+      message: error.message
+    });
+  }
+}
+
+/**
+ * 프리미엄 결제 요청 생성 (2차 결제)
+ * 1차 결제를 완료한 사용자가 한자 이름을 입력하고 프리미엄 업그레이드를 요청
+ *
+ * @param {string} req.body.accessToken - 사용자 접근 토큰
+ * @param {string} req.body.hanjaName - 한자 이름 (2-4자)
+ */
+export async function createPremiumPayment(req, res) {
+  try {
+    const { accessToken, hanjaName } = req.body;
+
+    if (!accessToken || !hanjaName) {
+      return res.status(400).json({
+        error: '접근 토큰과 한자 이름이 필요합니다.'
+      });
+    }
+
+    // 한자 검증 (2-4자, 한자만)
+    const hanjaRegex = /^[\u4E00-\u9FFF]{2,4}$/;
+    if (!hanjaRegex.test(hanjaName)) {
+      return res.status(400).json({
+        error: '한자 2-4자를 입력해주세요.'
+      });
+    }
+
+    // 사용자 정보 조회 (삭제된 사용자 제외)
+    const [users] = await db.execute(
+      `SELECT u.id, u.name, u.phone, sr.id as saju_result_id, sr.is_premium
+       FROM users u
+       LEFT JOIN saju_results sr ON u.id = sr.user_id AND sr.deleted_at IS NULL
+       WHERE u.access_token = ? AND u.deleted_at IS NULL`,
+      [accessToken]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
+    }
+
+    const user = users[0];
+
+    // 사주 결과가 없는 경우
+    if (!user.saju_result_id) {
+      return res.status(404).json({ error: '사주 결과를 찾을 수 없습니다.' });
+    }
+
+    // 1차 결제 완료 확인
+    const [basicPayments] = await db.execute(
+      `SELECT * FROM payments
+       WHERE user_id = ? AND status = 'paid' AND payment_type = 'basic'
+       ORDER BY paid_at DESC LIMIT 1`,
+      [user.id]
+    );
+
+    if (basicPayments.length === 0) {
+      return res.status(400).json({ error: '1차 결제가 필요합니다.' });
+    }
+
+    // 이미 프리미엄 결제했는지 확인
+    if (user.is_premium) {
+      return res.status(400).json({
+        error: '이미 프리미엄 업그레이드를 완료했습니다.'
+      });
+    }
+
+    // 한자 이름 임시 저장 (결제 전)
+    await db.execute(
+      `UPDATE saju_results
+       SET custom_hanja_name = ?
+       WHERE id = ?`,
+      [hanjaName, user.saju_result_id]
+    );
+
+    // merchant_uid 생성 (프리미엄 구분을 위해 'premium_' 접두사 사용)
+    const merchantUid = `premium_${Date.now()}_${user.id}`;
+
+    // 결제 정보 DB에 저장 (pending 상태, payment_type = 'premium')
+    const [result] = await db.execute(
+      `INSERT INTO payments (user_id, merchant_uid, amount, product_type, status, payment_type)
+       VALUES (?, ?, ?, 'premium', 'pending', 'premium')`,
+      [user.id, merchantUid, 100] // 테스트: 100원
+    );
+
+    // 포트원 결제 요청 생성
+    const paymentData = await createPortonePayment({
+      merchant_uid: merchantUid,
+      amount: 100, // 테스트: 100원
+      name: '천명록 프리미엄 업그레이드'
+    });
+
+    res.json({
+      success: true,
+      paymentId: result.insertId,
+      merchantUid,
+      impUid: paymentData.imp_uid,
+      paymentData,
+      accessToken,
+      message: '프리미엄 결제 요청이 생성되었습니다.'
+    });
+  } catch (error) {
+    console.error('프리미엄 결제 생성 오류:', error);
+    res.status(500).json({
+      error: '프리미엄 결제 요청 생성에 실패했습니다.',
       message: error.message
     });
   }
