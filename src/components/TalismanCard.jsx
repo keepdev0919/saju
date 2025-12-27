@@ -39,9 +39,7 @@ const TalismanCard = forwardRef(({
 
     // Expose methods to parent
     useImperativeHandle(ref, () => ({
-        handleDownload: () => {
-            handleDownload();
-        }
+        handleDownload
     }));
 
     // 이미지 매핑
@@ -226,28 +224,90 @@ const TalismanCard = forwardRef(({
 
     // 부적 저장하기 (html2canvas)
     const handleDownload = async () => {
+        console.log('🔍 handleDownload 호출됨');
+        console.log('isPurchased:', isPurchased);
+        console.log('cardRef.current:', cardRef.current);
+
         if (!isPurchased) {
+            console.log('⚠️ 구매 안됨 - 모달 띄우기');
+            alert('구매 확인 안됨: isPurchased = ' + isPurchased);
             setShowModal(true); // 잠겨있으면 구매 모달 띄우기
             return;
         }
 
-        if (!cardRef.current) return;
+        if (!cardRef.current) {
+            console.log('❌ cardRef가 없음');
+            alert('카드 참조가 없습니다');
+            return;
+        }
+
+        console.log('✅ 다운로드 시작');
+        alert('다운로드를 시작합니다...');
 
         try {
+            console.log('📸 html2canvas 시작...');
             const canvas = await html2canvas(cardRef.current, {
                 scale: 2, // 고해상도
                 backgroundColor: null, // 투명 배경 유지
-                logging: false,
-                useCORS: true // 이미지 로딩 문제 방지
+                logging: true, // 에러 확인을 위해 로깅 활성화
+                useCORS: true, // 이미지 로딩 문제 방지
+                allowTaint: true, // 크로스 오리진 이미지 허용
+                foreignObjectRendering: false // SVG/외부 객체 렌더링 비활성화
             });
 
-            const link = document.createElement('a');
-            link.href = canvas.toDataURL('image/png');
-            link.download = `saju_talisman_${type}.png`;
-            link.click();
+            console.log('✅ canvas 생성 완료');
+            const dataUrl = canvas.toDataURL('image/png');
+            console.log('✅ dataUrl 생성 완료');
+
+            // 모바일 환경 체크
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            console.log('📱 모바일 여부:', isMobile);
+            alert('모바일: ' + isMobile);
+
+            if (isMobile) {
+                console.log('📱 모바일 다운로드 시작...');
+                // 모바일: 새 창에서 이미지 열기 (길게 눌러서 저장 가능)
+                const newWindow = window.open();
+                console.log('새 창 열림:', !!newWindow);
+                if (newWindow) {
+                    newWindow.document.write(`
+                        <html>
+                            <head>
+                                <title>수호신 카드 다운로드</title>
+                                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                                <style>
+                                    body { margin: 0; padding: 20px; background: #000; text-align: center; }
+                                    img { max-width: 100%; height: auto; }
+                                    p { color: #fff; font-family: sans-serif; margin: 20px 0; }
+                                </style>
+                            </head>
+                            <body>
+                                <p>이미지를 길게 눌러서 저장하세요</p>
+                                <img src="${dataUrl}" alt="수호신 카드">
+                            </body>
+                        </html>
+                    `);
+                    console.log('✅ 새 창에 이미지 작성 완료');
+                    alert('새 창이 열렸습니다');
+                } else {
+                    console.log('❌ 팝업이 차단되었습니다');
+                    alert('팝업이 차단되었습니다. 브라우저 설정에서 팝업을 허용해주세요.');
+                }
+            } else {
+                console.log('💻 PC 다운로드 시작...');
+                // PC: 기존 방식
+                const link = document.createElement('a');
+                link.href = dataUrl;
+                link.download = `saju_talisman_${type}.png`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                console.log('✅ PC 다운로드 완료');
+                alert('PC 다운로드 완료');
+            }
         } catch (err) {
-            console.error('부적 저장 실패:', err);
-            alert('이미지 저장 중 오류가 발생했습니다.');
+            console.error('❌ 부적 저장 실패:', err);
+            alert('이미지 저장 중 오류가 발생했습니다: ' + err.message);
         }
     };
 
@@ -430,6 +490,7 @@ const TalismanCard = forwardRef(({
 
                     {/* [BACK FACE] Revealed State */}
                     <div
+                        ref={cardRef}
                         className="absolute inset-0 w-full h-full rounded-xl overflow-hidden shadow-2xl border border-white/10 bg-[#0d0d12]"
                         style={{
                             transform: 'rotateY(180deg)',

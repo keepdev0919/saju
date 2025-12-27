@@ -423,12 +423,12 @@ const ResultPage = () => {
     fetchResult();
   }, [token]);
 
-  // [NEW] 프리미엄 상태 동기화 - DB의 isPremium이면 TalismanCard도 구매 완료 상태로
+  // [NEW] 결제 상태 동기화 - 1차 결제(isPaid) 또는 2차 결제(isPremium)이면 TalismanCard 구매 완료 상태로
   useEffect(() => {
-    if (sajuResult?.isPremium) {
+    if (sajuResult?.isPaid || sajuResult?.isPremium) {
       setIsTalismanPurchased(true);
     }
-  }, [sajuResult?.isPremium]);
+  }, [sajuResult?.isPaid, sajuResult?.isPremium]);
 
   // 점수 애니메이션
   useEffect(() => {
@@ -662,25 +662,53 @@ const ResultPage = () => {
   // 프리미엄 - 수호신 카드 다운로드 (서버에서 한자 각인)
   const handleDownloadTalismanCard = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talisman/download/${token}`);
+      // 모바일 환경 체크
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || '다운로드에 실패했습니다.');
+      if (isMobile) {
+        // 모바일: 먼저 API 요청해서 성공 여부 확인
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talisman/download/${token}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || '다운로드에 실패했습니다.');
+        }
+
+        // 성공하면 Blob을 Base64로 변환 후 새 탭에서 열기
+        const blob = await response.blob();
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64data = reader.result;
+          // Data URL로 새 탭 열기 (팝업 차단 우회)
+          const link = document.createElement('a');
+          link.href = base64data;
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.click();
+        };
+        reader.readAsDataURL(blob);
+      } else {
+        // PC: Blob으로 다운로드
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/talisman/download/${token}`);
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || '다운로드에 실패했습니다.');
+        }
+
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `수호신_${userInfo?.name || '사용자'}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
       }
-
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `수호신_${userInfo?.name || '사용자'}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
     } catch (error) {
       console.error('수호신 카드 다운로드 실패:', error);
-      alert(error.message);
+      alert('에러: ' + error.message);
     }
   };
 
@@ -2336,7 +2364,7 @@ const ResultPage = () => {
 
                           {/* Secondary: 저장 버튼 - 슬림 가로형 */}
                           <button
-                            onClick={() => talismanCardRef.current?.handleDownload()}
+                            onClick={handleDownloadTalismanCard}
                             className="flex-1 relative group overflow-hidden py-2.5 px-4 rounded-md border border-stone-700/50 bg-stone-900/20 transition-all duration-500 hover:border-stone-600 hover:bg-stone-800/30 active:scale-[0.98]"
                           >
                             <div className="relative flex items-center justify-center gap-2">
@@ -2353,7 +2381,7 @@ const ResultPage = () => {
                           <div className="flex gap-3 w-full">
                             {/* 카드 저장 버튼 (프리미엄도 저장 가능) */}
                             <button
-                              onClick={() => talismanCardRef.current?.handleDownload()}
+                              onClick={handleDownloadTalismanCard}
                               className="flex-1 relative group overflow-hidden py-3 px-4 rounded-md border border-stone-700/50 bg-stone-900/40 transition-all duration-500 hover:border-stone-500 hover:bg-stone-800/50 active:scale-[0.98]"
                             >
                               <div className="relative flex items-center justify-center gap-2">
