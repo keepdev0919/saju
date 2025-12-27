@@ -355,6 +355,8 @@ export async function getSajuResult(req, res) {
       result: {
         id: result.id,
         isPaid, // 결제 여부 추가
+        isPremium: !!result.is_premium, // 프리미엄 여부
+        customHanjaName: result.custom_hanja_name || null, // 한자 이름
         overallFortune: result.overall_fortune,
         wealthFortune: result.wealth_fortune,
         loveFortune: result.love_fortune,

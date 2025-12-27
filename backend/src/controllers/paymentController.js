@@ -148,7 +148,8 @@ export async function verifyPayment(req, res) {
       await db.execute(
         `UPDATE saju_results
          SET is_premium = TRUE
-         WHERE user_id = ? AND deleted_at IS NULL`,
+         WHERE user_id = ? AND deleted_at IS NULL
+         ORDER BY created_at DESC LIMIT 1`,
         [payment.user_id]
       );
 
@@ -199,11 +200,11 @@ export async function verifyPayment(req, res) {
         userId: payment.user_id,
         amount: payment.amount,
         status: 'paid',
-        paymentType: isPremium ? 'premium' : 'basic'
+        paidAt: new Date()
       },
-      accessToken: user.access_token,
-      isPremium: isPremium,
-      message: isPremium ? '프리미엄 업그레이드가 완료되었습니다.' : '결제가 완료되었습니다.'
+      accessToken: user.access_token, // 프론트엔드 자동 로그인을 위한 토큰 전달
+      isPremium, // [NEW] 결제 타입 정보 전달 (콜백 처리용)
+      message: '결제가 성공적으로 검증되었습니다.'
     });
   } catch (error) {
     console.error('결제 검증 오류:', error);
@@ -241,10 +242,7 @@ export async function createPremiumPayment(req, res) {
 
     // 사용자 정보 조회 (삭제된 사용자 제외)
     const [users] = await db.execute(
-      `SELECT u.id, u.name, u.phone, sr.id as saju_result_id, sr.is_premium
-       FROM users u
-       LEFT JOIN saju_results sr ON u.id = sr.user_id AND sr.deleted_at IS NULL
-       WHERE u.access_token = ? AND u.deleted_at IS NULL`,
+      `SELECT id, name, phone FROM users WHERE access_token = ? AND deleted_at IS NULL`,
       [accessToken]
     );
 
@@ -254,10 +252,22 @@ export async function createPremiumPayment(req, res) {
 
     const user = users[0];
 
-    // 사주 결과가 없는 경우
-    if (!user.saju_result_id) {
+    // [FIX] 사주 결과 조회 - 반드시 '최신' 결과로 업데이트해야 함
+    // (JOIN을 쓰면 과거 결과가 잡힐 수 있음)
+    const [latestResults] = await db.execute(
+      `SELECT id, is_premium FROM saju_results 
+       WHERE user_id = ? AND deleted_at IS NULL 
+       ORDER BY created_at DESC LIMIT 1`,
+      [user.id]
+    );
+
+    if (latestResults.length === 0) {
       return res.status(404).json({ error: '사주 결과를 찾을 수 없습니다.' });
     }
+
+    const sajuResultId = latestResults[0].id;
+    // user.is_premium은 구형 구조일 수 있으니 saju_results의 상태도 확인
+    const isAlreadyPremium = latestResults[0].is_premium;
 
     // 1차 결제 완료 확인
     const [basicPayments] = await db.execute(
@@ -272,7 +282,7 @@ export async function createPremiumPayment(req, res) {
     }
 
     // 이미 프리미엄 결제했는지 확인
-    if (user.is_premium) {
+    if (isAlreadyPremium) {
       return res.status(400).json({
         error: '이미 프리미엄 업그레이드를 완료했습니다.'
       });
@@ -283,7 +293,7 @@ export async function createPremiumPayment(req, res) {
       `UPDATE saju_results
        SET custom_hanja_name = ?
        WHERE id = ?`,
-      [hanjaName, user.saju_result_id]
+      [hanjaName, sajuResultId]
     );
 
     // merchant_uid 생성 (프리미엄 구분을 위해 'premium_' 접두사 사용)

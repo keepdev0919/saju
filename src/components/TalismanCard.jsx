@@ -1,4 +1,4 @@
-import React, { useState, useRef, useImperativeHandle, forwardRef } from 'react';
+import React, { useState, useRef, useImperativeHandle, forwardRef, useEffect } from 'react';
 import html2canvas from 'html2canvas';
 import { Download, Lock, Sun, ShieldCheck, Info } from 'lucide-react';
 import TalismanPurchaseModal from './TalismanPurchaseModal';
@@ -11,6 +11,7 @@ const getBlurEffectClass = () => {
 const TalismanCard = forwardRef(({
     type = 'water',
     userName = '사용자',
+    initialStampName = null, // [NEW] DB에서 가져온 한자 이름 (프리미엄 유저)
     talismanData,
     reason,
     activeTab = 'image',
@@ -23,7 +24,16 @@ const TalismanCard = forwardRef(({
 }, ref) => {
     const [internalFlipped, setInternalFlipped] = useState(false); // 로컬 상태
     const isFlipped = controlledFlipped !== undefined ? controlledFlipped : internalFlipped;
-    const [stampName, setStampName] = useState(userName); // 기본은 한글 이름
+    // [NEW] initialStampName이 있으면 그걸 사용, 없으면 userName 사용
+    const [stampName, setStampName] = useState(initialStampName || userName);
+
+    // [FIX] initialStampName이 변경되면(예: 결제 후) state도 업데이트
+    useEffect(() => {
+        if (initialStampName) {
+            setStampName(initialStampName);
+        }
+    }, [initialStampName]);
+
     const [showModal, setShowModal] = useState(false);
     const cardRef = useRef(null);
 

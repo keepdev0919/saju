@@ -61,13 +61,15 @@ const PaymentCallback = () => {
                     throw new Error(verifyResponse.error || '결제 검증에 실패했습니다.');
                 }
 
-                const { accessToken } = verifyResponse;
+                const { accessToken, isPremium } = verifyResponse;
 
                 // 4. AI 분석 요청 (백그라운드 트리거)
-                // [FIX] ResultPage는 폴링만 하므로, 여기서 계산을 시작해주어야 함 (무한로딩 해결)
-                calculateSaju({
-                    accessToken,
-                }).catch(err => console.warn('Background calc trigger warning:', err));
+                // [FIX] 1차 결제(basic)인 경우에만 AI 생성을 요청 (프리미엄 결제는 생성 불필요)
+                if (!isPremium) {
+                    calculateSaju({
+                        accessToken,
+                    }).catch(err => console.warn('Background calc trigger warning:', err));
+                }
 
                 // 5. 성공 리다이렉트
                 setStatus('success');

@@ -423,6 +423,13 @@ const ResultPage = () => {
     fetchResult();
   }, [token]);
 
+  // [NEW] 프리미엄 상태 동기화 - DB의 isPremium이면 TalismanCard도 구매 완료 상태로
+  useEffect(() => {
+    if (sajuResult?.isPremium) {
+      setIsTalismanPurchased(true);
+    }
+  }, [sajuResult?.isPremium]);
+
   // 점수 애니메이션
   useEffect(() => {
     if (mounted && sajuResult) {
@@ -703,9 +710,27 @@ const ResultPage = () => {
   };
 
   // 한자 입력 모달 제출 (결제 성공 후 호출됨)
-  const handleHanjaSubmit = (hanjaName) => {
-    console.log('한자 이름 제출:', hanjaName);
-    // 결제 성공 후 페이지 새로고침은 모달 내부에서 처리됨
+  const handleHanjaSubmit = async (hanjaName) => {
+    console.log('한자 이름 제출 및 데이터 갱신:', hanjaName);
+
+    // [FIX] 페이지 새로고침 대신 백그라운드 데이터 갱신 (로딩 화면 방지)
+    try {
+      const response = await getSajuResult(token);
+      if (response.success && response.result) {
+        setSajuResult(response.result); // 결과 데이터 갱신 (isPremium, customHanjaName 포함)
+
+        // 프리미엄 상태 반영
+        if (response.result.isPremium) {
+          setIsTalismanPurchased(true);
+        }
+
+        // 알림 메시지 (선택 사항)
+        // alert('프리미엄 업그레이드가 완료되었습니다.');
+      }
+    } catch (error) {
+      console.error('데이터 갱신 실패:', error);
+      // 실패해도 치명적이지 않음 (새로고침하면 해결됨)
+    }
   };
 
   // AI 완료 상태 폴링 시작
@@ -2257,6 +2282,7 @@ const ResultPage = () => {
                             ref={talismanCardRef}
                             type={testTalismanKey || sajuResult.talisman?.name || "gapja"}
                             userName={userInfo?.name || '사용자'}
+                            initialStampName={sajuResult.customHanjaName} // [NEW] DB에서 가져온 한자 이름
                             reason={sajuResult.talisman?.reason}
                             activeTab={talismanViewMode}
                             isFlipped={isTalismanFlipped}
@@ -2294,72 +2320,70 @@ const ResultPage = () => {
                   {sajuResult.isPaid && isTalismanFlipped && (
                     <div className="flex flex-col gap-4 px-8 mt-2 mb-8 items-center w-full max-w-[320px] mx-auto animate-fade-in-up delay-300">
                       {!sajuResult.isPremium ? (
-                        <>
-                          {/* [REDESIGNED] Name Engraving - Traditional Gold/Red Border Style */}
+                        <div className="flex gap-3 w-full">
+                          {/* Primary: 이름 각인 버튼 - 슬림 가로형 */}
                           <button
                             onClick={() => setShowHanjaModal(true)}
-                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-amber-600/40 transition-all duration-700 hover:border-amber-500 active:scale-[0.98]"
+                            className="flex-1 relative group overflow-hidden py-2.5 px-4 rounded-md border border-amber-600/50 bg-gradient-to-r from-amber-950/30 to-amber-950/10 transition-all duration-500 hover:border-amber-500 hover:from-amber-900/40 active:scale-[0.98]"
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-amber-950/20 to-transparent group-hover:from-amber-950/40 transition-all duration-700" />
-
-                            <div className="relative flex items-center justify-center gap-4">
-                              <div className="w-6 h-px bg-amber-600/30 group-hover:w-10 transition-all duration-700" />
-                              <span className="text-amber-500 font-serif font-bold tracking-[0.3em] text-xs uppercase flex items-center gap-2">
-                                <span className="text-[10px] opacity-70">✨</span>
-                                이름 새기기 (銘刻)
+                            <div className="relative flex items-center justify-center gap-2">
+                              <span className="text-amber-500/80 font-serif text-sm">印</span>
+                              <span className="text-amber-400 font-serif font-bold tracking-[0.1em] text-[11px]">
+                                이름 각인
                               </span>
-                              <div className="w-6 h-px bg-amber-600/30 group-hover:w-10 transition-all duration-700" />
                             </div>
                           </button>
 
-                          {/* [REDESIGNED] Save Card - Minimal Traditional Ink Style */}
+                          {/* Secondary: 저장 버튼 - 슬림 가로형 */}
                           <button
                             onClick={() => talismanCardRef.current?.handleDownload()}
-                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-stone-800 transition-all duration-700 hover:border-amber-900/50 active:scale-[0.98]"
+                            className="flex-1 relative group overflow-hidden py-2.5 px-4 rounded-md border border-stone-700/50 bg-stone-900/20 transition-all duration-500 hover:border-stone-600 hover:bg-stone-800/30 active:scale-[0.98]"
                           >
-                            <div className="absolute inset-0 bg-[#0a0a0c]/50 transition-colors group-hover:bg-[#121214]/80" />
-
-                            <div className="relative flex items-center justify-center gap-4">
-                              <Download size={14} className="text-stone-500 group-hover:text-amber-600 transition-all duration-500" />
-                              <span className="text-stone-400 group-hover:text-stone-300 font-serif tracking-[0.2em] text-[11px]">
-                                수호신 카드 저장 (貯藏)
+                            <div className="relative flex items-center justify-center gap-2">
+                              <span className="text-stone-500 group-hover:text-stone-400 text-sm">↓</span>
+                              <span className="text-stone-500 group-hover:text-stone-400 font-serif tracking-[0.1em] text-[11px]">
+                                저장
                               </span>
                             </div>
                           </button>
-                        </>
+                        </div>
                       ) : (
                         /* 2차 결제자용 버튼 (프리미엄) - Slim & Premium Redesign */
-                        <>
-                          {/* [REDESIGNED] PDF Download - Slim & Premium Purple Style */}
-                          <button
-                            onClick={handleDownloadPDF}
-                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-purple-900/30 transition-all duration-700 hover:border-purple-600 active:scale-[0.98]"
-                          >
-                            <div className="absolute inset-0 bg-gradient-to-r from-purple-950/20 to-transparent transition-colors group-hover:from-purple-900/30" />
+                        <div className="flex flex-col gap-3 w-full">
+                          <div className="flex gap-3 w-full">
+                            {/* 카드 저장 버튼 (프리미엄도 저장 가능) */}
+                            <button
+                              onClick={() => talismanCardRef.current?.handleDownload()}
+                              className="flex-1 relative group overflow-hidden py-3 px-4 rounded-md border border-stone-700/50 bg-stone-900/40 transition-all duration-500 hover:border-stone-500 hover:bg-stone-800/50 active:scale-[0.98]"
+                            >
+                              <div className="relative flex items-center justify-center gap-2">
+                                <span className="text-stone-400 group-hover:text-stone-300 text-sm">↓</span>
+                                <span className="text-stone-400 group-hover:text-stone-300 font-serif tracking-wider text-xs">
+                                  부적 저장
+                                </span>
+                              </div>
+                            </button>
 
-                            <div className="relative flex items-center justify-center gap-4">
-                              <Scroll size={14} className="text-purple-400 group-hover:text-purple-300 transition-all duration-500" />
-                              <span className="text-purple-300/80 group-hover:text-white font-serif tracking-[0.2em] text-[11px] font-bold">
-                                전체 결과 PDF 다운로드 (下載)
-                              </span>
-                            </div>
-                          </button>
+                            {/* [REDESIGNED] PDF Download - Slim & Premium Purple Style */}
+                            <button
+                              onClick={handleDownloadPDF}
+                              className="flex-[2] relative group overflow-hidden py-3 px-6 rounded-md border border-purple-900/40 bg-gradient-to-r from-purple-950/30 to-purple-900/10 transition-all duration-700 hover:border-purple-500/50 active:scale-[0.98]"
+                            >
+                              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/0 via-purple-500/5 to-purple-500/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
-                          {/* [REDESIGNED] Save Card (Still needed for premium users) */}
-                          <button
-                            onClick={() => talismanCardRef.current?.handleDownload()}
-                            className="w-full relative group overflow-hidden py-3 px-6 rounded-sm border border-stone-800 transition-all duration-700 hover:border-amber-900/50 active:scale-[0.98]"
-                          >
-                            <div className="absolute inset-0 bg-[#0a0a0c]/50 transition-colors group-hover:bg-[#121214]/80" />
+                              <div className="relative flex items-center justify-center gap-2">
+                                <span className="text-purple-300/80 group-hover:text-purple-200 transition-colors text-sm">✦</span>
+                                <span className="bg-gradient-to-r from-purple-200 to-purple-100 bg-clip-text text-transparent font-serif font-bold tracking-widest text-xs group-hover:from-white group-hover:to-purple-100 transition-all">
+                                  천기비록 저장 (PDF)
+                                </span>
+                              </div>
+                            </button>
+                          </div>
 
-                            <div className="relative flex items-center justify-center gap-4">
-                              <Download size={14} className="text-stone-500 group-hover:text-amber-600 transition-all duration-500" />
-                              <span className="text-stone-400 group-hover:text-stone-300 font-serif tracking-[0.2em] text-[11px]">
-                                수호신 카드 저장 (貯藏)
-                              </span>
-                            </div>
-                          </button>
-                        </>
+                          <p className="text-[10px] text-stone-500/60 text-center font-serif tracking-wider">
+                            수호신장에 이름이 각인되었습니다
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}
@@ -2621,8 +2645,8 @@ const ResultPage = () => {
           accessToken={token}
         />
 
-      </div>
-    </div>
+      </div >
+    </div >
   );
 };
 
