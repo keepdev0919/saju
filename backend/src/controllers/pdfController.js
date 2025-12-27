@@ -145,8 +145,8 @@ export async function generatePdf(req, res) {
 }
 
 /**
- * PDF 다운로드
- * 토큰으로 PDF 파일 다운로드
+ * PDF 다운로드 (프리미엄 전용)
+ * 토큰으로 PDF 파일 다운로드 - 프리미엄 사용자만 가능
  */
 export async function downloadPdf(req, res) {
   try {
@@ -156,9 +156,12 @@ export async function downloadPdf(req, res) {
       return res.status(400).json({ error: '토큰이 필요합니다.' });
     }
 
-    // 사용자 조회
+    // 사용자 및 프리미엄 여부 조회
     const [users] = await db.execute(
-      `SELECT id FROM users WHERE access_token = ?`,
+      `SELECT u.id, u.name, sr.is_premium
+       FROM users u
+       LEFT JOIN saju_results sr ON u.id = sr.user_id AND sr.deleted_at IS NULL
+       WHERE u.access_token = ? AND u.deleted_at IS NULL`,
       [token]
     );
 
@@ -166,12 +169,28 @@ export async function downloadPdf(req, res) {
       return res.status(404).json({ error: '유효하지 않은 토큰입니다.' });
     }
 
-    const userId = users[0].id;
+    const user = users[0];
 
-    // 가장 최근 PDF 파일 찾기 (실제로는 DB에 PDF 정보를 저장하는 것이 좋음)
+    // 프리미엄 사용자 확인
+    if (!user.is_premium) {
+      return res.status(403).json({
+        error: '프리미엄 사용자만 PDF를 다운로드할 수 있습니다.'
+      });
+    }
+
+    // 가장 최근 PDF 파일 찾기
     const uploadsDir = path.join(process.cwd(), 'uploads', 'pdf');
+
+    // 디렉토리 존재 확인
+    try {
+      await fs.access(uploadsDir);
+    } catch {
+      // 디렉토리가 없으면 생성
+      await fs.mkdir(uploadsDir, { recursive: true });
+    }
+
     const files = await fs.readdir(uploadsDir);
-    const userPdfFiles = files.filter(file => file.startsWith(`saju_${userId}_`));
+    const userPdfFiles = files.filter(file => file.startsWith(`saju_${user.id}_`));
 
     if (userPdfFiles.length === 0) {
       return res.status(404).json({ error: 'PDF 파일을 찾을 수 없습니다.' });
@@ -189,16 +208,17 @@ export async function downloadPdf(req, res) {
     }
 
     // PDF 파일 전송
+    const fileName = `천명록_${user.name}.pdf`;
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${latestFile}"`);
-    
+    res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(fileName)}"`);
+
     const fileBuffer = await fs.readFile(filePath);
     res.send(fileBuffer);
   } catch (error) {
     console.error('PDF 다운로드 오류:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'PDF 다운로드에 실패했습니다.',
-      message: error.message 
+      message: error.message
     });
   }
 }

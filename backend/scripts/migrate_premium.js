@@ -31,13 +31,13 @@ async function migratePremium() {
       }
     }
 
-    // 2. saju_results.custom_hanja_name 컬럼 추가
+    // 2. saju_results.custom_hanja_name 컬럼 추가 (테이블 끝에 추가)
     try {
       await connection.execute(`
         ALTER TABLE saju_results
         ADD COLUMN custom_hanja_name VARCHAR(10)
         DEFAULT NULL
-        AFTER yongshen_reason
+        AFTER deleted_at
       `);
       console.log('✅ saju_results.custom_hanja_name 컬럼 추가 완료');
     } catch (err) {
